@@ -287,9 +287,7 @@ function progressBar(data)
 			lockInv(false)
 			if data.cam then stopTempCam(data.cam) end
 		end
-
-		exports["esx_progressbar"]:Progressbar(message, length, Options)
-
+		
 	elseif Config.System.ProgressBar == "qb" then
 		Core.Functions.Progressbar("mechbar",
 			data.label,
