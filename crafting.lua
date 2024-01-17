@@ -28,7 +28,7 @@ function GetStashTimeout(stashName, stop)
 end
 
 local CraftLock = false
-function craftingMenu(data)
+function craftingMenu(data) local hasjob = false
     if CraftLock then return end
     if data.stashName and not GetStashTimeout(data.stashName) then
 		--triggerNotify(nil, "Chacking", "success")
@@ -40,12 +40,11 @@ function craftingMenu(data)
 		for k, v in pairs(Recipes[i]) do
 			if k ~= "amount" and k ~= "job" and k ~= "gang" then
                 if Recipes[i].job then hasjob = false
-					for l, b in pairs(data.craftable[i]["job"]) do
-						hasjob = hasJob(l)
+					for l, b in pairs(data.craftable.Recipes[i]["job"]) do
+						hasjob = hasJob(l, nil, b)
 					end
 				end
                 local setheader, settext = "", ""
-				local text = ""
 				local disable = false
 				local checktable = {}
                 if Recipes[i].job and hasjob == false then else

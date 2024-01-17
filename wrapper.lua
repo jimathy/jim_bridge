@@ -364,6 +364,18 @@ function isOx() return (Config.System.Menu == "ox" or Config.System.Menu == "gta
 
 function isWarMenuOpen() if Config.System.Menu == "gta" then return WarMenu.IsAnyMenuOpened() else return false end end
 
+local TextTargets = {}
+local Keys = {
+    [322] = "ESC", [288] = "F1", [289] = "F2", [170] = "F3", [166] = "F5",
+    [167] = "F6", [168] = "F7", [169] = "F8", [56] = "F9", [57] = "F10",
+    [243] = "~", [157] = "1", [158] = "2", [160] = "3", [164] = "4",  [165] = "5", [159] = "6", [161] = "7", [162] = "8", [163] = "9", [84] = "-", [83] = "=",  [177] = "BACKSPACE", [37] = "TAB",
+    [44] = "Q", [32] = "W", [38] = "E", [45] = "R", [245] = "T", [246] = "Y", [303] = "U", [199] = "P",
+    [39] = "[",  [40] = "]", [18] = "ENTER", [137] = "CAPS",
+    [34] = "A", [8] = "S", [9] = "D", [23] = "F", [47] = "G",
+    [74] = "H", [311] = "K", [182] = "L", [21] = "LEFTSHIFT",
+    [20] = "Z", [73] = "X", [26] = "C", [0] = "V",  [29] = "B", [249] = "N",
+    [244] = "M", [82] = ",", [81] = "."
+}
 -- Targets --
 local targetEntities = {}
 function createEntityTarget(entity, opts, dist)
@@ -392,6 +404,14 @@ function createEntityTarget(entity, opts, dist)
         end
         local options = { options = opts, distance = dist }
         exports[QBTargetExport]:AddTargetEntity(entity, options)
+    else
+        local tempText = ""
+        local keyTable = { 38, 29, 303, }
+        for i = 1, #opts do
+            opts[i].key = keyTable[i]
+            tempText = tempText.."~b~["..Keys[opts[i].key].."] ~w~"..opts[i].label.." "
+        end
+        TextTargets[entity] = { coords = GetEntityCoords(entity), buttontext = tempText, options = opts, dist = dist }
     end
 end
 
@@ -435,6 +455,15 @@ function createBoxTarget(data, opts, dist)
         local target = exports[QBTargetExport]:AddBoxZone(data[1], data[2], data[3], data[4], data[5], options)
         boxTargets[#boxTargets+1] = target
         return target
+    else
+        local tempText = ""
+        local keyTable = { 38, 29, 303, }
+        for i = 1, #opts do
+            opts[i].key = keyTable[i]
+            tempText = tempText.."~b~["..Keys[opts[i].key].."] ~w~"..opts[i].label.." "
+        end
+        TextTargets[data[1]] = { coords = data[2], buttontext = tempText, options = opts, dist = dist }
+        return data[1]
     end
 end
 
@@ -475,17 +504,57 @@ function createCircleTarget(data, opts, dist)
 
         circleTargets[#circleTargets+1] = target
         return target
+    else
+        local tempText = ""
+        local keyTable = { 38, 29, 303, }
+        for i = 1, #opts do
+            opts[i].key = keyTable[i]
+            tempText = tempText.."~b~["..Keys[opts[i].key].."] ~w~"..opts[i].label.." "
+        end
+        TextTargets[data[1]] = { coords = data[2], buttontext = tempText, options = opts, dist = dist }
+        return data[1]
     end
 end
 
 function removeEntityTarget(entity)
     if GetResourceState(QBTargetExport):find("start") then exports[QBTargetExport]:RemoveTargetEntity(entity) end
     if GetResourceState(OXTargetExport):find("start") then exports[OXTargetExport]:removeLocalEntity(entity, nil) end
+    if not GetResourceState(OXTargetExport):find("start") and not GetResourceState(QBTargetExport):find("start") then
+        TextTargets[entity] = nil
+    end
 end
 
 function removeZoneTarget(target)
     if GetResourceState(QBTargetExport):find("start") then exports[QBTargetExport]:RemoveZone(target) end
     if GetResourceState(OXTargetExport):find("start") then exports[OXTargetExport]:removeZone(target, true) end
+    if not GetResourceState(OXTargetExport):find("start") and not GetResourceState(QBTargetExport):find("start") then
+        TextTargets[target] = nil
+    end
+end
+
+if not GetResourceState(OXTargetExport):find("start") and not GetResourceState(QBTargetExport):find("start") and not IsDuplicityVersion() then
+    CreateThread(function()
+        while true do
+            local pedCoords = GetEntityCoords(PlayerPedId())
+            for k, v in pairs (TextTargets) do
+                if #(pedCoords - v.coords) <= v.dist then
+                    DrawText3D(
+                        v.coords.x,
+                        v.coords.y,
+                        v.coords.z + 1.0,
+                        v.buttontext
+                    )
+                    for i = 1, #v.options do
+                        if IsControlJustPressed(0, v.options[i].key) then
+                            if  v.options[i].onSelect then  v.options[i].onSelect() end
+                            if  v.options[i].action then  v.options[i].action() end
+                        end
+                    end
+                end
+            end
+            Wait(0)
+        end
+    end)
 end
 
 AddEventHandler('onResourceStop', function(r)
@@ -656,7 +725,6 @@ function createInput(title, opts)
             if opts[i].type == "radio" then
                 for k in pairs(opts[i].options) do
                     opts[i].options[k].label = opts[i].options[k].text
-                    print(opts[i].options[k].text)
                 end
                 options[i] = {
                     type = "select",
@@ -674,6 +742,13 @@ function createInput(title, opts)
                     isRequired = opts[i].isRequired,
                     name = opts[i].name,
                     options = opts[i].options,
+                }
+            end
+            if opts[i].type == "text" then
+                options[i] = {
+                    type = "input",
+                    label = opts[i].text ..(opts[i].txt and " - "..opts[i].txt or ""),
+                    isRequired = opts[i].isRequired,
                 }
             end
             if opts[i].type == "select" then
@@ -885,7 +960,7 @@ function createUseableItem(item, funct)
     end
 end
 
-function hasJob(job, src) local hasJob = false
+function hasJob(job, src, grade) local hasJob = false
     if src then
         if GetResourceState(ESXExport):find("start") then
             local info = ESX.GetPlayerFromId(src).job
@@ -905,14 +980,26 @@ function hasJob(job, src) local hasJob = false
 
         elseif GetResourceState(QBXExport):find("start") then
             local jobinfo = exports[QBXExport]:GetPlayer(src).PlayerData.job
-            if jobinfo.name == job then hasJob = true end
+            if jobinfo.name == job then
+                hasJob = true
+                if grade and not jobinfo.grade.level then hasJob = false end
+            end
             local ganginfo = exports[QBXExport]:GetPlayer(src).PlayerData.gang
-            if ganginfo.name == job then hasJob = true end
+            if ganginfo.name == job then
+                hasJob = true
+                if grade and not ganginfo.grade.level then hasJob = false end
+            end
         else
             local jobinfo = exports[QBExport]:GetPlayer(src).PlayerData.job
-            if jobinfo.name == job then hasJob = true end
+            if jobinfo.name == job then
+                hasJob = true
+                if grade and not jobinfo.grade.level then hasJob = false end
+            end
             local ganginfo = exports[QBExport]:GetPlayer(src).PlayerData.gang
-            if ganginfo.name == job then hasJob = true end
+            if ganginfo.name == job then
+                hasJob = true
+                if grade and not ganginfo.grade.level then hasJob = false end
+            end
         end
     else
         if GetResourceState(ESXExport):find("start") then
@@ -931,18 +1018,30 @@ function hasJob(job, src) local hasJob = false
 
         elseif GetResourceState(QBXExport):find("start") then
             local jobinfo = QBX.PlayerData.job
-            if jobinfo.name == job then hasJob = true end
+            if jobinfo.name == job then
+                hasJob = true
+                if grade and not jobinfo.grade.level then hasJob = false end
+            end
             local ganginfo = QBX.PlayerData.gang
-            if ganginfo.name == job then hasJob = true end
+            if ganginfo.name == job then
+                hasJob = true
+                if grade and not ganginfo.grade.level then hasJob = false end
+            end
         else
             local info = nil
             Core.Functions.GetPlayerData(function(PlayerData)
                 info = PlayerData
             end)
             local jobinfo = info.job
-            if jobinfo.name == job then hasJob = true end
+            if jobinfo.name == job then
+                hasJob = true
+                if grade and not jobinfo.grade.level then hasJob = false end
+            end
             local ganginfo = info.gang
-            if ganginfo.name == job then hasJob = true end
+            if ganginfo.name == job then
+                hasJob = true
+                if grade and not ganginfo.grade.level then hasJob = false end
+            end
         end
     end
     return hasJob
