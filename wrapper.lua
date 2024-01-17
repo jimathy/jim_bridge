@@ -981,38 +981,30 @@ function hasJob(job, source, grade) local hasJob = false
 
         elseif GetResourceState(QBXExport):find("start") then
             local jobinfo = exports[QBXExport]:GetPlayer(src).PlayerData.job
-            if jobinfo.name == job then
-                hasJob = true
+            if jobinfo.name == job then hasJob = true
                 if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
             end
             local ganginfo = exports[QBXExport]:GetPlayer(src).PlayerData.gang
-            if ganginfo.name == job then
-                hasJob = true
+            if ganginfo.name == job then hasJob = true
                 if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
             end
         elseif GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
-            if Core.Functions.GetPlayer ~= nil then -- support older qb-core
-                local Player = Core.Functions.GetPlayer(src).PlayerData
-
-                local jobinfo = Player.job
-                if jobinfo.name == job then
-                    hasJob = true
-                    if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
-                end
-                local ganginfo = Player.gang
-                if ganginfo.name == job then
-                    hasJob = true
-                    if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
-                end
-            else
+            if Core.Functions.GetPlayer then -- support older qb-core functions
                 local jobinfo = Core.Functions.GetPlayer(src).PlayerData.job
-                if jobinfo.name == job then
-                    hasJob = true
+                if jobinfo.name == job then hasJob = true
                     if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
                 end
                 local ganginfo = Core.Functions.GetPlayer(src).PlayerData.gang
-                if ganginfo.name == job then
-                    hasJob = true
+                if ganginfo.name == job then hasJob = true
+                    if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
+                end
+            else -- support newer qb-core exports
+                local jobinfo = exports[QBExport]:GetPlayer(src).PlayerData.job
+                if jobinfo.name == job then hasJob = true
+                    if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
+                end
+                local ganginfo = exports[QBExport]:GetPlayer(src).PlayerData.gang
+                if ganginfo.name == job then hasJob = true
                     if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
                 end
             end
@@ -1041,7 +1033,7 @@ function hasJob(job, source, grade) local hasJob = false
             if ganginfo.name == job then hasJob = true
                 if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
             end
-        else
+        elseif GetResourceState(QBXExport):find("start") and not GetResourceState(QBXExport):find("start") then
             local info = nil
             Core.Functions.GetPlayerData(function(PlayerData)
                 info = PlayerData
@@ -1061,9 +1053,10 @@ function hasJob(job, source, grade) local hasJob = false
     return hasJob
 end
 
-function getPlayer(src) local Player = {}
+function getPlayer(source) local Player = {}
     if Config.System.Debug then print("^6Bridge^7: ^2Getting ^3Player^2 info^7") end
-    if src then -- If called from server
+    if source then -- If called from server
+        local src = tonumber(source)
         if GetResourceState(ESXExport):find("start") then
             local info = ESX.GetPlayerFromId(src)
             Player = {
@@ -1090,7 +1083,7 @@ function getPlayer(src) local Player = {}
                 bank = info.Functions.GetMoney("bank"),
             }
         elseif GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
-            local info = Core.Functions.GetPlayer(tonumber(src))
+            local info = exports[QBExport]:GetPlayer(src)
             Player = {
                 name = info.PlayerData.charinfo.firstname.." "..info.PlayerData.charinfo.lastname,
                 cash = info.PlayerData.money["cash"],
@@ -1098,7 +1091,7 @@ function getPlayer(src) local Player = {}
             }
         end
     else
-        if ESX ~= nil then
+        if GetResourceState(ESXExport):find("start") and ESX ~= nil then
             local info = ESX.GetPlayerData()
             local cash, bank = 0, 0
             for k, v in pairs(ESX.GetPlayerData().accounts) do
@@ -1124,11 +1117,9 @@ function getPlayer(src) local Player = {}
                 cash = info.money["cash"],
                 bank = info.money["bank"],
             }
-        else
+        elseif GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
             local info = nil
-            Core.Functions.GetPlayerData(function(PlayerData)
-                info = PlayerData
-            end)
+            Core.Functions.GetPlayerData(function(PlayerData) info = PlayerData end)
             Player = {
                 name = info.charinfo.firstname.." "..info.charinfo.lastname,
                 cash = info.money["cash"],
