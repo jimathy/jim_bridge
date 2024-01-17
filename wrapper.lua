@@ -982,23 +982,23 @@ function hasJob(job, src, grade) local hasJob = false
             local jobinfo = exports[QBXExport]:GetPlayer(src).PlayerData.job
             if jobinfo.name == job then
                 hasJob = true
-                if grade and not jobinfo.grade.level then hasJob = false end
+                if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
             end
             local ganginfo = exports[QBXExport]:GetPlayer(src).PlayerData.gang
             if ganginfo.name == job then
                 hasJob = true
-                if grade and not ganginfo.grade.level then hasJob = false end
+                if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
             end
         else
             local jobinfo = exports[QBExport]:GetPlayer(src).PlayerData.job
             if jobinfo.name == job then
                 hasJob = true
-                if grade and not jobinfo.grade.level then hasJob = false end
+                if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
             end
             local ganginfo = exports[QBExport]:GetPlayer(src).PlayerData.gang
             if ganginfo.name == job then
                 hasJob = true
-                if grade and not ganginfo.grade.level then hasJob = false end
+                if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
             end
         end
     else
@@ -1018,14 +1018,12 @@ function hasJob(job, src, grade) local hasJob = false
 
         elseif GetResourceState(QBXExport):find("start") then
             local jobinfo = QBX.PlayerData.job
-            if jobinfo.name == job then
-                hasJob = true
-                if grade and not jobinfo.grade.level then hasJob = false end
+            if jobinfo.name == job then hasJob = true
+                if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
             end
             local ganginfo = QBX.PlayerData.gang
-            if ganginfo.name == job then
-                hasJob = true
-                if grade and not ganginfo.grade.level then hasJob = false end
+            if ganginfo.name == job then hasJob = true
+                if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
             end
         else
             local info = nil
@@ -1035,12 +1033,12 @@ function hasJob(job, src, grade) local hasJob = false
             local jobinfo = info.job
             if jobinfo.name == job then
                 hasJob = true
-                if grade and not jobinfo.grade.level then hasJob = false end
+                if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
             end
             local ganginfo = info.gang
             if ganginfo.name == job then
                 hasJob = true
-                if grade and not ganginfo.grade.level then hasJob = false end
+                if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
             end
         end
     end

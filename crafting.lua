@@ -40,8 +40,9 @@ function craftingMenu(data) local hasjob = false
 		for k, v in pairs(Recipes[i]) do
 			if k ~= "amount" and k ~= "job" and k ~= "gang" then
                 if Recipes[i].job then hasjob = false
-					for l, b in pairs(data.craftable.Recipes[i]["job"]) do
+					for l, b in pairs(Recipes[i].job) do
 						hasjob = hasJob(l, nil, b)
+                        if hasJob == true then break end
 					end
 				end
                 local setheader, settext = "", ""
