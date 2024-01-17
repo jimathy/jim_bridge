@@ -960,8 +960,9 @@ function createUseableItem(item, funct)
     end
 end
 
-function hasJob(job, src, grade) local hasJob = false
-    if src then
+function hasJob(job, source, grade) local hasJob = false
+    if source then
+        local src = tonumber(source)
         if GetResourceState(ESXExport):find("start") then
             local info = ESX.GetPlayerFromId(src).job
             while not info do
@@ -989,16 +990,31 @@ function hasJob(job, src, grade) local hasJob = false
                 hasJob = true
                 if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
             end
-        else
-            local jobinfo = exports[QBExport]:GetPlayer(src).PlayerData.job
-            if jobinfo.name == job then
-                hasJob = true
-                if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
-            end
-            local ganginfo = exports[QBExport]:GetPlayer(src).PlayerData.gang
-            if ganginfo.name == job then
-                hasJob = true
-                if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
+        elseif GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
+            if Core.Functions.GetPlayer ~= nil then -- support older qb-core
+                local Player = Core.Functions.GetPlayer(src).PlayerData
+
+                local jobinfo = Player.job
+                if jobinfo.name == job then
+                    hasJob = true
+                    if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
+                end
+                local ganginfo = Player.gang
+                if ganginfo.name == job then
+                    hasJob = true
+                    if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
+                end
+            else
+                local jobinfo = Core.Functions.GetPlayer(src).PlayerData.job
+                if jobinfo.name == job then
+                    hasJob = true
+                    if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
+                end
+                local ganginfo = Core.Functions.GetPlayer(src).PlayerData.gang
+                if ganginfo.name == job then
+                    hasJob = true
+                    if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
+                end
             end
         end
     else
