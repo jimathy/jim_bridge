@@ -95,9 +95,24 @@ function makeProp(data, freeze, synced)
 end
 
 function cv(amount)
-    local formatted = amount
+    local formatted = amount or "0"
     while true do formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2') if (k==0) then break end Wait(0) end
     return formatted
+end
+
+function DrawText3D(x, y, z, text)
+	SetTextScale(0.35, 0.35)
+    SetTextFont(4)
+    SetTextProportional(true)
+    SetTextColour(255, 255, 255, 215)
+    BeginTextCommandDisplayText("STRING")
+    SetTextCentre(true)
+    AddTextComponentSubstringPlayerName(text)
+    SetDrawOrigin(x,y,z, 0)
+    EndTextCommandDisplayText(0.0, 0.0)
+    local factor = string.len(text) / 370
+    DrawRect(0.0, 0.0 + 0.0125, 0.017 + factor, 0.03, 0, 0, 0, 75)
+    ClearDrawOrigin()
 end
 
 AddEventHandler('onResourceStop', function(r)
@@ -287,7 +302,7 @@ function progressBar(data)
 			lockInv(false)
 			if data.cam then stopTempCam(data.cam) end
 		end
-		
+
 	elseif Config.System.ProgressBar == "qb" then
 		Core.Functions.Progressbar("mechbar",
 			data.label,
