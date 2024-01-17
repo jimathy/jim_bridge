@@ -11,6 +11,7 @@ OXInv = Exports and Exports.OXInv or ""
 QBInv = Exports and Exports.QBInv or ""
 QSInv = Exports and Exports.QSInv or ""
 CoreInv = Exports and Exports.CoreInv or ""
+CodeMInv = Exports and Exports.CodeMInv or ""
 
 QBMenuExport = Exports and Exports.QBMenuExport or ""
 
@@ -35,7 +36,7 @@ if GetResourceState(OXInv):find("start") then
     end
 elseif GetResourceState(QBExport):find("start") then
     print("^6Bridge^7: ^2Loading ^3Items^2 from ^7"..QBExport)
-    Core = exports[QBExport]:GetCoreObject()
+    Core = Core or exports[QBExport]:GetCoreObject()
     Items = Core.Shared.Items
 elseif GetResourceState(ESXExport):find("start") then
     print("^6Bridge^7: ^2Loading ^3Items^2 from ^7"..ESXExport)
@@ -45,14 +46,14 @@ end
 
 -- Load Vehicles
 if GetResourceState(QBXExport):find("start") then
-    Core = exports[QBExport]:GetCoreObject()
+    Core = Core or exports[QBExport]:GetCoreObject()
     print("^6Bridge^7: ^2Loading ^3Vehicles^2 from ^7"..QBXExport)
     Vehicles = exports[QBXExport]:GetVehiclesByHash()
 elseif GetResourceState(QBExport):find("start") then
     print("^6Bridge^7: ^2Loading ^3Vehicles^2 from ^7"..QBExport)
-    Core = exports[QBExport]:GetCoreObject()
+    Core = Core or exports[QBExport]:GetCoreObject()
     RegisterNetEvent('QBCore:Client:UpdateObject', function()
-        Core = exports[QBExport]:GetCoreObject()
+        Core = Core or exports[QBExport]:GetCoreObject()
     end)
     Vehicles = Core.Shared.Vehicles
 elseif GetResourceState(OXCoreExport):find("start") then
@@ -82,7 +83,7 @@ end
 
 -- Load Jobs
 if GetResourceState(QBXExport):find("start") then
-    Core = exports[QBExport]:GetCoreObject()
+    Core = Core or exports[QBExport]:GetCoreObject()
     print("^6Bridge^7: ^2Loading ^3Jobs^7/^3Gangs^2 from ^7"..QBXExport)
     Jobs = exports[QBXExport]:GetJobs()
     Gangs = exports[QBXExport]:GetGangs()
@@ -108,8 +109,8 @@ elseif GetResourceState(OXCoreExport):find("start") then
 
 elseif GetResourceState(QBExport):find("start") then
     print("^6Bridge^7: ^2Loading ^3Jobs^7/^3Gangs^2 from ^7"..QBExport)
-    Core = Core or exports[QBExport]:GetCoreObject()
-    RegisterNetEvent('QBCore:Client:UpdateObject', function() Core = exports[QBExport]:GetCoreObject() end)
+    Core = Core or Core or exports[QBExport]:GetCoreObject()
+    RegisterNetEvent('QBCore:Client:UpdateObject', function() Core = Core or exports[QBExport]:GetCoreObject() end)
     Jobs = Core.Shared.Jobs
     Gangs = Core.Shared.Gangs
 
@@ -437,6 +438,46 @@ function createBoxTarget(data, opts, dist)
     end
 end
 
+local circleTargets = {}
+function createCircleTarget(data, opts, dist)
+    if GetResourceState(OXTargetExport):find("start") then
+        if Config.System.Debug then
+            print("^6Bridge^7: ^2Creating new ^3Sphere^2 target with ^6"..OXTargetExport.." ^7"..data[1])
+        end
+        local options = {}
+        for i = 1, #opts do
+            options[i] = {
+                icon = opts[i].icon,
+                label = opts[i].label,
+                item = opts[i].item or nil,
+                groups = opts[i].job or opts[i].gang,
+                onSelect = opts[i].onSelect or opts[i].action,
+                canInteract = function(_, distance)
+                    return distance < dist and true or false
+                end
+            }
+        end
+        local target = exports[OXTargetExport]:addSphereZone({
+            coords = data[2],
+            radius = data[3],
+            debug = data[4].debugPoly,
+            options = options
+        })
+        circleTargets[#circleTargets+1] = target
+        return target
+    elseif GetResourceState(QBTargetExport):find("start") then
+        if Config.System.Debug then
+            print("^6Bridge^7: ^2Creating new ^3Circle^2 target with ^6"..QBTargetExport.." ^7"..data[1])
+        end
+        local options = { options = opts, distance = dist }
+
+        local target = exports[QBTargetExport]:AddCircleZone(data[1], data[2], data[3], data[4], options)
+
+        circleTargets[#circleTargets+1] = target
+        return target
+    end
+end
+
 function removeEntityTarget(entity)
     if GetResourceState(QBTargetExport):find("start") then exports[QBTargetExport]:RemoveTargetEntity(entity) end
     if GetResourceState(OXTargetExport):find("start") then exports[OXTargetExport]:removeLocalEntity(entity, nil) end
@@ -456,6 +497,10 @@ AddEventHandler('onResourceStop', function(r)
     for i = 1, #boxTargets do
         if GetResourceState(OXTargetExport):find("start") then exports[OXTargetExport]:removeZone(boxTargets[i], true)
         elseif GetResourceState(QBTargetExport):find("start") then exports[QBTargetExport]:RemoveZone(boxTargets[i].name) end
+    end
+    for i = 1, #circleTargets do
+        if GetResourceState(OXTargetExport):find("start") then exports[OXTargetExport]:removeZone(circleTargets[i], true)
+        elseif GetResourceState(QBTargetExport):find("start") then exports[QBTargetExport]:RemoveZone(circleTargets[i].name) end
     end
 end)
 
@@ -554,14 +599,14 @@ end
 -- Callbacks
 function createCallback(callbackName, funct)
     if GetResourceState(OXLibExport):find("start") then
-        if Config and Config.System.Debug then print("^6Bridge^7: ^2Registering ^3Callback^2 with ^7"..OXLibExport, callbackName) end
+        if Config.System.Debug then print("^6Bridge^7: ^2Registering ^3Callback^2 with ^7"..OXLibExport, callbackName) end
         lib.callback.register(callbackName, funct)
     elseif GetResourceState(QBExport):find("start") then
-        if Config and Config.System.Debug then print("^6Bridge^7: ^2Registering ^3Callback^2 with ^7"..QBExport, callbackName) end
-        Core = exports[QBExport]:GetCoreObject()
+        if Config.System.Debug then print("^6Bridge^7: ^2Registering ^3Callback^2 with ^7"..QBExport, callbackName) end
+        Core = Core or exports[QBExport]:GetCoreObject()
         Core.Functions.CreateCallback(callbackName, funct)
     elseif GetResourceState(ESXExport):find("start") then
-        if Config and Config.System.Debug then print("^6Bridge^7: ^2Registering ^3Callback^2 with ^7"..ESXExport, callbackName) end
+        if Config.System.Debug then print("^6Bridge^7: ^2Registering ^3Callback^2 with ^7"..ESXExport, callbackName) end
         ESX.RegisterServerCallback(callbackName, funct)
     else
         print("^6Bridge^7: ^1ERROR^7: ^3Can't find any script to register callback with", callbackName)
@@ -570,15 +615,15 @@ end
 
 function triggerCallback(callBackName, value) local result = nil
     if GetResourceState(OXLibExport):find("start") then
-        if Config and Config.System.Debug then print("^6Bridge^7: ^2Triggering ^3Callback^2 with ^7"..OXLibExport, callBackName) end
+        if Config.System.Debug then print("^6Bridge^7: ^2Triggering ^3Callback^2 with ^7"..OXLibExport, callBackName) end
         result = lib.callback.await(callBackName, false, value)
     elseif GetResourceState(QBExport):find("start") then
-        if Config and Config.System.Debug then print("^6Bridge^7: ^2Triggering ^3Callback^2 with ^7"..QBExport, callBackName) end
+        if Config.System.Debug then print("^6Bridge^7: ^2Triggering ^3Callback^2 with ^7"..QBExport, callBackName) end
         local p = promise.new()
         Core.Functions.TriggerCallback(callBackName, function(cb) p:resolve(cb) end, value)
         result = Citizen.Await(p)
     elseif GetResourceState(ESXExport):find("start") then
-        if Config and Config.System.Debug then print("^6Bridge^7: ^2Triggering ^3Callback^2 with ^7"..ESXExport, callBackName) end
+        if Config.System.Debug then print("^6Bridge^7: ^2Triggering ^3Callback^2 with ^7"..ESXExport, callBackName) end
         local p = promise.new()
         ESX.TriggerServerCallback(callBackName, function(cb) p:resolve(cb) end, value)
         result = Citizen.Await(p)
@@ -606,16 +651,17 @@ end
 function createInput(title, opts)
     local dialog = nil
     local options = {}
-    if Config.Input.Menu == "ox" then
+    if Config.System.Menu == "ox" then
         for i = 1, #opts do
             if opts[i].type == "radio" then
                 for k in pairs(opts[i].options) do
                     opts[i].options[k].label = opts[i].options[k].text
+                    print(opts[i].options[k].text)
                 end
                 options[i] = {
                     type = "select",
                     isRequired = opts[i].isRequired,
-                    label = opts[i].label,
+                    label = opts[i].label or opts[i].text,
                     name = opts[i].name,
                     default = opts[i].options[1].value,
                     options = opts[i].options,
@@ -624,7 +670,16 @@ function createInput(title, opts)
             if opts[i].type == "number" then
                 options[i] = {
                     type = "number",
-                    label = opts[i].text.." - "..opts[i].txt,
+                    label = opts[i].text ..(opts[i].txt and " - "..opts[i].txt or ""),
+                    isRequired = opts[i].isRequired,
+                    name = opts[i].name,
+                    options = opts[i].options,
+                }
+            end
+            if opts[i].type == "select" then
+                options[i] = {
+                    type = "select",
+                    label = opts[i].text ..(opts[i].txt and " - "..opts[i].txt or ""),
                     isRequired = opts[i].isRequired,
                     name = opts[i].name,
                     options = opts[i].options,
@@ -637,11 +692,11 @@ function createInput(title, opts)
         dialog = exports[OXLibExport]:inputDialog(title, options)
         return dialog
     end
-    if Config.Input.Menu == "qb" then
-        dialog = exports['qb-input']:ShowInput({ header = title, submitText = "Pay", inputs = opts })
+    if Config.System.Menu == "qb" then
+        dialog = exports['qb-input']:ShowInput({ header = title, submitText = "Accept", inputs = opts })
         return dialog
     end
-    if Config.Input.Menu == "gta" then
+    if Config.System.Menu == "gta" then
         WarMenu.CreateMenu(tostring(opts),
         title,
         " ",

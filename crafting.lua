@@ -1,7 +1,9 @@
-if GetResourceState(OXLibExport):find("start") then
-    createCallback(GetCurrentResourceName()..':server:GetStashItems', function(source, stashName) local stash = getStash(stashName) return stash end)
-else
-    createCallback(GetCurrentResourceName()..':server:GetStashItems', function(source, cb, stashName) local stash = getStash(stashName) cb(stash) end)
+if IsDuplicityVersion() then
+    if GetResourceState(OXLibExport):find("start") then
+        createCallback(GetCurrentResourceName()..':server:GetStashItems', function(source, stashName) local stash = getStash(stashName) return stash end)
+    else
+        createCallback(GetCurrentResourceName()..':server:GetStashItems', function(source, cb, stashName) local stash = getStash(stashName) cb(stash) end)
+    end
 end
 
 local timeout = 0
@@ -216,7 +218,7 @@ function openShop(data)
     if GetResourceState(OXInv):find("start") then
         exports[OXInv]:openInventory('shop', { type = data.shop })
     else
-        TriggerServerEvent(Config.JimShops and "jim-shops:ShopOpen" or "inventory:server:OpenInventory", "shop", data.shop, data.items)
+        TriggerServerEvent(Config.General.JimShops and "jim-shops:ShopOpen" or "inventory:server:OpenInventory", "shop", data.items.label, data.items)
     end
 	lookEnt(data.coords)
 end

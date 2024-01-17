@@ -1,6 +1,6 @@
 name "Jim_Bridge"
 author "Jimathy"
-version "help"
+version "alpha"
 description "Framework Bridge By Jimathy"
 fx_version "cerulean"
 game "gta5"

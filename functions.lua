@@ -94,6 +94,12 @@ function makeProp(data, freeze, synced)
 	return prop
 end
 
+function cv(amount)
+    local formatted = amount
+    while true do formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2') if (k==0) then break end Wait(0) end
+    return formatted
+end
+
 AddEventHandler('onResourceStop', function(r)
     if r ~= GetCurrentResourceName() then return end
 	stopSpinner()
@@ -211,7 +217,12 @@ function createTempCam(ent, coords)
 		if Config.System.Debug then
 			triggerNotify(nil, "ModCam Created", "success")
 		end
-		local camCoords = GetOffsetFromEntityInWorldCoords(ent, 1.2, -0.3, 0.8)
+		local camCoords = nil
+		if type(ent) ~= "vector3" then
+			camCoords = GetOffsetFromEntityInWorldCoords(ent, 1.2, -0.3, 0.8)
+		else
+			camCoords = ent
+		end
 		--local pedCoords = GetEntityCoords(PlayerPedId())
 		cam = CreateCamWithParams("DEFAULT_SCRIPTED_CAMERA", camCoords.x, camCoords.y, camCoords.z+0.5, 1.0, 0.0, 0.0, 60.00, false, 0)
 		PointCamAtCoord(cam, coords)
@@ -276,6 +287,9 @@ function progressBar(data)
 			lockInv(false)
 			if data.cam then stopTempCam(data.cam) end
 		end
+
+		exports["esx_progressbar"]:Progressbar(message, length, Options)
+
 	elseif Config.System.ProgressBar == "qb" then
 		Core.Functions.Progressbar("mechbar",
 			data.label,
@@ -297,10 +311,35 @@ function progressBar(data)
 					stopTempCam(data.cam)
 				end
 			end, data.icon)
-	elseif Config.System.ProgressBar == "gta" then
 
-		--local wait, inProgress = (Config.System.Debug and 1000 or data.time), true
-		local wait = data.time
+	elseif Config.System.ProgressBar == "esx" then
+		ESX.Progressbar(data.label, Config.System.Debug and 1000 or data.time, {
+			FreezePlayer = true,
+			animation ={
+				type =data.anim,
+				dict = data.dict,
+				scenario = data.task,
+			},
+			onFinish = function()
+				result = true
+				FreezeEntityPosition(PlayerPedId(), false)
+				lockInv(false)
+				if data.cam then
+					stopTempCam(data.cam)
+				end
+			end, onCancel = function()
+				result = false
+				FreezeEntityPosition(PlayerPedId(), false)
+				lockInv(false)
+				if data.cam then
+					stopTempCam(data.cam)
+				end
+			end
+		})
+
+	elseif Config.System.ProgressBar == "gta" then
+		local wait, inProgress = (Config.System.Debug and 1000 or data.time), true
+		--local wait = data.time
 		inProgress = true
 		if not (data.dead and data.dead or false) then
 			lockInv(true)
