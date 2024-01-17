@@ -308,7 +308,7 @@ function hasItem(items, amount, src) local amount, count = amount and amount or 
             else if Config.System.Debug then print("^6Bridge^7: ^3HasItem^7: ^2"..tostring(items).." ^1NOT FOUND^7") end return false end
 
         elseif GetResourceState(QSInv):find("start") then
-            for _, itemData in pairs(exports[QSInv]:GetInventory()) do
+            for _, itemData in pairs(exports[QSInv]:getUserInventory()) do
                 if itemData and (itemData.name == items) then
                     if Config.System.Debug then print("^6Bridge^7: ^3HasItem^7: ^2Item^7: '^3"..tostring(items).."^7' ^2Slot^7: ^3"..itemData.slot.." ^7x(^3"..tostring(itemData.amount).."^7)") end
                     count += (itemData.amount or 1)
