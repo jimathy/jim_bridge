@@ -60,7 +60,7 @@ end
 
 -- Load Vehicles
 if GetResourceState(QBXExport):find("start") then
-    Core = Core or exports[QBXExport]:GetCoreObject()
+    Core = Core or exports[QBExport]:GetCoreObject()
     print("^6Bridge^7: ^2Loading ^3Vehicles^2 from ^7"..QBXExport)
     Vehicles = exports[QBXExport]:GetVehiclesByHash()
 elseif GetResourceState(QBExport):find("start") then
@@ -937,11 +937,29 @@ function setVehicleProperties(vehicle, props)
         format(vehicle))
     end
     if GetResourceState(OXLibExport):find("start") then
-        lib.setVehicleProperties(vehicle, props)
+        TriggerServerEvent(GetCurrentResourceName()..":ox:setVehicleProperties", VehToNet(vehicle), props)
     elseif GetResourceState(QBExport):find("start") then
         Core.Functions.SetVehicleProperties(vehicle, props)
     end
 end
+
+RegisterNetEvent(GetCurrentResourceName()..":ox:setVehicleProperties", function(netId, props)
+    local vehicle = NetworkGetEntityFromNetworkId(netId)
+    local value = props
+    Entity(vehicle).state[GetCurrentResourceName()..':setVehicleProperties'] = value
+end)
+
+AddStateBagChangeHandler(GetCurrentResourceName()..':setVehicleProperties', '', function(bagName, _, value)
+    if not value or not GetEntityFromStateBagName then return end
+    local entity = GetEntityFromStateBagName(bagName)
+    local networked = not bagName:find('localEntity')
+
+    if networked and NetworkGetEntityOwner(entity) ~= cache.playerId then return end
+
+    if lib.setVehicleProperties(entity, value) then
+        Entity(entity).state:set('setVehicleProperties', nil, true)
+    end
+end)
 
 RegisterNetEvent(GetCurrentResourceName()..":server:ChargePlayer", function(cost, type) local src = source
     if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type) end
