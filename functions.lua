@@ -614,12 +614,11 @@ function dupeWarn(src, item)
     if Config.System.Debug == false then
         DropPlayer(src, src.." ^1Kicked for attempting to duplicate items")
     end
-    print("^5DupeWarn:^7: (^1"..tostring(src).."^7) ^2Dropped from server for item duplicating^7")
+    print("^5DupeWarn:^7: (^1"..tostring(src).."^7) ^2Dropped from server - exploit protection detected an item not being found in players inventory^7")
 end
 
-
 function toggleDuty()
-	if GetResourceState(QBExport):find("start") then
+	if GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then
 		TriggerServerEvent("QBCore:ToggleDuty")
 	else
 		onDuty = not onDuty
