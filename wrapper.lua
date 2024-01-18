@@ -1083,12 +1083,21 @@ function getPlayer(source) local Player = {}
                 bank = info.Functions.GetMoney("bank"),
             }
         elseif GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
-            local info = exports[QBExport]:GetPlayer(src)
-            Player = {
-                name = info.PlayerData.charinfo.firstname.." "..info.PlayerData.charinfo.lastname,
-                cash = info.PlayerData.money["cash"],
-                bank = info.PlayerData.money["bank"],
-            }
+            if Core.Functions.GetPlayer ~= nil then -- support older qb-core functions
+                local info = Core.Functions.GetPlayer(src).PlayerData
+                Player = {
+                    name = info.charinfo.firstname.." "..info.charinfo.lastname,
+                    cash = info.money["cash"],
+                    bank = info.money["bank"],
+                }
+            else
+                local info = exports[QBExport]:GetPlayer(src).PlayerData
+                Player = {
+                    name = info.charinfo.firstname.." "..info.charinfo.lastname,
+                    cash = info.money["cash"],
+                    bank = info.money["bank"],
+                }
+            end
         end
     else
         if GetResourceState(ESXExport):find("start") and ESX ~= nil then
