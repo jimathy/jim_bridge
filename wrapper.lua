@@ -60,7 +60,7 @@ end
 
 -- Load Vehicles
 if GetResourceState(QBXExport):find("start") then
-    Core = Core or exports[QBExport]:GetCoreObject()
+    Core = Core or exports[QBXExport]:GetCoreObject()
     print("^6Bridge^7: ^2Loading ^3Vehicles^2 from ^7"..QBXExport)
     Vehicles = exports[QBXExport]:GetVehiclesByHash()
 elseif GetResourceState(QBExport):find("start") then
@@ -560,12 +560,7 @@ if not GetResourceState(OXTargetExport):find("start") and not GetResourceState(Q
             local pedCoords = GetEntityCoords(PlayerPedId())
             for k, v in pairs (TextTargets) do
                 if #(pedCoords - v.coords) <= v.dist then
-                    DrawText3D(
-                        v.coords.x,
-                        v.coords.y,
-                        v.coords.z + 1.0,
-                        v.buttontext
-                    )
+                    DrawText3D(v.coords.x, v.coords.y, v.coords.z + 1.0, v.buttontext)
                     for i = 1, #v.options do
                         if IsControlJustPressed(0, v.options[i].key) then
                             if  v.options[i].onSelect then  v.options[i].onSelect() end
@@ -739,7 +734,6 @@ function onPlayerLoaded(func)
         print("^4ERROR^7: ^2No Core detected for onPlayerLoaded ^7- ^2Check ^3exports^1.^2lua^7")
     end
 end
-
 
 -- INPUT --
 function createInput(title, opts)
@@ -990,7 +984,7 @@ function createUseableItem(item, funct)
     end
 end
 
-function hasJob(job, source, grade) local hasJob = false
+function hasJob(job, source, grade) local hasJob, duty = false, true
     if source then
         local src = tonumber(source)
         if GetResourceState(ESXExport):find("start") then
@@ -1012,16 +1006,19 @@ function hasJob(job, source, grade) local hasJob = false
         elseif GetResourceState(QBXExport):find("start") then
             local jobinfo = exports[QBXExport]:GetPlayer(src).PlayerData.job
             if jobinfo.name == job then hasJob = true
+                duty = exports[QBXExport]:GetPlayer(src).PlayerData.job.onduty
                 if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
             end
             local ganginfo = exports[QBXExport]:GetPlayer(src).PlayerData.gang
             if ganginfo.name == job then hasJob = true
                 if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
             end
+
         elseif GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
             if Core.Functions.GetPlayer then -- support older qb-core functions
                 local jobinfo = Core.Functions.GetPlayer(src).PlayerData.job
                 if jobinfo.name == job then hasJob = true
+                    duty = Core.Functions.GetPlayer(src).PlayerData.job.onduty
                     if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
                 end
                 local ganginfo = Core.Functions.GetPlayer(src).PlayerData.gang
@@ -1031,6 +1028,7 @@ function hasJob(job, source, grade) local hasJob = false
             else -- support newer qb-core exports
                 local jobinfo = exports[QBExport]:GetPlayer(src).PlayerData.job
                 if jobinfo.name == job then hasJob = true
+                    duty = exports[QBExport]:GetPlayer(src).PlayerData.job.onduty
                     if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
                 end
                 local ganginfo = exports[QBExport]:GetPlayer(src).PlayerData.gang
@@ -1059,6 +1057,7 @@ function hasJob(job, source, grade) local hasJob = false
         elseif GetResourceState(QBXExport):find("start") then
             local jobinfo = QBX.PlayerData.job
             if jobinfo.name == job then hasJob = true
+                duty = QBX.PlayerData.job.onduty
                 if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
             end
             local ganginfo = QBX.PlayerData.gang
@@ -1071,8 +1070,8 @@ function hasJob(job, source, grade) local hasJob = false
                 info = PlayerData
             end)
             local jobinfo = info.job
-            if jobinfo.name == job then
-                hasJob = true
+            if jobinfo.name == job then hasJob = true
+                duty = jobinfo.onduty
                 if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
             end
             local ganginfo = info.gang
@@ -1084,7 +1083,7 @@ function hasJob(job, source, grade) local hasJob = false
             print("^4ERROR^7: ^2No Core detected for hasJob() ^7- ^2Check ^3exports^1.^2lua^7")
         end
     end
-    return hasJob
+    return hasJob, duty
 end
 
 function getPlayer(source) local Player = {}
