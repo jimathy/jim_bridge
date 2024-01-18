@@ -60,7 +60,7 @@ end
 
 -- Load Vehicles
 if GetResourceState(QBXExport):find("start") then
-    Core = Core or exports[QBExport]:GetCoreObject()
+    Core = Core or exports[QBXExport]:GetCoreObject()
     print("^6Bridge^7: ^2Loading ^3Vehicles^2 from ^7"..QBXExport)
     Vehicles = exports[QBXExport]:GetVehiclesByHash()
 elseif GetResourceState(QBExport):find("start") then
