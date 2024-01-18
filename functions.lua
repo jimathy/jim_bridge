@@ -558,12 +558,24 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
 		if hasItem(item, amount and amount or 1, src) then -- check if you still have the item
             if GetResourceState(OXInv):find("start") then
                 local success = exports[OXInv]:RemoveItem(src, item, (amount and amount or 1), nil)
+				if Config.System.Debug then
+					print("^6Bridge^7: ^1Removing ^2from Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) - '"..OXInv)
+				end
             elseif GetResourceState(QSInv):find("start") then
                 local success = exports[QSInv]:RemoveItem(src, item, amount)
+				if Config.System.Debug then
+					print("^6Bridge^7: ^1Removing ^2from Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) - '"..QSInv)
+				end
             elseif GetResourceState(CoreInv):find("start") then
                 local success = exports[CoreInv]:removeItemExact('primary-'..src, item, amount)
+				if Config.System.Debug then
+					print("^6Bridge^7: ^1Removing ^2from Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) - '"..CoreInv)
+				end
             elseif GetResourceState(CodeMInv):find("start") then
                 local success = exports[CodeMInv]:RemoveItem(src, item, amount)
+				if Config.System.Debug then
+					print("^6Bridge^7: ^1Removing ^2from Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) - '"..CodeMInv)
+				end
             elseif GetResourceState(QBInv):find("start") then
 				while remamount > 0 do
                     if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1) then end
@@ -572,10 +584,12 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
 				if Config.Crafting.showItemBox then
                     TriggerClientEvent('inventory:client:ItemBox', src, Items[item], "remove", (amount and amount or 1))
                 end
+				if Config.System.Debug then
+					print("^6Bridge^7: ^1Removing ^2from Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) - '"..QBInv)
+				end
+			else
+				print("^4Error^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
 			end
-			if Config.System.Debug then
-                print("^6Bridge^7: ^1Removing ^2from Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7)'")
-            end
 		else
             dupeWarn(src, item) -- if not boot the player
         end
@@ -584,26 +598,34 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
         if GetResourceState(OXInv):find("start") then
 			local success = exports[OXInv]:AddItem(src, item, amount or 1, nil)
 			if Config.System.Debug then
-                print("^6Bridge^7: ^4Giving ^2Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) ^1OX^7'")
+                print("^6Bridge^7: ^4Giving ^2Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) ^7"..OXInv)
             end
 		elseif GetResourceState(QSInv):find("start") then
             local success = exports[QSInv]:AddItem(src, item, amount)
             if Config.System.Debug then
-                print("^6Bridge^7: ^4Giving ^2Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) ^1QS^7'")
+                print("^6Bridge^7: ^4Giving ^2Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) ^7"..QSInv)
             end
 		elseif GetResourceState(CoreInv):find("start") then
             local success = exports[CoreInv]:addItem('primary-'..src, item, amount)
             if Config.System.Debug then
-                print("^6Bridge^7: ^4Giving ^2Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) ^1Core^7'")
+                print("^6Bridge^7: ^4Giving ^2Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) ^7"..CoreInv)
             end
         elseif GetResourceState(CodeMInv):find("start") then
             local success = exports[CodeMInv]:AddItem(src, item, amount)
-        elseif GetResourceState(QBInv):find("start") then
+			if Config.System.Debug then
+                print("^6Bridge^7: ^4Giving ^2Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) ^7"..CodeMInv)
+            end
+		elseif GetResourceState(QBInv):find("start") then
 			if Core.Functions.GetPlayer(src).Functions.AddItem(item, amount or 1) then
 				--if Config.Crafting.showItemBox then
                     TriggerClientEvent("inventory:client:ItemBox", src, Items[item], "add", amount and amount or 1)
                 --end
 			end
+			if Config.System.Debug then
+                print("^6Bridge^7: ^4Giving ^2Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) ^7"..QBInv)
+            end
+		else
+			print("^4Error^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
 		end
 	end
 end)
@@ -614,12 +636,11 @@ function dupeWarn(src, item)
     if Config.System.Debug == false then
         DropPlayer(src, src.." ^1Kicked for attempting to duplicate items")
     end
-    print("^5DupeWarn:^7: (^1"..tostring(src).."^7) ^2Dropped from server for item duplicating^7")
+    print("^5DupeWarn:^7: (^1"..tostring(src).."^7) ^2Dropped from server - exploit protection detected an item not being found in players inventory^7")
 end
 
-
 function toggleDuty()
-	if GetResourceState(QBExport):find("start") then
+	if GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then
 		TriggerServerEvent("QBCore:ToggleDuty")
 	else
 		onDuty = not onDuty
@@ -633,12 +654,21 @@ end
 
 local function CheckVersion()
 	if IsDuplicityVersion() then
+		local currentVersion = "^3"..GetResourceMetadata(GetCurrentResourceName(), 'version'):gsub("%.", "^7.^3").."^7"
 		PerformHttpRequest('https://raw.githubusercontent.com/jimathy/UpdateVersions/master/'..GetCurrentResourceName()..'.txt', function(err, newestVersion, headers)
-			if not newestVersion then print("Currently unable to run a version check.") return end
-			local currentVersion = "^3"..GetResourceMetadata(GetCurrentResourceName(), 'version'):gsub("%.", "^7.^3").."^7"
-			newestVersion = "^3"..newestVersion:sub(1, -2):gsub("%.", "^7.^3").."^7"
-			print("^6Version Check^7: ^2Running^7: "..currentVersion.." ^2Latest^7: "..newestVersion)
-			print(newestVersion == currentVersion and '^6You are running the latest version.^7 ('..currentVersion..')' or "^1You are currently running an outdated version^7, ^1please update^7!")
+			if not newestVersion then
+				PerformHttpRequest('https://raw.githubusercontent.com/jimathy/'..GetCurrentResourceName()..'/master/version.txt', function(err, freeVersion, headers)
+					if not freeVersion then print("^1Currently unable to run a version check for ^7'^3"..GetCurrentResourceName().."^7' ("..currentVersion.."^7)") return end
+					local currentVersion = "^3"..GetResourceMetadata(GetCurrentResourceName(), 'version'):gsub("%.", "^7.^3").."^7"
+					freeVersion = "^3"..freeVersion:sub(1, -2):gsub("%.", "^7.^3").."^7"
+					print("^6Version Check^7: ^2Running^7: "..currentVersion.." ^2Latest^7: "..freeVersion)
+					print(freeVersion == currentVersion and "^7'^3"..GetCurrentResourceName().."^7' - ^6You are running the latest version.^7 ("..currentVersion..")" or "^7'^3"..GetCurrentResourceName().."^7' - ^1You are currently running an outdated version^7, ^1please update^7!")
+				end)
+			else
+				newestVersion = "^3"..newestVersion:sub(1, -2):gsub("%.", "^7.^3").."^7"
+				print("^6Version Check^7: ^2Running^7: "..currentVersion.." ^2Latest^7: "..newestVersion)
+				print(newestVersion == currentVersion and '^6You are running the latest version.^7 ('..currentVersion..')' or "^1You are currently running an outdated version^7, ^1please update^7!")
+			end
 		end)
 	end
 end
