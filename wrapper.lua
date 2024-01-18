@@ -22,7 +22,7 @@ for k, v in pairs(Exports) do
     if GetResourceState(v):find("start") then print("^6Bridge^7: '^3"..v.."^7' ^2export found ^7") end
 end
 
--- Load item lists from qb-core or ox_lib
+-- Load item lists
 if GetResourceState(OXInv):find("start") then
     print("^6Bridge^7: ^2Loading ^3Items^2 from ^7"..OXInv)
     Items = exports[OXInv]:Items()
@@ -42,6 +42,8 @@ elseif GetResourceState(ESXExport):find("start") then
     print("^6Bridge^7: ^2Loading ^3Items^2 from ^7"..ESXExport)
     ESX = exports[ESXExport]:getSharedObject()
     Items = ESX.Items
+else
+    print("^4ERROR^7: ^2No Core Items detected ^7- ^2Check ^3exports^1.^2lua^7")
 end
 
 -- Load Vehicles
@@ -79,6 +81,8 @@ elseif GetResourceState(ESXExport):find("start") then
             end
         end
     end)
+else
+    print("^4ERROR^7: ^2No Vehicle info detected ^7- ^2Check ^3exports^1.^2lua^7")
 end
 
 -- Load Jobs
@@ -137,6 +141,8 @@ elseif GetResourceState(ESXExport):find("start") then
             Gangs = Jobs
         end
     end)
+else
+    print("^4ERROR^7: ^2No Job/Gang ifo detected ^7- ^2Check ^3exports^1.^2lua^7")
 end
 
 function makeBossRoles(role)
@@ -179,6 +185,8 @@ function createPoly(data) local Location = nil
                 data.onExit()
             end
         end)
+    else
+        print("^4ERROR^7: ^2No PolyZone creation script detected ^7- ^2Check ^3exports^1.^2lua^7")
     end
 end
 
@@ -196,6 +204,8 @@ function createCirclePoly(data) local Location = nil
                 data.onExit()
             end
         end)
+    else
+        print("^4ERROR^7: ^2No PolyZone creation script detected ^7- ^2Check ^3exports^1.^2lua^7")
     end
 end
 
@@ -713,8 +723,11 @@ function onPlayerLoaded(func)
     elseif GetResourceState(OXCoreExport):find("start") then
         if Config.System.Debug then print("^6Bridge^7: ^2Registering ^3onPlayerLoaded^2 with ^7"..OXLibExport) end
         AddEventHandler('ox:playerLoaded', func)
+    else
+        print("^4ERROR^7: ^2No Core detected for onPlayerLoaded ^7- ^2Check ^3exports^1.^2lua^7")
     end
 end
+
 
 -- INPUT --
 function createInput(title, opts)
@@ -929,19 +942,24 @@ RegisterNetEvent(GetCurrentResourceName()..":server:ChargePlayer", function(cost
     if type == "cash" then
         if GetResourceState(OXInv):find("start") then
             exports[OXInv]:RemoveItem(src, "money", cost)
+            if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type, OXInv) end
         elseif GetResourceState(QBExport):find("start") then
             Core.Functions.GetPlayer(src).Functions.RemoveMoney("cash", cost)
+            if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type, QBExport) end
         elseif GetResourceState(ESXExport):find("start") then
             local Player = ESX.GetPlayerFromId(src)
             Player.removeMoney(cost, "")
+            if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type, ESXExport) end
         end
     end
     if type == "bank" then
         if GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then
             Core.Functions.GetPlayer(src).Functions.RemoveMoney("bank", cost)
+            if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type, QBExport) end
         elseif GetResourceState(ESXExport):find("start") then
             local Player = ESX.GetPlayerFromId(src)
             Player.removeMoney(cost, "")
+            if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type, ESXExport) end
         end
     end
 end)
@@ -1008,6 +1026,8 @@ function hasJob(job, source, grade) local hasJob = false
                     if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
                 end
             end
+        else
+            print("^4ERROR^7: ^2No Core detected for hasJob ^7- ^2Check ^3exports^1.^2lua^7")
         end
     else
         if GetResourceState(ESXExport):find("start") then
@@ -1033,7 +1053,7 @@ function hasJob(job, source, grade) local hasJob = false
             if ganginfo.name == job then hasJob = true
                 if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
             end
-        elseif GetResourceState(QBXExport):find("start") and not GetResourceState(QBXExport):find("start") then
+        elseif GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
             local info = nil
             Core.Functions.GetPlayerData(function(PlayerData)
                 info = PlayerData
@@ -1048,6 +1068,8 @@ function hasJob(job, source, grade) local hasJob = false
                 hasJob = true
                 if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
             end
+        else
+            print("^4ERROR^7: ^2No Core detected for hasJob() ^7- ^2Check ^3exports^1.^2lua^7")
         end
     end
     return hasJob
@@ -1098,6 +1120,8 @@ function getPlayer(source) local Player = {}
                     bank = info.money["bank"],
                 }
             end
+        else
+            print("^4ERROR^7: ^2No Core detected for getPlayer() ^7- ^2Check ^3exports^1.^2lua^7")
         end
     else
         if GetResourceState(ESXExport):find("start") and ESX ~= nil then
@@ -1134,6 +1158,8 @@ function getPlayer(source) local Player = {}
                 cash = info.money["cash"],
                 bank = info.money["bank"],
             }
+        else
+            print("^4ERROR^7: ^2No Core detected for hasJob ^7- ^2Check ^3exports^1.^2lua^7")
         end
     end
     return Player
@@ -1160,6 +1186,8 @@ function invImg(item)
             imgLink = "nui://"..CoreInv.."/html/img/"..(Items[item].image or "")
         elseif GetResourceState(QBInv and QBInv or ""):find("start") then
             imgLink = "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
+        else
+            print("^4ERROR^7: ^2No Inventory detected for invImg ^7- ^2Check ^3exports^1.^2lua^7")
         end
     end
     return imgLink

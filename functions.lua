@@ -558,12 +558,24 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
 		if hasItem(item, amount and amount or 1, src) then -- check if you still have the item
             if GetResourceState(OXInv):find("start") then
                 local success = exports[OXInv]:RemoveItem(src, item, (amount and amount or 1), nil)
+				if Config.System.Debug then
+					print("^6Bridge^7: ^1Removing ^2from Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) - '"..OXInv)
+				end
             elseif GetResourceState(QSInv):find("start") then
                 local success = exports[QSInv]:RemoveItem(src, item, amount)
+				if Config.System.Debug then
+					print("^6Bridge^7: ^1Removing ^2from Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) - '"..QSInv)
+				end
             elseif GetResourceState(CoreInv):find("start") then
                 local success = exports[CoreInv]:removeItemExact('primary-'..src, item, amount)
+				if Config.System.Debug then
+					print("^6Bridge^7: ^1Removing ^2from Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) - '"..CoreInv)
+				end
             elseif GetResourceState(CodeMInv):find("start") then
                 local success = exports[CodeMInv]:RemoveItem(src, item, amount)
+				if Config.System.Debug then
+					print("^6Bridge^7: ^1Removing ^2from Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) - '"..CodeMInv)
+				end
             elseif GetResourceState(QBInv):find("start") then
 				while remamount > 0 do
                     if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1) then end
@@ -572,10 +584,12 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
 				if Config.Crafting.showItemBox then
                     TriggerClientEvent('inventory:client:ItemBox', src, Items[item], "remove", (amount and amount or 1))
                 end
+				if Config.System.Debug then
+					print("^6Bridge^7: ^1Removing ^2from Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) - '"..QBInv)
+				end
+			else
+				print("^4Error^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
 			end
-			if Config.System.Debug then
-                print("^6Bridge^7: ^1Removing ^2from Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7)'")
-            end
 		else
             dupeWarn(src, item) -- if not boot the player
         end
@@ -584,26 +598,34 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
         if GetResourceState(OXInv):find("start") then
 			local success = exports[OXInv]:AddItem(src, item, amount or 1, nil)
 			if Config.System.Debug then
-                print("^6Bridge^7: ^4Giving ^2Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) ^1OX^7'")
+                print("^6Bridge^7: ^4Giving ^2Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) ^7"..OXInv)
             end
 		elseif GetResourceState(QSInv):find("start") then
             local success = exports[QSInv]:AddItem(src, item, amount)
             if Config.System.Debug then
-                print("^6Bridge^7: ^4Giving ^2Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) ^1QS^7'")
+                print("^6Bridge^7: ^4Giving ^2Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) ^7"..QSInv)
             end
 		elseif GetResourceState(CoreInv):find("start") then
             local success = exports[CoreInv]:addItem('primary-'..src, item, amount)
             if Config.System.Debug then
-                print("^6Bridge^7: ^4Giving ^2Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) ^1Core^7'")
+                print("^6Bridge^7: ^4Giving ^2Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) ^7"..CoreInv)
             end
         elseif GetResourceState(CodeMInv):find("start") then
             local success = exports[CodeMInv]:AddItem(src, item, amount)
-        elseif GetResourceState(QBInv):find("start") then
+			if Config.System.Debug then
+                print("^6Bridge^7: ^4Giving ^2Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) ^7"..CodeMInv)
+            end
+		elseif GetResourceState(QBInv):find("start") then
 			if Core.Functions.GetPlayer(src).Functions.AddItem(item, amount or 1) then
 				--if Config.Crafting.showItemBox then
                     TriggerClientEvent("inventory:client:ItemBox", src, Items[item], "add", amount and amount or 1)
                 --end
 			end
+			if Config.System.Debug then
+                print("^6Bridge^7: ^4Giving ^2Player^7(^2"..src.."^7) '^6"..Items[item].label.."^7(^2x^6"..((amount and amount or "1")).."^7) ^7"..QBInv)
+            end
+		else
+			print("^4Error^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
 		end
 	end
 end)
