@@ -456,7 +456,7 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
         if Config.System.Debug then
             print("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName.."^7'")
         end
-    else
+    elseif GetResourceState(QBInv):find("start") then
         for k, v in pairs(items) do
             for l in pairs(stashItems) do
                 if stashItems[l].name == k then
@@ -478,6 +478,8 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
             print("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName.."^7'")
         end
         MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', { ['stash'] = stashName, ['items'] = json.encode(stashItems) })
+    else
+        print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
     end
 end
 RegisterNetEvent(GetCurrentResourceName()..":server:stashRemoveItem", stashRemoveItem)
