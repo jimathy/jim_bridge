@@ -1083,12 +1083,21 @@ function getPlayer(source) local Player = {}
                 bank = info.Functions.GetMoney("bank"),
             }
         elseif GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
-            local info = exports[QBExport]:GetPlayer(src)
-            Player = {
-                name = info.PlayerData.charinfo.firstname.." "..info.PlayerData.charinfo.lastname,
-                cash = info.PlayerData.money["cash"],
-                bank = info.PlayerData.money["bank"],
-            }
+            if Core.Functions.GetPlayer ~= nil then -- support older qb-core functions
+                local info = Core.Functions.GetPlayer(src).PlayerData
+                Player = {
+                    name = info.charinfo.firstname.." "..info.charinfo.lastname,
+                    cash = info.money["cash"],
+                    bank = info.money["bank"],
+                }
+            else
+                local info = exports[QBExport]:GetPlayer(src).PlayerData
+                Player = {
+                    name = info.charinfo.firstname.." "..info.charinfo.lastname,
+                    cash = info.money["cash"],
+                    bank = info.money["bank"],
+                }
+            end
         end
     else
         if GetResourceState(ESXExport):find("start") and ESX ~= nil then
@@ -1144,13 +1153,13 @@ function invImg(item)
     local imgLink = ""
     if item ~= "" and Items[item] then
         if GetResourceState(OXInv):find("start") then
-            imgLink = "nui://"..OXInv.."/web/images/"..Items[item].image
+            imgLink = "nui://"..OXInv.."/web/images/"..(Items[item].image or "")
         elseif GetResourceState(QSInv and QSInv or ""):find("start") then
-            imgLink = "nui://"..QSInv.."/html/images/"..Items[item].image
+            imgLink = "nui://"..QSInv.."/html/images/"..(Items[item].image or "")
         elseif GetResourceState(CoreInv and CoreInv or ""):find("start") then
-            imgLink = "nui://"..CoreInv.."/html/img/"..Items[item].image
+            imgLink = "nui://"..CoreInv.."/html/img/"..(Items[item].image or "")
         elseif GetResourceState(QBInv and QBInv or ""):find("start") then
-            imgLink = "nui://"..QBInv.."/html/images/"..Items[item].image
+            imgLink = "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
         end
     end
     return imgLink
