@@ -39,6 +39,7 @@ function craftingMenu(data) local hasjob = false
 	for i = 1, #Recipes do
 		for k, v in pairs(Recipes[i]) do
 			if k ~= "amount" and k ~= "job" and k ~= "gang" then
+                if not Recipes[i]["amount"] then Recipes[i]["amount"] = 1 end
                 if Recipes[i].job then hasjob = false
 					for l, b in pairs(Recipes[i].job) do
 						hasjob = hasJob(l, nil, b)
