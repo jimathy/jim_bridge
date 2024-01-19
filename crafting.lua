@@ -403,12 +403,11 @@ RegisterNetEvent(GetCurrentResourceName()..":server:stashRemoveItem", stashRemov
 function stashhasItem(stashItems, items, amount)
     local foundInv = ""
     if type(items) ~= "table" then items = { [items] = amount and amount or 1, } end
-
     local hasTable = {}
     for item, amount in pairs(items) do
         local count = 0
         for _, itemData in pairs(stashItems) do
-            if itemData and (itemData.name == k) then
+            if itemData and (itemData.name == item) then
                 count += (itemData.amount or 1)
             end
         end
