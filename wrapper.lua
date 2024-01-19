@@ -939,6 +939,7 @@ function setVehicleProperties(vehicle, props)
     if GetResourceState(OXLibExport):find("start") then
         TriggerServerEvent(GetCurrentResourceName()..":ox:setVehicleProperties", VehToNet(vehicle), props)
     elseif GetResourceState(QBExport):find("start") then
+        if Config.System.Debug then print("^6Bridge^7: ^2Setting Vehicle Properties ^7'^3"..vehicle.."'^7 - '^3"..GetEntityModel(vehicle).."^7' - '^3"..props.plate.."^7") end
         Core.Functions.SetVehicleProperties(vehicle, props)
     end
 end
@@ -953,6 +954,7 @@ AddStateBagChangeHandler(GetCurrentResourceName()..':setVehicleProperties', '', 
     if not value or not GetEntityFromStateBagName then return end
     local entity = GetEntityFromStateBagName(bagName)
     local networked = not bagName:find('localEntity')
+    if Config.System.Debug then print("^6Bridge^7: ^2Setting Vehicle Properties ^7[^3"..entity.."]^7 - [^3"..GetEntityModel(entity).."^7] - [^3"..value.plate.."^7]") end
 
     if networked and NetworkGetEntityOwner(entity) ~= cache.playerId then return end
 
