@@ -154,12 +154,14 @@ function lookEnt(entity) local ped = PlayerPedId()
 end
 
 function destroyProp(entity)
-	if Config.System.Debug then print("^6Bridge^7: ^2Destroying Prop^7: '^6"..entity.."^7'") end
-	if IsEntityAttachedToEntity(entity, PlayerPedId()) then
-		SetEntityAsMissionEntity(entity)
-		DetachEntity(entity, true, true)
+	if entity then
+		if Config.System.Debug then print("^6Bridge^7: ^2Destroying Prop^7: '^6"..entity.."^7'") end
+		if IsEntityAttachedToEntity(entity, PlayerPedId()) then
+			SetEntityAsMissionEntity(entity)
+			DetachEntity(entity, true, true)
+		end
+		DeleteObject(entity)
 	end
-	DeleteObject(entity)
 end
 
 function pushVehicle(entity)
