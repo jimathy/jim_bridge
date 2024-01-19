@@ -48,21 +48,17 @@ function craftingMenu(data) local hasjob = false
 				end
                 local setheader, settext = "", ""
 				local disable = false
-				local checktable = {}
                 if Recipes[i].job and hasjob == false then else
+                    local itemTable = {}
                     for l, b in pairs(Recipes[i][tostring(k)]) do
-                        if not Items[l] then print("^3Error^7: ^2Script can't find ingredient item in Shared Items - ^1"..l.."^7") return end
-                        settext = settext..(settext ~= "" and br or "")..Items[l].label..(b > 1 and " x"..b or "")
-                        if data.stashName then checktable[l] = stashhasItem(stashItems, l, b)
-                        else checktable[l] = hasItem(l, b) end
+                        settext = settext..(settext ~= "" and br or "")..(Items[l] and Items[l].label or "error - "..l)..(b > 1 and " x"..b or "")
+                        itemTable[l] = b
                         Wait(0)
                     end
-                    for _, v in pairs(checktable) do
-                        if not v then
-                            disable = true
-                            break
-                        end
-                    end
+                    if Config.System.Debug then print("^6Bridge^7: ^2Checking"..(data.stashName and " ^7'^6"..data.stashName.."^7'" or "").." ^2ingredients^7 - ^6"..k.."^7") end
+                    if data.stashName then disable = not stashhasItem(stashItems, itemTable)
+                    else disable = not hasItem(itemTable) end
+
                     setheader = Items[tostring(k)].label..(Recipes[i]["amount"] > 1 and " x"..Recipes[i]["amount"] or "")..(not disable and " ✔️" or "")
                     Menu[#Menu + 1] = {
                         isMenuHeader = disable,
@@ -97,17 +93,20 @@ function multiCraft(data) local Menu = {}
     }
 	for k in pairsByKeys(success) do
         local settext = ""
+        local itemTable = {}
         for l, b in pairs(data.craft[data.item]) do
-            if data.stashName then
-                success[k] = stashhasItem(stashItems, l, (b * k))
-            else
-                success[k] = hasItem(l, (b * k))
-            end
+            itemTable[l] = (b * k)
             settext = settext..(settext ~= "" and br or "")..Items[l].label..(b*k > 1 and "- x"..b*k or "")
             Wait(0)
         end
+        local disable = false
+        if Config.System.Debug then print("^6Bridge^7: ^2Checking "..(data.stashName and "^7'^6"..data.stashName.."^7'" or "inventory").."^7x^5"..k.." ^2ingredients^7 - ^6"..data.item.."^7") end
+        if data.stashName then disable = not stashhasItem(stashItems, itemTable)
+        else disable = not hasItem(itemTable) end
+
 		Menu[#Menu + 1] = {
-			isMenuHeader = not success[k],
+			isMenuHeader = disable,
+            arrow = not disable,
             header = "Craft - x"..k * data.craft.amount,
             txt = settext,
             onSelect = function ()
@@ -266,6 +265,7 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
     if grabInv then
         local hasTable = {}
         for item, amount in pairs(items) do
+            if not Items[item] then print("^4ERROR^7: ^2Script can't find ingredient item in Shared Items - ^1"..item.."^7") end
             local count = 0
             for _, itemData in pairs(grabInv) do
                 if itemData and (itemData.name == item) then
@@ -274,12 +274,10 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
                 end
             end
             if count >= amount then
-                if Config.System.Debug then print("^6Bridge^7: ^3HasItem^7: ^5FOUND^7 ^3"..count.."^7/^3"..amount.." "..tostring(item).."^7", foundInv) end
+                if Config.System.Debug then print("^6Bridge^7: ^3HasItem^7: ^7[^6"..foundInv.."^7] ^5FOUND^7 '"..tostring(item).."' ^3"..count.."^7/^3"..amount.."^7") end
                 hasTable[item] = { hasItem = true, count = count, }
             else
-                if Config.System.Debug then
-                    print("^6Bridge^7: ^3HasItem^7: ^2"..tostring(item).." ^1NOT FOUND^7", foundInv)
-                end
+                if Config.System.Debug then print("^6Bridge^7: ^3HasItem^7: ^7[^6"..foundInv.."^7] ^1NOT FOUND^7 '"..tostring(item).."' ^1"..count.."^7/^3"..amount.."^7") end
                 hasTable[item] = { hasItem = false, count = count, }
             end
         end
@@ -415,10 +413,10 @@ function stashhasItem(stashItems, items, amount)
             end
         end
         if count >= amount then
-            if Config.System.Debug then print("^6Bridge^7: ^3stashHasItem^7: ^2Items ^3"..item.." ^5FOUND^7 x^3"..count.."^7/^3"..amount.."^7") end
+            if Config.System.Debug then print("^6Bridge^7: ^3stashHasItem^7: ^5FOUND '"..item.."' ^3"..count.."^7/^3"..amount.."^7") end
             hasTable[item] = { hasItem = true, count = count, }
         else
-            if Config.System.Debug then print("^6Bridge^7: ^3stashHasItem^7: ^2Items ^1NOT FOUND^7 "..json.encode(item)) end
+            if Config.System.Debug then print("^6Bridge^7: ^3stashHasItem^7: ^1NOT FOUND^7 '"..item.."' ^1"..count.."^7/^3"..amount.."^7") end
             hasTable[item] = { hasItem = false, count = count, }
         end
     end
