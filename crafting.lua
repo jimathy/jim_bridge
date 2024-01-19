@@ -380,7 +380,7 @@ function openStash(data)
         exports[CodeMInv]:OpenStash(data.stash, 400000, 100)
     else
         TriggerEvent("inventory:client:SetCurrentStash", data.stash)
-        TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash)
+        TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, data.stashOptions)
 	end
     lookEnt(data.coords)
 end
