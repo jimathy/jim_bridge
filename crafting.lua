@@ -274,10 +274,10 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
                 end
             end
             if count >= amount then
-                if Config.System.Debug then print("^6Bridge^7: ^3HasItem^7: ^7[^6"..foundInv.."^7] ^5FOUND^7 '"..tostring(item).."' ^3"..count.."^7/^3"..amount.."^7") end
+                if Config.System.Debug then print("^6Bridge^7: ^3HasItem^7[^6"..foundInv.."^7]: "..tostring(item).." ^3"..count.."^7/^3"..amount.." ^5FOUND^7") end
                 hasTable[item] = { hasItem = true, count = count, }
             else
-                if Config.System.Debug then print("^6Bridge^7: ^3HasItem^7: ^7[^6"..foundInv.."^7] ^1NOT FOUND^7 '"..tostring(item).."' ^1"..count.."^7/^3"..amount.."^7") end
+                if Config.System.Debug then print("^6Bridge^7: ^3HasItem^7[^6"..foundInv.."^7]: "..tostring(item).." ^1"..count.."^7/^3"..amount.." ^1NOT FOUND^7") end
                 hasTable[item] = { hasItem = false, count = count, }
             end
         end

@@ -954,7 +954,7 @@ AddStateBagChangeHandler(GetCurrentResourceName()..':setVehicleProperties', '', 
     if not value or not GetEntityFromStateBagName then return end
     local entity = GetEntityFromStateBagName(bagName)
     local networked = not bagName:find('localEntity')
-    if Config.System.Debug then print("^6Bridge^7: ^2Setting Vehicle Properties ^7[^6"..OXLibExport.."^7] - [^3"..entity.."]^7 - [^3"..GetEntityModel(entity).."^7] - [^3"..value.plate.."^7]") end
+    if Config.System.Debug then print("^6Bridge^7: ^2Setting Vehicle Properties ^7[^6"..OXLibExport.."^7] - [^3"..entity.."^7] - [^3"..GetEntityModel(entity).."^7] - [^3"..value.plate.."^7]") end
 
     if networked and NetworkGetEntityOwner(entity) ~= cache.playerId then return end
 
