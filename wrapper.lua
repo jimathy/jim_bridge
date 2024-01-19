@@ -923,10 +923,10 @@ end
 function getVehicleProperties(vehicle)
     local properties = {}
     if vehicle == nil then return nil end
-    if GetResourceState(OXLibExport):find("start") then
-        properties = lib.getVehicleProperties(vehicle)
-    elseif GetResourceState(QBExport):find("start") then
+    if GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
         properties = Core.Functions.GetVehicleProperties(vehicle)
+    elseif GetResourceState(OXLibExport):find("start") then
+        properties = lib.getVehicleProperties(vehicle)
     end
     return properties
 end
@@ -936,10 +936,11 @@ function setVehicleProperties(vehicle, props)
         print(("Unable to set vehicle properties for '%s' (entity does not exist)"):
         format(vehicle))
     end
-    if GetResourceState(OXLibExport):find("start") then
-        TriggerServerEvent(GetCurrentResourceName()..":ox:setVehicleProperties", VehToNet(vehicle), props)
-    elseif GetResourceState(QBExport):find("start") then
+    if GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
+        if Config.System.Debug then print("^6Bridge^7: ^2Setting Vehicle Properties ^7[^6"..QBExport.."^7] - [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7] - [^3"..props.plate.."^7]") end
         Core.Functions.SetVehicleProperties(vehicle, props)
+    else
+        TriggerServerEvent(GetCurrentResourceName()..":ox:setVehicleProperties", VehToNet(vehicle), props)
     end
 end
 
@@ -953,6 +954,7 @@ AddStateBagChangeHandler(GetCurrentResourceName()..':setVehicleProperties', '', 
     if not value or not GetEntityFromStateBagName then return end
     local entity = GetEntityFromStateBagName(bagName)
     local networked = not bagName:find('localEntity')
+    if Config.System.Debug then print("^6Bridge^7: ^2Setting Vehicle Properties ^7[^6"..OXLibExport.."^7] - [^3"..entity.."^7] - [^3"..GetEntityModel(entity).."^7] - [^3"..value.plate.."^7]") end
 
     if networked and NetworkGetEntityOwner(entity) ~= cache.playerId then return end
 

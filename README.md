@@ -21,6 +21,7 @@ But I want this script to grow with help of others who know more about other cor
 ---
 
 The installation of this script is simple
+- REMOVE `-main` from the folder name, like any other github hosted script
 - it just needs to start before any script that requires it
 - it can start before core scripts if you want
 - for `qb-core` I personally place this script in `resources > [standalone]`
