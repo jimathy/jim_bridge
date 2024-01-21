@@ -767,6 +767,7 @@ function createInput(title, opts)
                 options[i] = {
                     type = "input",
                     label = opts[i].text ..(opts[i].txt and " - "..opts[i].txt or ""),
+                    default = opts[i].default,
                     isRequired = opts[i].isRequired,
                 }
             end
@@ -925,23 +926,47 @@ function getVehicleProperties(vehicle)
     if vehicle == nil then return nil end
     if GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
         properties = Core.Functions.GetVehicleProperties(vehicle)
+        if Config.System.Debug then print("^6Bridge^7: ^2Getting Vehicle Properties ^7[^6"..QBExport.."^7] - [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7/^3"..properties.model.."^7] - [^3"..properties.plate.."^7]") end
     elseif GetResourceState(OXLibExport):find("start") then
         properties = lib.getVehicleProperties(vehicle)
+        if Config.System.Debug then print("^6Bridge^7: ^2Getting Vehicle Properties ^7[^6"..OXLibExport.."^7] - [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7/^3"..properties.model.."^7] - [^3"..properties.plate.."^7]") end
     end
     return properties
 end
 
 function setVehicleProperties(vehicle, props)
-    if not DoesEntityExist(vehicle) then
-        print(("Unable to set vehicle properties for '%s' (entity does not exist)"):
-        format(vehicle))
-    end
-    if GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
-        if Config.System.Debug then print("^6Bridge^7: ^2Setting Vehicle Properties ^7[^6"..QBExport.."^7] - [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7] - [^3"..props.plate.."^7]") end
-        Core.Functions.SetVehicleProperties(vehicle, props)
+    local oldProps = getVehicleProperties(vehicle)
+    if checkDifferences(vehicle, props) then
+        --if Config.System.Debug then debugDifferences(vehicle, props) end
+        if not DoesEntityExist(vehicle) then
+            print(("Unable to set vehicle properties for '%s' (entity does not exist)"):
+            format(vehicle))
+        end
+        if GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
+            Core.Functions.SetVehicleProperties(vehicle, props)
+            if Config.System.Debug then print("^6Bridge^7: ^2Setting Vehicle Properties ^7[^6"..QBExport.."^7] - [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7/^3"..props.model.."^7] - [^3"..props.plate.."^7]") end
+        else
+            TriggerServerEvent(GetCurrentResourceName()..":ox:setVehicleProperties", VehToNet(vehicle), props)
+        end
     else
-        TriggerServerEvent(GetCurrentResourceName()..":ox:setVehicleProperties", VehToNet(vehicle), props)
+        if Config.System.Debug then print("^6Bridge^7: ^2No Changes Found ^7 [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7/^3"..props.model.."^7] - [^3"..props.plate.."^7]") end
     end
+end
+
+function checkDifferences(vehicle, newProps)
+    local oldProps = getVehicleProperties(vehicle)
+    if Config.System.Debug then print("^6Bridge^7: ^2Finding differences in ^3Vehicle Properties^7") end
+    local allow = false
+    for k in pairs(oldProps) do
+        if json.encode(oldProps[k]) ~= json.encode(newProps[k]) then
+            allow = true
+            if Config.System.Debug then
+                print("^6Bridge^7: ^5Old ^7[^3"..k.."^7] - "..json.encode(oldProps[k], { indent = true }))
+                print("^6Bridge^7: ^5New ^7[^3"..k.."^7] - "..json.encode(newProps[k], { indent = true }))
+            end
+        end
+    end
+    return allow
 end
 
 RegisterNetEvent(GetCurrentResourceName()..":ox:setVehicleProperties", function(netId, props)
