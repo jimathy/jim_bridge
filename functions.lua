@@ -29,7 +29,7 @@ function pairsByKeys(t) local a = {} for n in pairs(t) do a[#a+1] = n end table.
 
 function playAnim(animDict, animName, duration, flag, ped)
 	loadAnimDict(animDict)
-	TaskPlayAnim(ped and ped or PlayerPedId(), animDict, animName, 1.0, -1.0, duration or 30000, flag or 50, 1, false, false, false)
+	TaskPlayAnim(ped and ped or PlayerPedId(), animDict, animName, 8.0, -8.0, duration or 30000, flag or 50, 1, false, false, false)
 end
 
 function stopAnim(animDict, animName)

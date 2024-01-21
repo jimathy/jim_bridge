@@ -767,6 +767,7 @@ function createInput(title, opts)
                 options[i] = {
                     type = "input",
                     label = opts[i].text ..(opts[i].txt and " - "..opts[i].txt or ""),
+                    default = opts[i].default,
                     isRequired = opts[i].isRequired,
                 }
             end
