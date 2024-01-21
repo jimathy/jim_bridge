@@ -23,7 +23,7 @@ function CheckBridgeVersion()
         local currentVersion = "^3"..GetResourceMetadata("jim_bridge", 'version'):gsub("%.", "^7.^3").."^7"
         PerformHttpRequest('https://raw.githubusercontent.com/jimathy/jim_bridge/master/version.txt', function(err, newestVersion, headers)
             if not newestVersion then print("^1Currently unable to run a version check for ^7'^3jim_bridge^7' ("..currentVersion.."^7)") return end
-            newestVersion = "^3"..newestVersion:sub(1, -2):gsub("%.", "^7.^3").."^7"
+            newestVersion = "^3"..newestVersion:sub(1, -2):gsub("%.", "^7.^3"):gsub("%\r", "").."^7"
             print(newestVersion == currentVersion and "^7'^3jim_bridge^7' - ^6You are running the latest version.^7 ("..currentVersion..")" or "^7'^3jim_bridge^7' - ^1You are currently running an outdated version^7, ^1please update^7!")
 		end)
 	end
