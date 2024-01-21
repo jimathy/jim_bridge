@@ -348,8 +348,21 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
         end
     elseif GetResourceState(QSInv):find("start") then
         for k, v in pairs(items) do
-            exports[QSInv]:RemoveItemIntoStash(stashName, k, v)
-            if Config.System.Debug then print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QSInv, k, v) end
+            for l in pairs(stashItems) do
+                if stashItems[l].name == k then
+                    if (stashItems[l].amount - v) <= 0 then
+                        if Config.System.Debug then
+                            print("^6Bridge^7: ^2None of this item left in stash ^3Stash^7", k, v)
+                        end
+                        stashItems[l] = nil
+                    else
+                        if Config.System.Debug then
+                            print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QBInv, k, v)
+                        end
+                        exports[QSInv]:RemoveItemIntoStash(stashName, k, v, l)
+                    end
+                end
+            end
         end
     elseif GetResourceState(CodeMInv):find("start") then
         for k, v in pairs(items) do
