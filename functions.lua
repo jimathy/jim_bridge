@@ -685,12 +685,12 @@ local function CheckVersion()
 				PerformHttpRequest('https://raw.githubusercontent.com/jimathy/'..GetCurrentResourceName()..'/master/version.txt', function(err, freeVersion, headers)
 					if not freeVersion then print("^1Currently unable to run a version check for ^7'^3"..GetCurrentResourceName().."^7' ("..currentVersion.."^7)") return end
 					local currentVersion = "^3"..GetResourceMetadata(GetCurrentResourceName(), 'version'):gsub("%.", "^7.^3").."^7"
-					freeVersion = "^3"..freeVersion:sub(1, -2):gsub("%.", "^7.^3").."^7"
+					freeVersion = "^3"..freeVersion:sub(1, -2):gsub("%.", "^7.^3"):gsub("%\r", "").."^7"
 					print("^6Version Check^7: ^2Running^7: "..currentVersion.." ^2Latest^7: "..freeVersion)
 					print(freeVersion == currentVersion and "^7'^3"..GetCurrentResourceName().."^7' - ^6You are running the latest version.^7 ("..currentVersion..")" or "^7'^3"..GetCurrentResourceName().."^7' - ^1You are currently running an outdated version^7, ^1please update^7!")
 				end)
 			else
-				newestVersion = "^3"..newestVersion:sub(1, -2):gsub("%.", "^7.^3").."^7"
+				newestVersion = "^3"..newestVersion:sub(1, -2):gsub("%.", "^7.^3"):gsub("%\r", "").."^7"
 				print("^6Version Check^7: ^2Running^7: "..currentVersion.." ^2Latest^7: "..newestVersion)
 				print(newestVersion == currentVersion and '^6You are running the latest version.^7 ('..currentVersion..')' or "^1You are currently running an outdated version^7, ^1please update^7!")
 			end
