@@ -1,5 +1,8 @@
 Items, Vehicles, Jobs, Gangs, Core, ESX = {}, nil, nil, nil, nil, nil
 
+if GetResourceState("ps-inventory"):find("start") then Exports.QBInv = "ps-inventory" end
+if GetResourceState("lj-inventory"):find("start") then Exports.QBInv = "lj-inventory" end
+
 OXLibExport = Exports and Exports.OXLibExport or ""
 
 QBXExport = Exports and Exports.QBXExport or ""
