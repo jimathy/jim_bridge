@@ -43,7 +43,7 @@ function craftingMenu(data) local hasjob = false
                 if Recipes[i].job then hasjob = false
 					for l, b in pairs(Recipes[i].job) do
 						hasjob = hasJob(l, nil, b)
-                        if hasJob == true then break end
+                        if hasjob == true then break end
 					end
 				end
                 local setheader, settext = "", ""
