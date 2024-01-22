@@ -15,6 +15,7 @@ QBInv = Exports and Exports.QBInv or ""
 QSInv = Exports and Exports.QSInv or ""
 CoreInv = Exports and Exports.CoreInv or ""
 CodeMInv = Exports and Exports.CodeMInv or ""
+OrigenInv = Exports and Exports.OrigenInv or ""
 
 QBMenuExport = Exports and Exports.QBMenuExport or ""
 
@@ -1243,6 +1244,8 @@ function invImg(item)
             imgLink = "nui://"..QSInv.."/html/images/"..(Items[item].image or "")
         elseif GetResourceState(CoreInv and CoreInv or ""):find("start") then
             imgLink = "nui://"..CoreInv.."/html/img/"..(Items[item].image or "")
+        elseif GetResourceState(OrigenInv and OrigenInv or ""):find("start") then
+            imgLink = "nui://"..OrigenInv.."/html/img/"..(Items[item].image or "")
         elseif GetResourceState(QBInv and QBInv or ""):find("start") then
             imgLink = "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
         else

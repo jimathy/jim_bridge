@@ -240,6 +240,14 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
         else grabInv = exports[QSInv]:getUserInventory()
         end
 
+    elseif GetResourceState(OrigenInv):find("start") then
+        foundInv = OrigenInv
+        if src then
+            grabInv = exports[OrigenInv]:getPlayerInventory(src)
+        else
+            grabInv = exports[OrigenInv]:getPlayerInventory()
+        end
+
     elseif GetResourceState(CoreInv):find("start") then
         foundInv = CoreInv
         if src then
@@ -329,6 +337,10 @@ function getStash(stashName)
         if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..CodeMInv) end
         stashItems = exports[CodeMInv]:GetInventoryItems('Stash', stashName)
 
+    elseif GetResourceState(OrigenInv):find("start") then
+        if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..OrigenInv) end
+        stashItems = exports[OrigenInv]:GetStash(stashName)
+
     elseif GetResourceState(QBInv):find("start") then
         if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..QBInv) end
         local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
@@ -410,6 +422,13 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
         if Config.System.Debug then
             print("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName.."^7'")
         end
+
+    elseif GetResourceState(OrigenInv):find("start") then
+        for k, v in pairs(items) do
+            exports[OrigenInv]:RemoveItem(stashName, k, v)
+            if Config.System.Debug then print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..OrigenInv, k, v) end
+        end
+
     elseif GetResourceState(QBInv):find("start") then
         for k, v in pairs(items) do
             for l in pairs(stashItems) do
