@@ -592,7 +592,16 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
 					print("^6Bridge^7: ^3"..addremove.."^7[^6"..QSInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
 				end
             elseif GetResourceState(CoreInv):find("start") then
-                local success = exports[CoreInv]:removeItemExact('primary-'..src, item, amount)
+				local id = ""
+				if GetResourceState(QBExport):find("start") then
+					local Player = Core.Functions.GetPlayer(src)
+					id = Player.PlayerData.citizenid
+					Player.Functions.RemoveItem(item, amount, nil)
+				elseif GetResourceState(ESXExport):find("start") then
+					id = ESX.GetPlayerFromId(src).identifier:gsub(":", "")
+					Player = ESX.GetPlayerFromId(src)
+					Player.removeInventoryItem(item, count)
+				end
 				if Config.System.Debug then
 					print("^6Bridge^7: ^3"..addremove.."^7[^6"..CoreInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
 				end
@@ -631,7 +640,16 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
 				print("^6Bridge^7: ^3"..addremove.."^7[^6"..QSInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
             end
 		elseif GetResourceState(CoreInv):find("start") then
-            local success = exports[CoreInv]:addItem('primary-'..src, item, amount)
+			local id = ""
+			if GetResourceState(QBExport):find("start") then
+				local Player = Core.Functions.GetPlayer(src)
+				id = Player.PlayerData.citizenid
+				Player.Functions.AddItem(item, amount, nil, nil)
+			elseif GetResourceState(ESXExport):find("start") then
+				id = ESX.GetPlayerFromId(src).identifier:gsub(":", "")
+				Player = ESX.GetPlayerFromId(src)
+				Player.addInventoryItem(item, amount)
+			end
             if Config.System.Debug then
 				print("^6Bridge^7: ^3"..addremove.."^7[^6"..CoreInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
             end
