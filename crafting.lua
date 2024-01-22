@@ -242,8 +242,19 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
 
     elseif GetResourceState(CoreInv):find("start") then
         foundInv = CoreInv
-        if src then grabInv = exports['core_inventory']:getInventory('primary-'..src)
-        else grabInv = exports[CoreInv]:getInventory('primary-'..GetPlayerServerId(PlayerPedId()))
+        if src then
+            if GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then
+                local Player = Core.Functions.GetPlayer(src)
+                grabInv = Player.PlayerData.inventory
+            elseif GetResourceState(ESXExport):find("start") then
+                local Player = ESX.GetPlayerFromId(src)
+                grabInv = Player.getInventory(false)
+            end
+        else
+            local p = promise.new()
+            Core.Functions.TriggerCallback('core_inventory:server:getInventory', function(cb) p:resolve(cb) end)
+            local result = Citizen.Await(p)
+            grabInv = result
         end
 
     elseif GetResourceState(CodeMInv):find("start") then

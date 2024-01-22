@@ -513,7 +513,7 @@ function setThirst(src, thirst)
 	if GetResourceState(ESXExport):find("start") then
 		TriggerClientEvent('esx_status:add', src, 'thirst', thirst)
 	elseif GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then
-		local Player = QBCore.Functions.GetPlayer(src)
+		local Player = Core.Functions.GetPlayer(src)
 		Player.Functions.SetMetaData('thirst', thirst)
 		TriggerClientEvent("hud:client:UpdateNeeds", src, thirst, Player.PlayerData.metadata.thirst)
 	end
@@ -523,7 +523,7 @@ function setHunger(src, hunger)
 	if GetResourceState(ESXExport):find("start") then
 		TriggerClientEvent('esx_status:add', src, 'hunger', hunger)
 	elseif GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then
-		local Player = QBCore.Functions.GetPlayer(src)
+		local Player = Core.Functions.GetPlayer(src)
 		Player.Functions.SetMetaData('hunger', hunger)
 		TriggerClientEvent("hud:client:UpdateNeeds", src, hunger, Player.PlayerData.metadata.hunger)
 	end
