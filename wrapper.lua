@@ -1239,7 +1239,7 @@ function invImg(item)
         elseif GetResourceState(QSInv and QSInv or ""):find("start") then
             imgLink = "nui://"..QSInv.."/html/images/"..(Items[item].image or "")
         elseif GetResourceState(CoreInv and CoreInv or ""):find("start") then
-            imgLink = "nui://"..CoreInv.."/html/img/"..(Items[item].image or "")
+            imgLink = "nui://"..CoreInv.."/html/img/"..item..'.png'
         elseif GetResourceState(QBInv and QBInv or ""):find("start") then
             imgLink = "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
         else
