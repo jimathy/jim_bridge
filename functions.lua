@@ -592,7 +592,13 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
 					print("^6Bridge^7: ^3"..addremove.."^7[^6"..QSInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
 				end
             elseif GetResourceState(CoreInv):find("start") then
-                local success = exports[CoreInv]:removeItemExact('primary-'..src, item, amount)
+				if GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then 
+					local Player = QBCore.Functions.GetPlayer(src)
+					Player.Functions.RemoveItem(item, amount, nil)
+				elseif GetResourceState(ESXExport):find("start") then 
+					local Player = ESX.GetPlayerFromId(src)
+					Player.removeInventoryItem(item, count)
+				end				
 				if Config.System.Debug then
 					print("^6Bridge^7: ^3"..addremove.."^7[^6"..CoreInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
 				end
@@ -630,11 +636,17 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
             if Config.System.Debug then
 				print("^6Bridge^7: ^3"..addremove.."^7[^6"..QSInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
             end
-		elseif GetResourceState(CoreInv):find("start") then
-            local success = exports[CoreInv]:addItem('primary-'..src, item, amount)
-            if Config.System.Debug then
-				print("^6Bridge^7: ^3"..addremove.."^7[^6"..CoreInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
-            end
+	elseif GetResourceState(CoreInv):find("start") then
+		if GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then 
+			local Player = QBCore.Functions.GetPlayer(src)
+			Player.Functions.AddItem(item, amount, nil, nil)
+		elseif GetResourceState(ESXExport):find("start") then 
+			local Player = ESX.GetPlayerFromId(src)
+			Player.addInventoryItem(item, amount)
+		end            
+		if Config.System.Debug then
+			print("^6Bridge^7: ^3"..addremove.."^7[^6"..CoreInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
+		end
         elseif GetResourceState(CodeMInv):find("start") then
             local success = exports[CodeMInv]:AddItem(src, item, amount)
 			if Config.System.Debug then
