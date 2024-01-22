@@ -244,8 +244,7 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
         foundInv = CoreInv
         if src then
             if GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then
-                local Player = Core.Functions.GetPlayer(src)
-                grabInv = Player.PlayerData.inventory
+                grabInv = Core.Functions.GetPlayer(src).PlayerData.items
             elseif GetResourceState(ESXExport):find("start") then
                 local Player = ESX.GetPlayerFromId(src)
                 grabInv = Player.getInventory(false)
@@ -254,6 +253,7 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
             local p = promise.new()
             Core.Functions.TriggerCallback('core_inventory:server:getInventory', function(cb) p:resolve(cb) end)
             local result = Citizen.Await(p)
+            if type(result) == "string" then result = json.decode(result) end
             grabInv = result
         end
 
@@ -314,16 +314,23 @@ end
 function getStash(stashName)
     local stashItems, items = {}, {}
     if GetResourceState(OXInv):find("start") then
-        if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7ox_inventory") end
+        if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..OXInv) end
         stashItems = exports[OXInv]:Inventory(stashName).items
+
     elseif GetResourceState(QSInv):find("start") then
-        if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7qs-inventory") end
+        if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..QSInv) end
         stashItems = exports[QSInv]:GetStashItems(stashName)
+
+    elseif GetResourceState(CoreInv):find("start") then
+        if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..CoreInv) end
+        stashItems = exports[CoreInv]:getInventory(stashName)
+
     elseif GetResourceState(CodeMInv):find("start") then
-        if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7qs-inventory") end
+        if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..CodeMInv) end
         stashItems = exports[CodeMInv]:GetInventoryItems('Stash', stashName)
+
     elseif GetResourceState(QBInv):find("start") then
-        if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7qb-inventory") end
+        if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..QBInv) end
         local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
 		if result then stashItems = json.decode(result) end
     end
@@ -331,18 +338,18 @@ function getStash(stashName)
         for _, item in pairs(stashItems) do
             local itemInfo = Items[item.name:lower()]
             if itemInfo then
-                items[item.slot] = {
-                    name = itemInfo["name"],
+                items[#items+1] = {
+                    name = itemInfo["name"] ~= nil and itemInfo["slot"] or nil,
                     amount = tonumber(item.amount) or tonumber(item.count),
                     info = item.info ~= nil and item.info or "",
-                    label = itemInfo["label"],
+                    label = itemInfo["label"] ~= nil and itemInfo["slot"] or nil,
                     description = itemInfo["description"] ~= nil and itemInfo["description"] or "",
-                    weight = itemInfo["weight"],
-                    type = itemInfo["type"],
-                    unique = itemInfo["unique"],
-                    useable = itemInfo["useable"],
-                    image = itemInfo["image"],
-                    slot = item.slot,
+                    weight = itemInfo["weight"] ~= nil and itemInfo["slot"] or nil,
+                    type = itemInfo["type"] ~= nil and itemInfo["slot"] or nil,
+                    unique = itemInfo["unique"] ~= nil and itemInfo["slot"] or nil,
+                    useable = itemInfo["useable"] ~= nil and itemInfo["slot"] or nil,
+                    image = itemInfo["image"] ~= nil and itemInfo["slot"] or nil,
+                    slot = itemInfo["slot"] ~= nil and itemInfo["slot"] or nil,
                 }
             end
         end
@@ -358,23 +365,30 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
             if Config.System.Debug then print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..OXInv, k, v) end
         end
     elseif GetResourceState(QSInv):find("start") then
-        for k, v in pairs(items) do
-            for l in pairs(stashItems) do
-                if stashItems[l].name == k then
-                    if (stashItems[l].amount - v) <= 0 then
-                        if Config.System.Debug then
-                            print("^6Bridge^7: ^2None of this item left in stash ^3Stash^7", k, v)
+            for k, v in pairs(items) do
+                for l in pairs(stashItems) do
+                    if stashItems[l].name == k then
+                        if (stashItems[l].amount - v) <= 0 then
+                            if Config.System.Debug then
+                                print("^6Bridge^7: ^2None of this item left in stash ^3Stash^7", k, v)
+                            end
+                            stashItems[l] = nil
+                        else
+                            if Config.System.Debug then
+                                print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QBInv, k, v)
+                            end
+                            exports[QSInv]:RemoveItemIntoStash(stashName, k, v, l)
                         end
-                        stashItems[l] = nil
-                    else
-                        if Config.System.Debug then
-                            print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QBInv, k, v)
-                        end
-                        exports[QSInv]:RemoveItemIntoStash(stashName, k, v, l)
                     end
                 end
             end
+
+    elseif GetResourceState(CoreInv):find("start") then
+        for k, v in pairs(items) do
+            exports[CoreInv]:removeItemExact(stashName, k, v)
+            if Config.System.Debug then print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..CoreInv, k, v) end
         end
+
     elseif GetResourceState(CodeMInv):find("start") then
         for k, v in pairs(items) do
             for l in pairs(stashItems) do
