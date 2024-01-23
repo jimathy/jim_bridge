@@ -52,20 +52,20 @@ function craftingMenu(data)
                         Wait(0)
                     end
                     if Config.System.Debug then print("^6Bridge^7: ^2Checking"..(data.stashName and " ^7'^6"..data.stashName.."^7'" or "").." ^2ingredients^7 - ^6"..k.."^7") end
-                    disable = data.stashName and stashhasItem(stashItems, itemTable) or hasItem(itemTable)
-
+                    if data.stashName ~= nil then disable = stashhasItem(stashItems, itemTable) else disable = hasItem(itemTable) end
                     setheader = Items[tostring(k)].label..(Recipes[i]["amount"] > 1 and " x"..Recipes[i]["amount"] or "")..(not disable and " ✔️" or "")
                     Menu[#Menu + 1] = {
-                        isMenuHeader = disable,
+                        isMenuHeader = not disable,
                         icon = invImg(tostring(k)),
                         header = setheader, txt = settext,
                         onSelect = function()
                             local transdata = { item = k, craft = data.craftable.Recipes[i], craftable = data.craftable, coords = data.coords, stashName = data.stashName, onBack = data.onBack }
-                            (Config.Crafting.MultiCraft and multiCraft or makeItem)(transdata)
+                            if Config.Crafting.MultiCraft then multiCraft(transdata) else makeItem(transdata) end
                         end,
                     }
                 end
             end
+            Wait(0)
 		end
 	end
 	openMenu(Menu, { header = data.craftable.Header, onBack = data.onBack or nil, canClose = true, onExit = function() end,  })
@@ -109,25 +109,18 @@ function multiCraft(data) local Menu = {}
 end
 
 function makeItem(data)
-	if not CraftLock then CraftLock = true else return end
-    local bartime, bartext, animDict, anim = nil, nil, nil, nil
-    if data.craftable.progressBar then
-        bartime = data.craftable.progressBar.time
-        bartext = data.craftable.progressBar.label
-    else
-        bartime = 5000
-        bartext = Loc[Config.Lan].progressbar["progress_make"]
-    end
-    animDict = data.craftable.Anims.animDict or "amb@prop_human_parking_meter@male@idle_a"
-    anim = data.craftable.Anims.anim or "idle_a"
+	if CraftLock then return end
+	CraftLock = true
 
-    local amount = (data.amount and data.amount ~= 1) and data.amount or 1
+	local bartime = data.craftable.progressBar and data.craftable.progressBar.time or 5000
+	local bartext = data.craftable.progressBar and data.craftable.progressBar.label or Loc[Config.Lan].progressbar["progress_make"]
+	local animDict = data.craftable.Anims.animDict or "amb@prop_human_parking_meter@male@idle_a"
+	local anim = data.craftable.Anims.anim or "idle_a"
+	local amount = data.amount and (data.amount ~= 1) and data.amount or 1
 
-    local crafted = true
-    local crafting = true
-
-    local cam = createTempCam(PlayerPedId(), data.coords)
-    startTempCam(cam)
+	local crafted, crafting = true, true
+	local cam = createTempCam(PlayerPedId(), data.coords)
+	startTempCam(cam)
 
     for i = 1, amount do
         for k, v in pairs(data.craft) do
@@ -145,9 +138,8 @@ function makeItem(data)
                         }) then
                             --TriggerEvent('inventory:client:ItemBox', Items[l], "use", b) -- Show item box for each item
                         else
-                            crafted = false
-                            crafting = false
-                            break
+							crafted, crafting = false, false
+							break
                         end
                         Wait(200)
                     end
@@ -198,7 +190,7 @@ RegisterNetEvent(GetCurrentResourceName()..":Crafting:GetItem", function(ItemMak
         end
     end
     TriggerEvent(GetCurrentResourceName()..":server:toggleItem", true, ItemMake, amount, src)
-    if GetResourceState("core_skills"):find("start") exports["core_skills"]:AddExperience(src, 2) end
+    if GetResourceState("core_skills"):find("start") then exports["core_skills"]:AddExperience(src, 2) end
 end)
 
 --[[SHOPS]]--
