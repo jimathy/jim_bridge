@@ -6,49 +6,45 @@ if IsDuplicityVersion() then
     end
 end
 
-local timeout = 0
-local timing = false
-local stashItems = {}
+local timeout, timing, stashItems = 0, false, {}
 function GetStashTimeout(stashName, stop)
-	if stop then stashItems = {} timing = false timeout = 0 return end
-	if stashItems[1] then return true else
-		if timeout <= 0 then
-			stashItems = triggerCallback(GetCurrentResourceName()..':server:GetStashItems', stashName)
-			timeout = 15000
-			if not timing then
-				CreateThread(function()
-					timing = true
-					while timeout > 0 do timeout -= 1000 Wait(1000) end
-					timing = false stashItems = {} timeout = 0
-				end)
-			end
-		end
-		return false
-	end
+    if stop then stashItems, timing, timeout = {}, false, 0 return end
+    if #stashItems > 0 then return true end
+    if timeout <= 0 then
+        stashItems = triggerCallback(GetCurrentResourceName()..':server:GetStashItems', stashName)
+        timeout = 10000
+        if not timing then
+            CreateThread(function()
+                timing = true
+                while timeout > 0 do timeout -= 1000 Wait(1000) end
+                timing, stashItems, timeout = false, {}, 0
+            end)
+        end
+    end
+    return false
 end
 
 local CraftLock = false
-function craftingMenu(data) local hasjob = false
+function craftingMenu(data)
     if CraftLock then return end
     if data.stashName and not GetStashTimeout(data.stashName) then
 		--triggerNotify(nil, "Chacking", "success")
     end
-	if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
-	local Menu = {}
+    if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
+    local Menu, hasjob = {}, false
     local Recipes = data.craftable.Recipes
 	for i = 1, #Recipes do
-		for k, v in pairs(Recipes[i]) do
+        if not Recipes[i]["amount"] then Recipes[i]["amount"] = 1 end
+        for k, v in pairs(Recipes[i]) do
 			if k ~= "amount" and k ~= "job" and k ~= "gang" then
-                if not Recipes[i]["amount"] then Recipes[i]["amount"] = 1 end
-                if Recipes[i].job then hasjob = false
+                if Recipes[i].job then
 					for l, b in pairs(Recipes[i].job) do
 						hasjob = hasJob(l, nil, b)
                         if hasjob == true then break end
 					end
-				end
-                local setheader, settext = "", ""
-				local disable = false
-                if Recipes[i].job and hasjob == false then else
+				else hasjob = true end
+                local setheader, settext, disable = "", "", false
+                if hasjob then
                     local itemTable = {}
                     for l, b in pairs(Recipes[i][tostring(k)]) do
                         settext = settext..(settext ~= "" and br or "")..(Items[l] and Items[l].label or "error - "..l)..(b > 1 and " x"..b or "")
@@ -56,8 +52,7 @@ function craftingMenu(data) local hasjob = false
                         Wait(0)
                     end
                     if Config.System.Debug then print("^6Bridge^7: ^2Checking"..(data.stashName and " ^7'^6"..data.stashName.."^7'" or "").." ^2ingredients^7 - ^6"..k.."^7") end
-                    if data.stashName then disable = not stashhasItem(stashItems, itemTable)
-                    else disable = not hasItem(itemTable) end
+                    disable = data.stashName and stashhasItem(stashItems, itemTable) or hasItem(itemTable)
 
                     setheader = Items[tostring(k)].label..(Recipes[i]["amount"] > 1 and " x"..Recipes[i]["amount"] or "")..(not disable and " ✔️" or "")
                     Menu[#Menu + 1] = {
@@ -66,11 +61,7 @@ function craftingMenu(data) local hasjob = false
                         header = setheader, txt = settext,
                         onSelect = function()
                             local transdata = { item = k, craft = data.craftable.Recipes[i], craftable = data.craftable, coords = data.coords, stashName = data.stashName, onBack = data.onBack }
-                            if Config.Crafting.MultiCraft then
-                                multiCraft(transdata)
-                            else
-                                makeItem(transdata)
-                            end
+                            (Config.Crafting.MultiCraft and multiCraft or makeItem)(transdata)
                         end,
                     }
                 end
@@ -189,24 +180,19 @@ function makeItem(data)
 end
 
 RegisterNetEvent(GetCurrentResourceName()..":Crafting:GetItem", function(ItemMake, craftable, stashName)
-	local src = source
-	local amount = 1
+    local src, amount, stashItems = source, craftable and craftable.amount or 1, stashName and getStash(stashName)
+
     if stashName then
-        local stashItems = getStash(stashName)
-        if craftable["amount"] then amount = craftable["amount"] end
         local itemRemove = {}
-        for k, v in pairs(craftable[ItemMake]) do
-            for l, b in pairs(stashItems) do
-                if k == b.name then
-                    itemRemove[k] = v
-                end
+        for k, v in pairs(craftable[ItemMake] or {}) do
+            for _, b in pairs(stashItems or {}) do
+                if k == b.name then itemRemove[k] = v end
             end
         end
         stashRemoveItem(stashItems, stashName, itemRemove)
     else
         if craftable then
-            if craftable["amount"] then amount = craftable["amount"] end
-            for k, v in pairs(craftable[ItemMake]) do
+            for k, v in pairs(craftable[ItemMake] or {}) do
                 TriggerEvent(GetCurrentResourceName()..":server:toggleItem", false, tostring(k), v, src)
             end
         end
@@ -232,23 +218,15 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
     if type(items) ~= "table" then items = { [items] = amount and amount or 1, } end
     if GetResourceState(OXInv):find("start") then
         foundInv = OXInv
-        if src then grabInv = exports.ox_inventory:GetInventoryItems(src)
-        else grabInv = exports[OXInv]:GetPlayerItems()
-        end
+        grabInv = src and exports.ox_inventory:GetInventoryItems(src) or exports[OXInv]:GetPlayerItems()
 
     elseif GetResourceState(QSInv):find("start") then
         foundInv = QSInv
-        if src then grabInv = exports[QSInv]:GetInventory(src)
-        else grabInv = exports[QSInv]:getUserInventory()
-        end
+        grabInv = src and exports[QSInv]:GetInventory(src) or exports[QSInv]:getUserInventory()
 
     elseif GetResourceState(OrigenInv):find("start") then
         foundInv = OrigenInv
-        if src then
-            grabInv = exports[OrigenInv]:getPlayerInventory(src)
-        else
-            grabInv = exports[OrigenInv]:getPlayerInventory()
-        end
+        grabInv = src and exports[OrigenInv]:getPlayerInventory(src) or exports[OrigenInv]:getPlayerInventory()
 
     elseif GetResourceState(CoreInv):find("start") then
         foundInv = CoreInv
@@ -269,15 +247,11 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
 
     elseif GetResourceState(CodeMInv):find("start") then
         foundInv = CodeMInv
-        if src then grabInv = exports[CodeMInv]:GetUserInventory(src)
-        else grabInv = exports[CodeMInv]:GetClientPlayerInventory()
-        end
+        grabInv = src and exports[CodeMInv]:GetUserInventory(src) or exports[CodeMInv]:GetClientPlayerInventory()
 
     elseif GetResourceState(QBInv):find("start") then
         foundInv = QBInv
-        if src then grabInv = Core.Functions.GetPlayer(src).PlayerData.items
-        else grabInv = Core.Functions.GetPlayerData().items
-        end
+        grabInv = src and Core.Functions.GetPlayer(src).PlayerData.items or Core.Functions.GetPlayerData().items
 
     else
         print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
@@ -289,20 +263,14 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
             if not Items[item] then print("^4ERROR^7: ^2Script can't find ingredient item in Shared Items - ^1"..item.."^7") end
             local count = 0
             for _, itemData in pairs(grabInv) do
-                if itemData and (itemData.name == item) then
-                    --if Config.System.Debug then print("^6Bridge^7: ^3HasItem^7: ^2Item^7: '^3"..tostring(item).."^7' ^2Slot^7: ^3"..itemData.slot.." ^7x(^3"..tostring(itemData.count or itemData.amount).."^7)", foundInv) end
-                    count += ((itemData.count or itemData.amount) or 1)
-                end
+                if itemData and (itemData.name == item) then count += (itemData.count or itemData.amount or 1) end
             end
-            if count >= amount then
-                if Config.System.Debug then print("^6Bridge^7: ^3HasItem^7[^6"..foundInv.."^7]: "..tostring(item).." ^3"..count.."^7/^3"..amount.." ^5FOUND^7") end
-                hasTable[item] = { hasItem = true, count = count, }
-            else
-                if Config.System.Debug then print("^6Bridge^7: ^3HasItem^7[^6"..foundInv.."^7]: "..tostring(item).." ^1"..count.."^7/^3"..amount.." ^1NOT FOUND^7") end
-                hasTable[item] = { hasItem = false, count = count, }
-            end
+            local foundMessage = "^6Bridge^7: ^3HasItem^7[^6"..foundInv.."^7]: "..tostring(item).." ^3"..count.."^7/^3"..amount
+            if count >= amount then foundMessage = foundMessage.." ^5FOUND^7" else foundMessage = foundMessage .." ^1NOT FOUND^7" end
+            if Config.System.Debug then print(foundMessage) end
+            hasTable[item] = { hasItem = count >= amount, count = count }
         end
-        for k, v in pairs(hasTable) do if v.hasItem == false then return false, hasTable end end
+        for k, v in pairs(hasTable) do if not v.hasItem then return false, hasTable end end
         return true, hasTable
     end
 end
