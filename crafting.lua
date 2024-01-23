@@ -321,49 +321,44 @@ function openStash(data)
     lookEnt(data.coords)
 end
 
-function getStash(stashName)
+function getStash(stashName) local stashResource = ""
     local stashItems, items = {}, {}
-    if GetResourceState(OXInv):find("start") then
-        if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..OXInv) end
+    if GetResourceState(OXInv):find("start") then stashResource = OXInv
         stashItems = exports[OXInv]:Inventory(stashName).items
 
-    elseif GetResourceState(QSInv):find("start") then
-        if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..QSInv) end
+    elseif GetResourceState(QSInv):find("start") then stashResource = QSInv
         stashItems = exports[QSInv]:GetStashItems(stashName)
 
-    elseif GetResourceState(CoreInv):find("start") then
-        if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..CoreInv) end
+    elseif GetResourceState(CoreInv):find("start") then stashResource = CoreInv
         stashItems = exports[CoreInv]:getInventory(stashName)
 
-    elseif GetResourceState(CodeMInv):find("start") then
-        if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..CodeMInv) end
+    elseif GetResourceState(CodeMInv):find("start") then stashResource = CodeMInv
         stashItems = exports[CodeMInv]:GetInventoryItems('Stash', stashName)
 
-    elseif GetResourceState(OrigenInv):find("start") then
-        if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..OrigenInv) end
+    elseif GetResourceState(OrigenInv):find("start") then stashResource = OrigenInv
         stashItems = exports[OrigenInv]:GetStash(stashName)
 
-    elseif GetResourceState(QBInv):find("start") then
-        if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..QBInv) end
+    elseif GetResourceState(QBInv):find("start") then stashResource = QBInv
         local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
 		if result then stashItems = json.decode(result) end
     end
+    if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..stashResource) end
     if stashItems then
         for _, item in pairs(stashItems) do
             local itemInfo = Items[item.name:lower()]
             if itemInfo then
                 items[#items+1] = {
-                    name = itemInfo["name"] ~= nil and itemInfo["slot"] or nil,
+                    name = itemInfo.name or nil,
                     amount = tonumber(item.amount) or tonumber(item.count),
-                    info = item.info ~= nil and item.info or "",
-                    label = itemInfo["label"] ~= nil and itemInfo["slot"] or nil,
-                    description = itemInfo["description"] ~= nil and itemInfo["description"] or "",
-                    weight = itemInfo["weight"] ~= nil and itemInfo["slot"] or nil,
-                    type = itemInfo["type"] ~= nil and itemInfo["slot"] or nil,
-                    unique = itemInfo["unique"] ~= nil and itemInfo["slot"] or nil,
-                    useable = itemInfo["useable"] ~= nil and itemInfo["slot"] or nil,
-                    image = itemInfo["image"] ~= nil and itemInfo["slot"] or nil,
-                    slot = itemInfo["slot"] ~= nil and itemInfo["slot"] or nil,
+                    info = item.info or "",
+                    label = itemInfo.label or nil,
+                    description = itemInfo.description or "",
+                    weight = itemInfo.weight or nil,
+                    type = itemInfo.type or nil,
+                    unique = itemInfo.unique or nil,
+                    useable = itemInfo.useable or nil,
+                    image = itemInfo.image or nil,
+                    slot = itemInfo.slot or nil,
                 }
             end
         end
