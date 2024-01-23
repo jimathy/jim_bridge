@@ -1,5 +1,8 @@
 Items, Vehicles, Jobs, Gangs, Core, ESX = {}, nil, nil, nil, nil, nil
 
+if GetResourceState("ps-inventory"):find("start") then Exports.QBInv = "ps-inventory" end
+if GetResourceState("lj-inventory"):find("start") then Exports.QBInv = "lj-inventory" end
+
 OXLibExport = Exports and Exports.OXLibExport or ""
 
 QBXExport = Exports and Exports.QBXExport or ""
@@ -12,6 +15,7 @@ QBInv = Exports and Exports.QBInv or ""
 QSInv = Exports and Exports.QSInv or ""
 CoreInv = Exports and Exports.CoreInv or ""
 CodeMInv = Exports and Exports.CodeMInv or ""
+OrigenInv = Exports and Exports.OrigenInv or ""
 
 QBMenuExport = Exports and Exports.QBMenuExport or ""
 
@@ -223,16 +227,19 @@ end
 
 function openMenu(Menu, data)
     if Config.System.Menu == "ox" then
-        if data.onBack then
+        local index = nil
+        if data.onBack and not data.onSelected then
             table.insert(Menu, 1, { icon = "fas fa-circle-arrow-left",
                 title = "Return",
                 onSelect = data.onBack,
+                label = "Return"
             })
         end
         for k in pairs(Menu) do
             if not Menu[k].title then
                 if Menu[k].header ~= nil and Menu[k].header ~= "" then
                     Menu[k].title = Menu[k].header
+                    Menu[k].label = Menu[k].header
                     if Menu[k].txt then Menu[k].description = Menu[k].txt else Menu[k].description = "" end
                 else
                     Menu[k].title = Menu[k].txt
@@ -246,8 +253,22 @@ function openMenu(Menu, data)
                 Menu[k].disabled = true
             end
         end
-        lib.registerContext({id = 'Menu', title = data.header..br..br..(data.headertxt and data.headertxt or ""), position = 'top-right', options = Menu, canClose = data.canClose and data.canClose or nil, onExit = data.onExit and data.onExit or nil, })
-        lib.showContext("Menu")
+        local menuID = 'Menu'
+        (data.onSelected and lib.registerMenu or lib.registerContext)({
+            id = menuID,
+            title = data.header..br..br..(data.headertxt and data.headertxt or ""),
+            position = 'top-right',
+            options = Menu,
+            canClose = data.canClose and data.canClose or nil,
+            onClose = (data.onBack and data.onBack) or (data.onExit and data.onExit) or nil,
+            onExit = data.onExit and data.onExit or nil,
+            onSelected = data.onSelected and (function(selected) index = selected end) or nil,
+        }, (data.onSelected and (function(x, y, args) Menu[x].onSelect() end) or nil))
+        if data.onSelected then
+            lib.showMenu(menuID, 1)
+        else
+            lib.showContext(menuID)
+        end
     elseif Config.System.Menu == "qb" then
         if data.onBack then
             table.insert(Menu, 1, { icon = "fas fa-circle-arrow-left",
@@ -750,7 +771,7 @@ function createInput(title, opts)
                     isRequired = opts[i].isRequired,
                     label = opts[i].label or opts[i].text,
                     name = opts[i].name,
-                    default = opts[i].options[1].value,
+                    default = opts[i].default or opts[i].options[1].value,
                     options = opts[i].options,
                 }
             end
@@ -1240,6 +1261,8 @@ function invImg(item)
             imgLink = "nui://"..QSInv.."/html/images/"..(Items[item].image or "")
         elseif GetResourceState(CoreInv and CoreInv or ""):find("start") then
             imgLink = "nui://"..CoreInv.."/html/img/"..(Items[item].image or "")
+        elseif GetResourceState(OrigenInv and OrigenInv or ""):find("start") then
+            imgLink = "nui://"..OrigenInv.."/html/img/"..(Items[item].image or "")
         elseif GetResourceState(QBInv and QBInv or ""):find("start") then
             imgLink = "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
         else
