@@ -43,7 +43,7 @@ function craftingMenu(data) local hasjob = false
                 if Recipes[i].job then hasjob = false
 					for l, b in pairs(Recipes[i].job) do
 						hasjob = hasJob(l, nil, b)
-                        if hasJob == true then break end
+                        if hasjob == true then break end
 					end
 				end
                 local setheader, settext = "", ""
@@ -139,40 +139,42 @@ function makeItem(data)
     startTempCam(cam)
 
     for i = 1, amount do
-        for _, v in pairs(data.craft) do
-            if type(v) == "table" then
-                for l, b in pairs(v) do
-                    if crafting and progressBar({
-                        label = "Using "..b.." "..Items[l].label,
-                        time = 1000,
-                        cancel = true,
-                        dict = 'pickup_object',
-                        anim = "putdown_low",
-                        flag = 48,
-                        icon = l,
-                    }) then
-                        --TriggerEvent('inventory:client:ItemBox', Items[l], "use", b) -- Show item box for each item
-                    else
-                        crafted = false
-                        crafting = false
-                        break
+        for k, v in pairs(data.craft) do
+            if k ~= "amount" and k ~= "job" then
+                if type(v) == "table" then
+                    for l, b in pairs(v) do
+                        if crafting and progressBar({
+                            label = "Using "..b.." "..Items[l].label,
+                            time = 1000,
+                            cancel = true,
+                            dict = 'pickup_object',
+                            anim = "putdown_low",
+                            flag = 48,
+                            icon = l,
+                        }) then
+                            --TriggerEvent('inventory:client:ItemBox', Items[l], "use", b) -- Show item box for each item
+                        else
+                            crafted = false
+                            crafting = false
+                            break
+                        end
+                        Wait(200)
                     end
-                    Wait(200)
-                end
-                if crafted then
-                    if crafting and progressBar({
-                        label = bartext..Items[data.item].label,
-                        time = bartime,
-                        cancel = true,
-                        dict = animDict,
-                        anim = anim,
-                        flag = 8,
-                        icon = data.item,
-                    }) then
-                        TriggerServerEvent(GetCurrentResourceName()..":Crafting:GetItem", data.item, data.craft, data.stashName)
-                    else
-                        crafting = false
-                        break
+                    if crafted then
+                        if crafting and progressBar({
+                            label = bartext..Items[data.item].label,
+                            time = bartime,
+                            cancel = true,
+                            dict = animDict,
+                            anim = anim,
+                            flag = 8,
+                            icon = data.item,
+                        }) then
+                            TriggerServerEvent(GetCurrentResourceName()..":Crafting:GetItem", data.item, data.craft, data.stashName)
+                        else
+                            crafting = false
+                            break
+                        end
                     end
                 end
             end
