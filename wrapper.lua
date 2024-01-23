@@ -227,16 +227,19 @@ end
 
 function openMenu(Menu, data)
     if Config.System.Menu == "ox" then
-        if data.onBack then
+        local index = nil
+        if data.onBack and not data.onSelected then
             table.insert(Menu, 1, { icon = "fas fa-circle-arrow-left",
                 title = "Return",
                 onSelect = data.onBack,
+                label = "Return"
             })
         end
         for k in pairs(Menu) do
             if not Menu[k].title then
                 if Menu[k].header ~= nil and Menu[k].header ~= "" then
                     Menu[k].title = Menu[k].header
+                    Menu[k].label = Menu[k].header
                     if Menu[k].txt then Menu[k].description = Menu[k].txt else Menu[k].description = "" end
                 else
                     Menu[k].title = Menu[k].txt
@@ -250,8 +253,22 @@ function openMenu(Menu, data)
                 Menu[k].disabled = true
             end
         end
-        lib.registerContext({id = 'Menu', title = data.header..br..br..(data.headertxt and data.headertxt or ""), position = 'top-right', options = Menu, canClose = data.canClose and data.canClose or nil, onExit = data.onExit and data.onExit or nil, })
-        lib.showContext("Menu")
+        local menuID = 'Menu'
+        (data.onSelected and lib.registerMenu or lib.registerContext)({
+            id = menuID,
+            title = data.header..br..br..(data.headertxt and data.headertxt or ""),
+            position = 'top-right',
+            options = Menu,
+            canClose = data.canClose and data.canClose or nil,
+            onClose = (data.onBack and data.onBack) or (data.onExit and data.onExit) or nil,
+            onExit = data.onExit and data.onExit or nil,
+            onSelected = data.onSelected and (function(selected) index = selected end) or nil,
+        }, (data.onSelected and (function(x, y, args) Menu[x].onSelect() end) or nil))
+        if data.onSelected then
+            lib.showMenu(menuID, 1)
+        else
+            lib.showContext(menuID)
+        end
     elseif Config.System.Menu == "qb" then
         if data.onBack then
             table.insert(Menu, 1, { icon = "fas fa-circle-arrow-left",
