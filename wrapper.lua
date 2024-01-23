@@ -771,7 +771,7 @@ function createInput(title, opts)
                     isRequired = opts[i].isRequired,
                     label = opts[i].label or opts[i].text,
                     name = opts[i].name,
-                    default = opts[i].options[1].value,
+                    default = opts[i].default or opts[i].options[1].value,
                     options = opts[i].options,
                 }
             end
