@@ -1,26 +1,14 @@
 Items, Vehicles, Jobs, Gangs, Core, ESX = {}, nil, nil, nil, nil, nil
 
-if GetResourceState("ps-inventory"):find("start") then Exports.QBInv = "ps-inventory" end
-if GetResourceState("lj-inventory"):find("start") then Exports.QBInv = "lj-inventory" end
+Exports.QBInv = GetResourceState("ps-inventory"):find("start") and "ps-inventory" or GetResourceState("lj-inventory"):find("start") and "lj-inventory" or ""
 
-OXLibExport = Exports and Exports.OXLibExport or ""
+OXLibExport, QBXExport, QBExport, ESXExport, OXCoreExport = Exports.OXLibExport or "", Exports.QBXExport or "", Exports.QBExport or "", Exports.ESXExport or "", Exports.OXCoreExport or ""
 
-QBXExport = Exports and Exports.QBXExport or ""
-QBExport = Exports and Exports.QBExport or ""
-ESXExport = Exports and Exports.ESXExport or ""
-OXCoreExport = Exports and Exports.OXCoreExport or ""
+OXInv, QBInv, QSInv, CoreInv, CodeMInv, OrigenInv = Exports.OXInv or "", Exports.QBInv or "", Exports.QSInv or "", Exports.CoreInv or "", Exports.CodeMInv or "", Exports.OrigenInv or ""
 
-OXInv = Exports and Exports.OXInv or ""
-QBInv = Exports and Exports.QBInv or ""
-QSInv = Exports and Exports.QSInv or ""
-CoreInv = Exports and Exports.CoreInv or ""
-CodeMInv = Exports and Exports.CodeMInv or ""
-OrigenInv = Exports and Exports.OrigenInv or ""
+QBMenuExport = Exports.QBMenuExport or ""
 
-QBMenuExport = Exports and Exports.QBMenuExport or ""
-
-QBTargetExport = Exports and Exports.QBTargetExport or ""
-OXTargetExport = Exports and Exports.OXTargetExport or ""
+QBTargetExport, OXTargetExport = Exports.QBTargetExport or "", Exports.OXTargetExport or ""
 
 function CheckBridgeVersion()
 	if IsDuplicityVersion() then
@@ -38,148 +26,146 @@ for k, v in pairs(Exports) do
     if GetResourceState(v):find("start") then print("^6Bridge^7: '^3"..v.."^7' ^2export found ^7") end
 end
 
--- Load item lists
-if GetResourceState(OXInv):find("start") then
-    print("^6Bridge^7: ^2Loading ^3Items^2 from ^7"..OXInv)
-    Items = exports[OXInv]:Items()
-    for k, v in pairs(Items) do
-        if v.client then
-            if v.client.image then Items[k].image = (Items[k].client.image):gsub("nui://"..OXInv.."/web/images/","")
-            else Items[k].image = k..".png" end
-            if v.client.hunger then Items[k].hunger = v.client.hunger end
-            if v.client.thirst then Items[k].thirst = v.client.thirst end
+local loadItems = function() local itemResource = ""
+    if GetResourceState(OXInv):find("start") then
+        itemResource = OXInv
+        Items = exports[OXInv]:Items()
+        for k, v in pairs(Items) do
+            if v.client and v.client.image then
+                Items[k].image = (v.client.image):gsub("nui://"..OXInv.."/web/images/", "")
+            else
+                Items[k].image = k..".png"
+            end
+            Items[k].hunger = v.client and v.client.hunger or nil
+            Items[k].thirst = v.client and v.client.thirst or nil
         end
-    end
-elseif GetResourceState(QBExport):find("start") then
-    print("^6Bridge^7: ^2Loading ^3Items^2 from ^7"..QBExport)
-    Core = Core or exports[QBExport]:GetCoreObject()
-    Items = Core.Shared.Items
-elseif GetResourceState(ESXExport):find("start") then
-    print("^6Bridge^7: ^2Loading ^3Items^2 from ^7"..ESXExport)
-    ESX = exports[ESXExport]:getSharedObject()
-    Items = ESX.Items
-else
-    print("^4ERROR^7: ^2No Core Items detected ^7- ^2Check ^3exports^1.^2lua^7")
-end
-
--- Load Vehicles
-if GetResourceState(QBXExport):find("start") then
-    Core = Core or exports[QBExport]:GetCoreObject()
-    print("^6Bridge^7: ^2Loading ^3Vehicles^2 from ^7"..QBXExport)
-    Vehicles = exports[QBXExport]:GetVehiclesByHash()
-elseif GetResourceState(QBExport):find("start") then
-    print("^6Bridge^7: ^2Loading ^3Vehicles^2 from ^7"..QBExport)
-    Core = Core or exports[QBExport]:GetCoreObject()
-    RegisterNetEvent('QBCore:Client:UpdateObject', function()
+    elseif GetResourceState(QBExport):find("start") then
+        itemResource = QBExport
         Core = Core or exports[QBExport]:GetCoreObject()
-    end)
-    Vehicles = Core.Shared.Vehicles
-elseif GetResourceState(OXCoreExport):find("start") then
-    print("^6Bridge^7: ^2Loading ^3Vehicles^2 from ^7"..OXCoreExport)
-    for k, v in pairs(Ox.GetVehicleData()) do
-        Vehicles = Vehicles or {}
-        Vehicles[k] = { model = k, price = v.price, name = v.name, brand = v.make }
+        Items = Core and Core.Shared.Items or nil
+    elseif GetResourceState(ESXExport):find("start") then
+        itemResource = ESXExport
+        ESX = exports[ESXExport]:getSharedObject()
+        Items = ESX and ESX.Items or nil
     end
-elseif GetResourceState(ESXExport):find("start") then
-    print("^6Bridge^7: ^2Loading ^3Vehicles^2 from ^7"..ESXExport)
-    CreateThread(function()
-        if IsDuplicityVersion() then
-            createCallback(GetCurrentResourceName()..":getVehiclesPrices", function(source)
-                Vehicles = MySQL.query.await('SELECT model, price, name FROM vehicles')
-                return Vehicles
-            end)
-        end
-        if not IsDuplicityVersion() then
-            local TempVehicles = triggerCallback(GetCurrentResourceName()..":getVehiclesPrices")
-            for _, v in pairs(TempVehicles) do
-                Vehicles = Vehicles or {}
-                Vehicles[v.model] = { model = v.model, price = v.price, name = v.name, brand = GetMakeNameFromVehicleModel(v.model):lower():gsub("^%l", string.upper) }
-            end
-        end
-    end)
-else
-    print("^4ERROR^7: ^2No Vehicle info detected ^7- ^2Check ^3exports^1.^2lua^7")
+    if not Items then
+        print("^4ERROR^7: ^2No Core Items detected ^7- ^2Check ^3exports^1.^2lua^7")
+    else
+        print("^6Bridge^7: ^2Loading ^6"..countTable(Items).." ^3Items^2 from ^7" .. itemResource)
+    end
 end
 
--- Load Jobs
-if GetResourceState(QBXExport):find("start") then
-    Core = Core or exports[QBExport]:GetCoreObject()
-    print("^6Bridge^7: ^2Loading ^3Jobs^7/^3Gangs^2 from ^7"..QBXExport)
-    Jobs = exports[QBXExport]:GetJobs()
-    Gangs = exports[QBXExport]:GetGangs()
-
-elseif GetResourceState(OXCoreExport):find("start") then
-    print("^6Bridge^7: ^2Loading ^3Jobs^7/^3Gangs^2 from ^7"..OXCoreExport)
-    CreateThread(function()
-        if IsDuplicityVersion() then
-            createCallback(GetCurrentResourceName()..":getOxGroups", function(source)
-                Jobs = MySQL.query.await('SELECT * FROM `ox_groups`')
-                return Jobs
+local loadVehicles = function() local vehResource = ""
+    if GetResourceState(QBXExport):find("start") or GetResourceState(QBExport):find("start") then vehResource = QBExport
+        Core = Core or exports[QBExport]:GetCoreObject()
+        if GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
+            RegisterNetEvent('QBCore:Client:UpdateObject', function()
+                Core = Core or exports[QBExport]:GetCoreObject()
             end)
-        else
-            local TempJobs = triggerCallback(GetCurrentResourceName()..":getOxGroups")
-            for k, v in pairs(TempJobs) do
-                local grades = {}
-                for i = 1, #v.grades do grades[i] = { name = grades[i], isboss = (i == #v.grades)} end
-                Jobs = Jobs or {}
-                Jobs[v.name] = { label = v.label, grades = grades, }
+        end
+        Vehicles = Core and Core.Shared.Vehicles
+    elseif GetResourceState(OXCoreExport):find("start") then vehResource = OXCoreExport
+        Vehicles = {}
+        for k, v in pairs(Ox.GetVehicleData()) do
+            Vehicles[k] = { model = k, price = v.price, name = v.name, brand = v.make }
+        end
+    elseif GetResourceState(ESXExport):find("start") then vehResource = ESXExport
+        CreateThread(function()
+            if IsDuplicityVersion() then
+                createCallback(GetCurrentResourceName()..":getVehiclesPrices", function(source)
+                    Vehicles = MySQL.query.await('SELECT model, price, name FROM vehicles')
+                    return Vehicles
+                end)
+            else
+                local TempVehicles = triggerCallback(GetCurrentResourceName()..":getVehiclesPrices")
+                for _, v in pairs(TempVehicles) do
+                    Vehicles = Vehicles or {}
+                    Vehicles[v.model] = { model = v.model, price = v.price, name = v.name, brand = GetMakeNameFromVehicleModel(v.model):lower():gsub("^%l", string.upper) }
+                end
             end
-        end
-    end)
-
-elseif GetResourceState(QBExport):find("start") then
-    print("^6Bridge^7: ^2Loading ^3Jobs^7/^3Gangs^2 from ^7"..QBExport)
-    Core = Core or Core or exports[QBExport]:GetCoreObject()
-    RegisterNetEvent('QBCore:Client:UpdateObject', function() Core = Core or exports[QBExport]:GetCoreObject() end)
-    Jobs = Core.Shared.Jobs
-    Gangs = Core.Shared.Gangs
-
-elseif GetResourceState(ESXExport):find("start") then
-    print("^6Bridge^7: ^2Loading ^3Jobs^7/^3Gangs^2 from ^7"..ESXExport)
-    ESX = exports[ESXExport]:getSharedObject()
-    if IsDuplicityVersion() then
-        Jobs = ESX.GetJobs()
-        for k, v in pairs(Jobs) do
-            local count = countTable(Jobs[k].grades)-1
-            Jobs[k].grades[tostring(count)].isBoss = true
-        end
-        Gangs = Jobs
+        end)
     end
-    CreateThread(function()
-        while not ESX do Wait(0) end
+    local timeout = 1000 while not Vehicles and timeout > 0 do timeout -=1 Wait(0) end
+    if not Vehicles then
+        print("^4ERROR^7: ^2No Vehicle info detected ^7- ^2Check ^3exports^1.^2lua^7")
+    else
+        print("^6Bridge^7: ^2Loading ^6"..countTable(Vehicles).." ^3Vehicles^2 from ^7"..vehResource)
+    end
+end
+
+local loadJobs = function() local jobResource = ""
+    if GetResourceState(QBXExport):find("start") then jobResource = QBXExport
+        Core = Core or exports[QBExport]:GetCoreObject()
+        Jobs, Gangs = exports[QBXExport]:GetJobs(), exports[QBXExport]:GetGangs()
+
+    elseif GetResourceState(OXCoreExport):find("start") then  jobResource = OXExport
+        CreateThread(function()
+            if IsDuplicityVersion() then
+                createCallback(GetCurrentResourceName()..":getOxGroups", function(source)
+                    Jobs = MySQL.query.await('SELECT * FROM `ox_groups`') return Jobs
+                end)
+            else
+                local TempJobs = triggerCallback(GetCurrentResourceName()..":getOxGroups")
+                Jobs = TempJobs and {}
+                for k, v in pairs(TempJobs) do
+                    local grades = {}
+                    for i = 1, #v.grades do grades[i] = { name = v.grades[i], isboss = (i == #v.grades)} end
+                    Jobs[v.name] = { label = v.label, grades = grades }
+                end
+                Gangs = Jobs
+            end
+        end)
+
+    elseif GetResourceState(QBExport):find("start") then jobResource = QBExport
+        Core = Core or Core or exports[QBExport]:GetCoreObject()
+        RegisterNetEvent('QBCore:Client:UpdateObject', function() Core = Core or exports[QBExport]:GetCoreObject() end)
+        Jobs, Gangs = Core.Shared.Jobs, Core.Shared.Gangs
+
+    elseif GetResourceState(ESXExport):find("start") then jobResource = ESXExport
+        ESX = exports[ESXExport]:getSharedObject()
         if IsDuplicityVersion() then
-            createCallback(GetCurrentResourceName()..":getJobs", function(source)
-                return Jobs
-            end)
-        end
-        if not IsDuplicityVersion() then
-            Jobs = triggerCallback(GetCurrentResourceName()..":getJobs")
+            Jobs = ESX.GetJobs()
+            for k, v in pairs(Jobs) do
+                local count = countTable(Jobs[k].grades) - 1
+                Jobs[k].grades[tostring(count)].isBoss = true
+            end
             Gangs = Jobs
         end
-    end)
-else
-    print("^4ERROR^7: ^2No Job/Gang ifo detected ^7- ^2Check ^3exports^1.^2lua^7")
+        CreateThread(function()
+            while not ESX do Wait(0) end
+            if IsDuplicityVersion() then
+                createCallback(GetCurrentResourceName()..":getJobs", function(source)
+                    return Jobs
+                end)
+            else
+                Jobs = triggerCallback(GetCurrentResourceName()..":getJobs")
+                Gangs = Jobs
+            end
+        end)
+    end
+    local timeout = 1000 while not Jobs and timeout > 0 do timeout -=1 Wait(0) end
+    if Jobs then
+        print("^6Bridge^7: ^2Loading ^6"..countTable(Jobs).." ^3Jobs^2 from ^7"..jobResource)
+        print("^6Bridge^7: ^2Loading ^6"..countTable(Gangs).." ^3Gangs^2 from ^7"..jobResource)
+    else
+        print("^4ERROR^7: ^2No Job/Gang info detected ^7- ^2Check ^3exports^1.^2lua^7")
+    end
 end
 
+loadItems()
+loadVehicles()
+loadJobs()
+
 function makeBossRoles(role)
-	local boss = {}
-	if Jobs and Jobs[role] then
-		for grade in pairs(Jobs[role].grades) do
-			if Jobs[role].grades[grade].isboss then
-				if boss[role] then
-					if boss[role] > tonumber(grade) then boss[role] = tonumber(grade) end
-				else boss[role] = tonumber(grade) end
-			end
-		end
-	elseif Gangs and Gangs[role] then
-		for grade in pairs(Gangs[role].grades) do
-			if Gangs[role].grades[grade].isboss then
-				if boss[role] then
-					if boss[role] > tonumber(grade) then boss[role] = tonumber(grade) end
-				else boss[role] = tonumber(grade) end
-			end
-		end
-	end
+    local boss = {}
+    local data = Jobs and Jobs[role] or Gangs and Gangs[role]
+    if data then
+        for grade, info in pairs(data.grades) do
+            if info.isboss then
+                boss[role] = boss[role] and math.min(boss[role], tonumber(grade)) or tonumber(grade)
+            end
+        end
+    end
     return boss
 end
 
