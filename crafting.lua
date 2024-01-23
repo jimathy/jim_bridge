@@ -198,6 +198,7 @@ RegisterNetEvent(GetCurrentResourceName()..":Crafting:GetItem", function(ItemMak
         end
     end
     TriggerEvent(GetCurrentResourceName()..":server:toggleItem", true, ItemMake, amount, src)
+    if GetResourceState("core_skills"):find("start") exports["core_skills"]:AddExperience(src, 2) end
 end)
 
 --[[SHOPS]]--
