@@ -193,22 +193,12 @@ end
 function ensureNetToVeh(vehNetID)
 	if Config.System.Debug then print("^6Bridge^7: ^3ensureNetToVeh^7: ^2Requesting NetworkDoesNetworkIdExist^7(^6"..vehNetID.."^7)") end
 	local timeout = 100
-	while not NetworkDoesNetworkIdExist(vehNetID) and timeout > 0 do
-		timeout -= 1
-		Wait(10)
-	end
-	if not NetworkDoesNetworkIdExist(vehNetID) then
-		return 0
-	end
+	while not NetworkDoesNetworkIdExist(vehNetID) and timeout > 0 do timeout -= 1 Wait(10) end
+	if not NetworkDoesNetworkIdExist(vehNetID) then return 0 end
 	timeout = 100
 	local vehicle = NetToVeh(vehNetID)
-	while not DoesEntityExist(vehicle) and vehicle ~= 0 and timeout > 0 do
-		timeout -= 1
-		Wait(10)
-	end
-	if not DoesEntityExist(vehicle) then
-		return 0
-	end
+	while not DoesEntityExist(vehicle) and vehicle ~= 0 and timeout > 0 do timeout -= 1 Wait(10) end
+	if not DoesEntityExist(vehicle) then return 0 end
 	return vehicle
 end
 
