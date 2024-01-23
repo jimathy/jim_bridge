@@ -222,6 +222,9 @@ function openMenu(Menu, data)
             })
         end
         for k in pairs(Menu) do
+            if data.onSelected and Menu[k].arrow then
+                Menu[k].icon = "fas fa-angle-right"
+            end
             if not Menu[k].title then
                 if Menu[k].header ~= nil and Menu[k].header ~= "" then
                     Menu[k].title = Menu[k].header
@@ -229,6 +232,7 @@ function openMenu(Menu, data)
                     if Menu[k].txt then Menu[k].description = Menu[k].txt else Menu[k].description = "" end
                 else
                     Menu[k].title = Menu[k].txt
+                    Menu[k].label = Menu[k].txt
                 end
             end
             if Menu[k].params then
@@ -249,7 +253,20 @@ function openMenu(Menu, data)
             onClose = (data.onBack and data.onBack) or (data.onExit and data.onExit) or nil,
             onExit = data.onExit and data.onExit or nil,
             onSelected = data.onSelected and (function(selected) index = selected end) or nil,
-        }, (data.onSelected and (function(x, y, args) Menu[x].onSelect() end) or nil))
+        }, (data.onSelected and (function(x, y, args)
+            if Menu[x].refresh then
+                if Menu[x].onSelect then
+                    Menu[x].onSelect()
+                end
+                lib.showMenu(menuID, index)
+            else
+                if Menu[x].onSelect then
+                    Menu[x].onSelect()
+                else
+                    lib.showMenu(menuID, index)
+                end
+            end
+        end) or nil))
         if data.onSelected then
             lib.showMenu(menuID, 1)
         else
