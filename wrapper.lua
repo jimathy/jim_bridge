@@ -1,6 +1,6 @@
 Items, Vehicles, Jobs, Gangs, Core, ESX = {}, nil, nil, nil, nil, nil
 
-Exports.QBInv = GetResourceState("ps-inventory"):find("start") and "ps-inventory" or GetResourceState("lj-inventory"):find("start") and "lj-inventory" or ""
+Exports.QBInv = GetResourceState("ps-inventory"):find("start") and "ps-inventory" or GetResourceState("lj-inventory"):find("start") and "lj-inventory" or Exports.QBInv
 
 OXLibExport, QBXExport, QBExport, ESXExport, OXCoreExport = Exports.OXLibExport or "", Exports.QBXExport or "", Exports.QBExport or "", Exports.ESXExport or "", Exports.OXCoreExport or ""
 
