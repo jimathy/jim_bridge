@@ -53,7 +53,7 @@ function craftingMenu(data)
                     end
                     if Config.System.Debug then print("^6Bridge^7: ^2Checking"..(data.stashName and " ^7'^6"..data.stashName.."^7'" or "").." ^2ingredients^7 - ^6"..k.."^7") end
                     if data.stashName ~= nil then disable = stashhasItem(stashItems, itemTable) else disable = hasItem(itemTable) end
-                    setheader = Items[tostring(k)].label..(Recipes[i]["amount"] > 1 and " x"..Recipes[i]["amount"] or "")..(not disable and " ✔️" or "")
+                    setheader = (Items[tostring(k)] and Items[tostring(k)].label or "error - "..tostring(k))..(Recipes[i]["amount"] > 1 and " x"..Recipes[i]["amount"] or "")..(not disable and " ✔️" or "")
                     Menu[#Menu + 1] = {
                         isMenuHeader = not disable,
                         icon = invImg(tostring(k)),
@@ -297,7 +297,7 @@ function getStash(stashName) local stashResource = ""
         stashItems = exports[CodeMInv]:GetInventoryItems('Stash', stashName)
 
     elseif GetResourceState(OrigenInv):find("start") then stashResource = OrigenInv
-        stashItems = exports[OrigenInv]:GetStash(stashName)
+        stashItems = exports[OrigenInv]:GetStashItems(stashName)
 
     elseif GetResourceState(QBInv):find("start") then stashResource = QBInv
         local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })

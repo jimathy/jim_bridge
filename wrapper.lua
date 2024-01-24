@@ -27,8 +27,7 @@ for k, v in pairs(Exports) do
 end
 
 local loadItems = function() local itemResource = ""
-    if GetResourceState(OXInv):find("start") then
-        itemResource = OXInv
+    if GetResourceState(OXInv):find("start") then itemResource = OXInv
         Items = exports[OXInv]:Items()
         for k, v in pairs(Items) do
             if v.client and v.client.image then
@@ -39,12 +38,10 @@ local loadItems = function() local itemResource = ""
             Items[k].hunger = v.client and v.client.hunger or nil
             Items[k].thirst = v.client and v.client.thirst or nil
         end
-    elseif GetResourceState(QBExport):find("start") then
-        itemResource = QBExport
+    elseif GetResourceState(QBExport):find("start") then itemResource = QBExport
         Core = Core or exports[QBExport]:GetCoreObject()
         Items = Core and Core.Shared.Items or nil
-    elseif GetResourceState(ESXExport):find("start") then
-        itemResource = ESXExport
+    elseif GetResourceState(ESXExport):find("start") then itemResource = ESXExport
         ESX = exports[ESXExport]:getSharedObject()
         Items = ESX and ESX.Items or nil
     end
@@ -85,7 +82,7 @@ local loadVehicles = function() local vehResource = ""
             end
         end)
     end
-    local timeout = 1000 while not Vehicles and timeout > 0 do timeout -=1 Wait(0) end
+    local timeout = 5000 while not Vehicles and timeout > 0 do timeout -=1 Wait(0) end
     if not Vehicles then
         print("^4ERROR^7: ^2No Vehicle info detected ^7- ^2Check ^3exports^1.^2lua^7")
     else
@@ -123,30 +120,25 @@ local loadJobs = function() local jobResource = ""
 
     elseif GetResourceState(ESXExport):find("start") then jobResource = ESXExport
         ESX = exports[ESXExport]:getSharedObject()
-        if IsDuplicityVersion() then
-            Jobs = ESX.GetJobs()
-            for k, v in pairs(Jobs) do
-                local count = countTable(Jobs[k].grades) - 1
-                Jobs[k].grades[tostring(count)].isBoss = true
-            end
-            Gangs = Jobs
-        end
         CreateThread(function()
             while not ESX do Wait(0) end
             if IsDuplicityVersion() then
-                createCallback(GetCurrentResourceName()..":getJobs", function(source)
-                    return Jobs
-                end)
+                Jobs = ESX.GetJobs()
+                for k, v in pairs(Jobs) do
+                    local count = countTable(Jobs[k].grades) - 1
+                    Jobs[k].grades[tostring(count)].isBoss = true
+                end
+                Gangs = Jobs
+                createCallback(GetCurrentResourceName()..":getJobs", function(source) return Jobs end)
             else
                 Jobs = triggerCallback(GetCurrentResourceName()..":getJobs")
                 Gangs = Jobs
             end
         end)
     end
-    local timeout = 1000 while not Jobs and timeout > 0 do timeout -=1 Wait(0) end
+    local timeout = 5000 while not Jobs and timeout > 0 do timeout -=1 Wait(0) end
     if Jobs then
-        print("^6Bridge^7: ^2Loading ^6"..countTable(Jobs).." ^3Jobs^2 from ^7"..jobResource)
-        print("^6Bridge^7: ^2Loading ^6"..countTable(Gangs).." ^3Gangs^2 from ^7"..jobResource)
+        print("^6Bridge^7: ^2Loading ^6"..countTable(Jobs).." ^3Jobs^2 from ^7"..jobResource, 0"^6Bridge^7: ^2Loading ^6"..countTable(Gangs).." ^3Gangs^2 from ^7"..jobResource)
     else
         print("^4ERROR^7: ^2No Job/Gang info detected ^7- ^2Check ^3exports^1.^2lua^7")
     end
@@ -181,11 +173,7 @@ function createPoly(data) local Location = nil
         if Config.System.Debug then print("^6Bridge^7: ^2Creating new poly with ^7PolyZone "..data.name) end
         Location = PolyZone:Create(data.points, { name = data.name, debugPoly = data.debug })
         Location:onPlayerInOut(function(isPointInside)
-            if isPointInside then
-                data.onEnter()
-            else
-                data.onExit()
-            end
+            if isPointInside then data.onEnter() else data.onExit() end
         end)
     else
         print("^4ERROR^7: ^2No PolyZone creation script detected ^7- ^2Check ^3exports^1.^2lua^7")
