@@ -138,7 +138,7 @@ local loadJobs = function() local jobResource = ""
     end
     local timeout = 5000 while not Jobs and timeout > 0 do timeout -=1 Wait(0) end
     if Jobs then
-        print("^6Bridge^7: ^2Loading ^6"..countTable(Jobs).." ^3Jobs^2 from ^7"..jobResource, 0"^6Bridge^7: ^2Loading ^6"..countTable(Gangs).." ^3Gangs^2 from ^7"..jobResource)
+        print("^6Bridge^7: ^2Loading ^6"..countTable(Jobs).." ^3Jobs^2 from ^7"..jobResource, "^6Bridge^7: ^2Loading ^6"..countTable(Gangs).." ^3Gangs^2 from ^7"..jobResource)
     else
         print("^4ERROR^7: ^2No Job/Gang info detected ^7- ^2Check ^3exports^1.^2lua^7")
     end
