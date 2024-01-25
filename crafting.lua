@@ -52,10 +52,11 @@ function craftingMenu(data)
                         Wait(0)
                     end
                     if Config.System.Debug then print("^6Bridge^7: ^2Checking"..(data.stashName and " ^7'^6"..data.stashName.."^7'" or "").." ^2ingredients^7 - ^6"..k.."^7") end
-                    if data.stashName ~= nil then disable = stashhasItem(stashItems, itemTable) else disable = hasItem(itemTable) end
+                    if data.stashName then disable = not stashhasItem(stashItems, itemTable)
+                    else disable = not hasItem(itemTable) end
                     setheader = (Items[tostring(k)] and Items[tostring(k)].label or "error - "..tostring(k))..(Recipes[i]["amount"] > 1 and " x"..Recipes[i]["amount"] or "")..(not disable and " ✔️" or "")
                     Menu[#Menu + 1] = {
-                        isMenuHeader = not disable,
+                        isMenuHeader = disable,
                         icon = invImg(tostring(k)),
                         header = setheader, txt = settext,
                         onSelect = function()
@@ -258,7 +259,8 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
             for _, itemData in pairs(grabInv) do
                 if itemData and (itemData.name == item) then count += (itemData.count or itemData.amount or 1) end
             end
-            local foundMessage = "^6Bridge^7: ^3HasItem^7[^6"..foundInv.."^7]: "..tostring(item).." ^3"..count.."^7/^3"..amount
+            foundInv = foundInv:gsub("%-", "^7-^6"):gsub("%_", "^7_^6")
+            local foundMessage = "^6Bridge^7: ^3hasItem^7[^6"..foundInv.."^7]: "..tostring(item).." ^3"..count.."^7/^3"..amount
             if count >= amount then foundMessage = foundMessage.." ^5FOUND^7" else foundMessage = foundMessage .." ^1NOT FOUND^7" end
             if Config.System.Debug then print(foundMessage) end
             hasTable[item] = { hasItem = count >= amount, count = count }
@@ -309,8 +311,8 @@ function getStash(stashName) local stashResource = ""
         for _, item in pairs(stashItems) do
             local itemInfo = Items[item.name:lower()]
             if itemInfo then
-                local indexNum = #items+1
-                items[(item.slot and item.slot) or #indexNum)] = {
+                local indexNum = #items+1 -- Added to help recreate missing slot numbers
+                items[(item.slot and item.slot) or indexNum] = {
                     name = itemInfo.name or nil,
                     amount = tonumber(item.amount) or tonumber(item.count),
                     info = item.info or "",
@@ -323,7 +325,6 @@ function getStash(stashName) local stashResource = ""
                     image = itemInfo.image or nil,
                     slot = (item.slot and item.slot) or indexNum,
                 }
-                print("TEST:", item.slot and ("slot info found: "..item.slot) or "reverting to indexnum "..indexNum)
             end
         end
         if Config.System.Debug then print("^6Bridge^7: ^3GetStashItems^7: ^2Stash information for ^7'^6"..stashName.."^7' ^2retrieved^7") end
@@ -420,7 +421,15 @@ end
 RegisterNetEvent(GetCurrentResourceName()..":server:stashRemoveItem", stashRemoveItem)
 
 function stashhasItem(stashItems, items, amount)
+    local invs = {OXInv, QSInv, CoreInv, CodeMInv, OrigenInv, QBInv}
     local foundInv = ""
+    for _, inv in ipairs(invs) do
+        if GetResourceState(inv):find("start") then
+            foundInv = inv:gsub("%-", "^7-^6"):gsub("%_", "^7_^6")
+            break
+        end
+    end
+
     if type(items) ~= "table" then items = { [items] = amount and amount or 1, } end
     local hasTable = {}
     for item, amount in pairs(items) do
@@ -430,13 +439,11 @@ function stashhasItem(stashItems, items, amount)
                 count += (itemData.amount or 1)
             end
         end
-        if count >= amount then
-            if Config.System.Debug then print("^6Bridge^7: ^3stashHasItem^7: ^5FOUND '"..item.."' ^3"..count.."^7/^3"..amount.."^7") end
-            hasTable[item] = { hasItem = true, count = count, }
-        else
-            if Config.System.Debug then print("^6Bridge^7: ^3stashHasItem^7: ^1NOT FOUND^7 '"..item.."' ^1"..count.."^7/^3"..amount.."^7") end
-            hasTable[item] = { hasItem = false, count = count, }
-        end
+
+        local debugMsg = string.format("^6Bridge^7: ^3stashHasItem^7[^6%s^7]: %s '%s' ^3%d^7/^3%d^7", foundInv, (count >= amount and "^5FOUND^7" or "^1NOT FOUND^7"), item, count, amount)
+        if Config.System.Debug then print(debugMsg) end
+
+        hasTable[item] = { hasItem = (count >= amount), count = count }
     end
     for k, v in pairs(hasTable) do if v.hasItem == false then return false, hasTable end end
     return true, hasTable
