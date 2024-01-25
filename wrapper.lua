@@ -26,7 +26,8 @@ for k, v in pairs(Exports) do
     if GetResourceState(v):find("start") then print("^6Bridge^7: '^3"..v.."^7' ^2export found ^7") end
 end
 
-local loadItems = function() local itemResource = ""
+--local loadItems = function()
+    local itemResource = ""
     if GetResourceState(OXInv):find("start") then itemResource = OXInv
         Items = exports[OXInv]:Items()
         for k, v in pairs(Items) do
@@ -43,6 +44,7 @@ local loadItems = function() local itemResource = ""
         Items = Core and Core.Shared.Items or nil
     elseif GetResourceState(ESXExport):find("start") then itemResource = ESXExport
         ESX = exports[ESXExport]:getSharedObject()
+        while not ESX do Wait(0) end
         Items = ESX and ESX.Items or nil
     end
     if not Items then
@@ -50,9 +52,10 @@ local loadItems = function() local itemResource = ""
     else
         print("^6Bridge^7: ^2Loading ^6"..countTable(Items).." ^3Items^2 from ^7" .. itemResource)
     end
-end
+--end
 
-local loadVehicles = function() local vehResource = ""
+--local loadVehicles = function()
+    local vehResource = ""
     if GetResourceState(QBXExport):find("start") or GetResourceState(QBExport):find("start") then vehResource = QBExport
         Core = Core or exports[QBExport]:GetCoreObject()
         if GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
@@ -67,6 +70,8 @@ local loadVehicles = function() local vehResource = ""
             Vehicles[k] = { model = k, price = v.price, name = v.name, brand = v.make }
         end
     elseif GetResourceState(ESXExport):find("start") then vehResource = ESXExport
+        ESX = exports[ESXExport]:getSharedObject()
+        while not ESX do Wait(0) end
         CreateThread(function()
             if IsDuplicityVersion() then
                 createCallback(GetCurrentResourceName()..":getVehiclesPrices", function(source)
@@ -88,9 +93,10 @@ local loadVehicles = function() local vehResource = ""
     else
         print("^6Bridge^7: ^2Loading ^6"..countTable(Vehicles).." ^3Vehicles^2 from ^7"..vehResource)
     end
-end
+--end
 
-local loadJobs = function() local jobResource = ""
+--local loadJobs = function()
+    local jobResource = ""
     if GetResourceState(QBXExport):find("start") then jobResource = QBXExport
         Core = Core or exports[QBExport]:GetCoreObject()
         Jobs, Gangs = exports[QBXExport]:GetJobs(), exports[QBXExport]:GetGangs()
@@ -120,8 +126,8 @@ local loadJobs = function() local jobResource = ""
 
     elseif GetResourceState(ESXExport):find("start") then jobResource = ESXExport
         ESX = exports[ESXExport]:getSharedObject()
+        while not ESX do Wait(0) end
         CreateThread(function()
-            while not ESX do Wait(0) end
             if IsDuplicityVersion() then
                 Jobs = ESX.GetJobs()
                 for k, v in pairs(Jobs) do
@@ -142,11 +148,11 @@ local loadJobs = function() local jobResource = ""
     else
         print("^4ERROR^7: ^2No Job/Gang info detected ^7- ^2Check ^3exports^1.^2lua^7")
     end
-end
+--end
 
-loadItems()
-loadVehicles()
-loadJobs()
+--loadItems()
+--loadVehicles()
+--loadJobs()
 
 function makeBossRoles(role)
     local boss = {}
