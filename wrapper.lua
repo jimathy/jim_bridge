@@ -1248,13 +1248,13 @@ function invImg(item)
     if item ~= "" and Items[item] then
         if GetResourceState(OXInv):find("start") then
             imgLink = "nui://"..OXInv.."/web/images/"..(Items[item].image or "")
-        elseif GetResourceState(QSInv and QSInv or ""):find("start") then
+        elseif GetResourceState(QSInv):find("start") then
             imgLink = "nui://"..QSInv.."/html/images/"..(Items[item].image or "")
-        elseif GetResourceState(CoreInv and CoreInv or ""):find("start") then
+        elseif GetResourceState(CoreInv):find("start") then
             imgLink = "nui://"..CoreInv.."/html/img/"..(Items[item].image or "")
-        elseif GetResourceState(OrigenInv and OrigenInv or ""):find("start") then
+        elseif GetResourceState(OrigenInv):find("start") then
             imgLink = "nui://"..OrigenInv.."/html/img/"..(Items[item].image or "")
-        elseif GetResourceState(QBInv and QBInv or ""):find("start") then
+        elseif GetResourceState(QBInv):find("start") then
             imgLink = "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
         else
             print("^4ERROR^7: ^2No Inventory detected for invImg ^7- ^2Check ^3exports^1.^2lua^7")

@@ -303,12 +303,14 @@ function getStash(stashName) local stashResource = ""
         local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
 		if result then stashItems = json.decode(result) end
     end
+
     if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..stashResource) end
     if stashItems then
         for _, item in pairs(stashItems) do
             local itemInfo = Items[item.name:lower()]
             if itemInfo then
-                items[#items+1] = {
+                local indexNum = #items+1
+                items[(item.slot and item.slot) or #indexNum)] = {
                     name = itemInfo.name or nil,
                     amount = tonumber(item.amount) or tonumber(item.count),
                     info = item.info or "",
@@ -319,8 +321,9 @@ function getStash(stashName) local stashResource = ""
                     unique = itemInfo.unique or nil,
                     useable = itemInfo.useable or nil,
                     image = itemInfo.image or nil,
-                    slot = itemInfo.slot or nil,
+                    slot = (item.slot and item.slot) or indexNum,
                 }
+                print("TEST:", item.slot and ("slot info found: "..item.slot) or "reverting to indexnum "..indexNum)
             end
         end
         if Config.System.Debug then print("^6Bridge^7: ^3GetStashItems^7: ^2Stash information for ^7'^6"..stashName.."^7' ^2retrieved^7") end
@@ -334,6 +337,7 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
             exports[OXInv]:RemoveItem(stashName, k, v)
             if Config.System.Debug then print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..OXInv, k, v) end
         end
+
     elseif GetResourceState(QSInv):find("start") then
             for k, v in pairs(items) do
                 for l in pairs(stashItems) do
