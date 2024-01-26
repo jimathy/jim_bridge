@@ -1124,6 +1124,7 @@ function hasJob(job, source, grade) local hasJob, duty = false, true
             if ganginfo.name == job then hasJob = true
                 if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
             end
+
         elseif GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
             local info = nil
             Core.Functions.GetPlayerData(function(PlayerData)
@@ -1139,6 +1140,7 @@ function hasJob(job, source, grade) local hasJob, duty = false, true
                 hasJob = true
                 if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
             end
+
         else
             print("^4ERROR^7: ^2No Core detected for hasJob() ^7- ^2Check ^3exports^1.^2lua^7")
         end
@@ -1157,6 +1159,7 @@ function getPlayer(source) local Player = {}
                 cash = info.getMoney(),
                 bank = info.getAccount("bank").money,
             }
+
         elseif GetResourceState(OXCoreExport):find("start") then
             local file = ('imports/%s.lua'):format('server')
             local import = LoadResourceFile('ox_core', file)
@@ -1168,6 +1171,7 @@ function getPlayer(source) local Player = {}
                 cash = exports[OXInv]:Search(src, 'count', "money"),
                 bank = 0,
             }
+
         elseif GetResourceState(QBXExport):find("start") then
             local info = exports[QBXExport]:GetPlayer(src)
             Player = {
@@ -1175,6 +1179,7 @@ function getPlayer(source) local Player = {}
                 cash = exports[OXInv]:Search(src, 'count', "money"),
                 bank = info.Functions.GetMoney("bank"),
             }
+
         elseif GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
             if Core.Functions.GetPlayer ~= nil then -- support older qb-core functions
                 local info = Core.Functions.GetPlayer(src).PlayerData
@@ -1191,6 +1196,7 @@ function getPlayer(source) local Player = {}
                     bank = info.money["bank"],
                 }
             end
+
         else
             print("^4ERROR^7: ^2No Core detected for getPlayer() ^7- ^2Check ^3exports^1.^2lua^7")
         end
