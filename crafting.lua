@@ -33,6 +33,15 @@ function craftingMenu(data)
     if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
     local Menu, hasjob = {}, false
     local Recipes = data.craftable.Recipes
+    local tempCarryTable = {}
+	for i = 1, #Recipes do
+        for k in pairs(Recipes[i]) do
+            if k ~= "amount" and k ~= "job" and k ~= "gang" then
+                tempCarryTable[k] = Recipes[i].amount or 1
+            end
+        end
+    end
+    local canCarryTable = triggerCallback(GetCurrentResourceName()..':server:canCarry', tempCarryTable)
 	for i = 1, #Recipes do
         if not Recipes[i]["amount"] then Recipes[i]["amount"] = 1 end
         for k, v in pairs(Recipes[i]) do
@@ -51,14 +60,21 @@ function craftingMenu(data)
                         itemTable[l] = b
                         Wait(0)
                     end
+                    while not canCarryTable do Wait(0) end
+                    print(json.encode(canCarryTable, {indent = true}))
                     if Config.System.Debug then print("^6Bridge^7: ^2Checking"..(data.stashName and " ^7'^6"..data.stashName.."^7'" or "").." ^2ingredients^7 - ^6"..k.."^7") end
                     if data.stashName then disable = not stashhasItem(stashItems, itemTable)
                     else disable = not hasItem(itemTable) end
-                    setheader = (Items[tostring(k)] and Items[tostring(k)].label or "error - "..tostring(k))..(Recipes[i]["amount"] > 1 and " x"..Recipes[i]["amount"] or "")..(not disable and " ✔️" or "")
+                    setheader = (Items[tostring(k)] and Items[tostring(k)].label or "error - " .. tostring(k)) .. (Recipes[i]["amount"] > 1 and " x" .. Recipes[i]["amount"] or "")
+                    if not disable then
+                        if not canCarryTable[k] then setheader = setheader .. " 📦"
+                        else setheader = setheader .. " ✔️" end
+                    elseif not canCarryTable[k] then setheader = setheader .. " 📦" end
                     Menu[#Menu + 1] = {
-                        isMenuHeader = disable,
+                        isMenuHeader = disable or not canCarryTable[k],
                         icon = invImg(tostring(k)),
-                        header = setheader, txt = settext,
+                        header = setheader,
+                        txt = settext,
                         onSelect = function()
                             local transdata = { item = k, craft = data.craftable.Recipes[i], craftable = data.craftable, coords = data.coords, stashName = data.stashName, onBack = data.onBack }
                             if Config.Crafting.MultiCraft then multiCraft(transdata) else makeItem(transdata) end
@@ -174,7 +190,6 @@ end
 
 RegisterNetEvent(GetCurrentResourceName()..":Crafting:GetItem", function(ItemMake, craftable, stashName)
     local src, amount, stashItems = source, craftable and craftable.amount or 1, stashName and getStash(stashName)
-
     if stashName then
         local itemRemove = {}
         for k, v in pairs(craftable[ItemMake] or {}) do
@@ -447,4 +462,62 @@ function stashhasItem(stashItems, items, amount)
     end
     for k, v in pairs(hasTable) do if v.hasItem == false then return false, hasTable end end
     return true, hasTable
+end
+
+if IsDuplicityVersion() then
+    if GetResourceState(OXLibExport):find("start") then
+        createCallback(GetCurrentResourceName()..':server:canCarry', function(source, itemTable) local result = canCarry(itemTable, source) return result end)
+    else
+        createCallback(GetCurrentResourceName()..':server:canCarry', function(source, cb, itemTable) local result = canCarry(itemTable, source) cb(result) end)
+    end
+end
+
+function canCarry(itemTable, src)
+    print("checking if player can carry")
+    local resultTable = {}
+    if src then
+        if GetResourceState(OXInv):find("start") then
+            for k, v in pairs(itemTable) do
+                resultTable[k] = exports[OXInv]:CanCarryItem(src, k, v)
+            end
+
+        elseif GetResourceState(QSInv):find("start") then
+            for k, v in pairs(itemTable) do
+                resultTable[k] = exports[OXInv]:CanCarryItem(src, k, v)
+            end
+
+        elseif GetResourceState(CoreInv):find("start") then
+            --??
+
+        elseif GetResourceState(CodeMInv):find("start") then
+            for k, v in pairs(itemTable) do
+                local weight = Items[k].weight
+                resultTable[k] = exports[CodeMInv]:CanCarryItem(src, weight, v)
+            end
+
+        elseif GetResourceState(OrigenInv):find("start") then
+            for k, v in pairs(itemTable) do
+                resultTable[k] = exports[OrigenInv]:canCarryItem(src, k, v)
+            end
+
+        elseif GetResourceState(QBInv):find("start") then
+            local Player = Core.Functions.GetPlayer(src)
+            local items = Player.PlayerData.items
+            local weight, totalWeight = 0, 0
+            if not items then return false end
+            for _, item in pairs(items) do weight += item.weight * item.amount end
+            totalWeight = tonumber(weight)
+
+            for k, v in pairs(itemTable) do
+                local itemInfo = Items[k]
+                if not itemInfo and not Player.Offline then
+                    triggerNotify(nil, 'Item does not exist', 'error', src)
+                    resultTable[k] = true
+                else
+                    resultTable[k] = (totalWeight + (Items[k]['weight'] * v)) <= 120000
+                end
+            end
+        end
+    end
+    return resultTable
 end

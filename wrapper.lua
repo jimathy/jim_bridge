@@ -1124,6 +1124,7 @@ function hasJob(job, source, grade) local hasJob, duty = false, true
             if ganginfo.name == job then hasJob = true
                 if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
             end
+
         elseif GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
             local info = nil
             Core.Functions.GetPlayerData(function(PlayerData)
@@ -1139,6 +1140,7 @@ function hasJob(job, source, grade) local hasJob, duty = false, true
                 hasJob = true
                 if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
             end
+
         else
             print("^4ERROR^7: ^2No Core detected for hasJob() ^7- ^2Check ^3exports^1.^2lua^7")
         end
@@ -1157,6 +1159,7 @@ function getPlayer(source) local Player = {}
                 cash = info.getMoney(),
                 bank = info.getAccount("bank").money,
             }
+
         elseif GetResourceState(OXCoreExport):find("start") then
             local file = ('imports/%s.lua'):format('server')
             local import = LoadResourceFile('ox_core', file)
@@ -1168,6 +1171,7 @@ function getPlayer(source) local Player = {}
                 cash = exports[OXInv]:Search(src, 'count', "money"),
                 bank = 0,
             }
+
         elseif GetResourceState(QBXExport):find("start") then
             local info = exports[QBXExport]:GetPlayer(src)
             Player = {
@@ -1175,6 +1179,7 @@ function getPlayer(source) local Player = {}
                 cash = exports[OXInv]:Search(src, 'count', "money"),
                 bank = info.Functions.GetMoney("bank"),
             }
+
         elseif GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
             if Core.Functions.GetPlayer ~= nil then -- support older qb-core functions
                 local info = Core.Functions.GetPlayer(src).PlayerData
@@ -1191,6 +1196,7 @@ function getPlayer(source) local Player = {}
                     bank = info.money["bank"],
                 }
             end
+
         else
             print("^4ERROR^7: ^2No Core detected for getPlayer() ^7- ^2Check ^3exports^1.^2lua^7")
         end
@@ -1235,6 +1241,60 @@ function getPlayer(source) local Player = {}
     end
     return Player
 end
+
+function sendPhoneMail(data) local phoneResource = ""
+    if GetResourceState("gksphone"):find("start") then phoneResource = "gksphone"
+        exports["gksphone"]:SendNewMail(data)
+
+    elseif GetResourceState("yflip-phone"):find("start") then phoneResource = "yflip-phone"
+        TriggerServerEvent(GetCurrentResourceName()..":yflip:SendMail", data)
+
+    elseif GetResourceState("qs-smartphone"):find("start") then phoneResource = "qs-smartphone"
+        TriggerServerEvent('qs-smartphone:server:sendNewMail', data)
+
+    elseif GetResourceState("qs-smartphone-pro"):find("start") then phoneResource = "qs-smartphone-pro"
+        TriggerServerEvent('phone:sendNewMail', data)
+
+    elseif GetResourceState("roadphone"):find("start") then phoneResource = "roadphone"
+        data.message = data.message:gsub("%<br>", "\n")
+        exports['roadphone']:sendMail(data)
+
+    elseif GetResourceState("lb-phone"):find("start") then phoneResource = "lb-phone"
+        TriggerServerEvent(GetCurrentResourceName()..":lbphone:SendMail", data)
+
+    elseif GetResourceState("qb-phone"):find("start") then phoneResource = "qb-phone"
+        TriggerServerEvent('qb-phone:server:sendNewMail', data)
+    end
+
+    if phoneResource ~= "" then if Config.System.Debug then print("^6Bridge^7[^3"..phoneResource.."^7]: ^2Sending mail to player") end
+    else print("^6Bridge^7: ^1ERROR ^2Sending mail to player ^7 - ^2No supported phone found") end
+end
+
+RegisterNetEvent(GetCurrentResourceName()..":lbphone:SendMail", function(data)
+    local src = source
+    local phoneNumber = exports["lb-phone"]:GetEquippedPhoneNumber(src)
+    local emailAddress = exports["lb-phone"]:GetEmailAddress(phoneNumber)
+    exports["lb-phone"]:SendMail({
+        to = emailAddress,
+        subject = data.subject,
+        message = data.message,
+        --[[attachments = {
+            "https://cdn.discordapp.com/attachments/1035667053115363349/1042500877426110474/upload.png",
+        },]]
+        actions = data.buttons,
+    })
+end)
+
+RegisterNetEvent(GetCurrentResourceName()..":yflip:SendMail", function(data)
+    local src = source
+    exports["yflip-phone"]:SendMail({
+        title = data.subject,
+        sender = data.sender,
+        senderDisplayName = data.sender,
+        content = data.message,
+        actions = data.buttons,
+    }, 'source', src)
+end)
 
 function registerCommand(command, options)
     if GetResourceState(OXLibExport):find("start") then
