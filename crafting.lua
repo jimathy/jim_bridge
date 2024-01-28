@@ -61,7 +61,6 @@ function craftingMenu(data)
                         Wait(0)
                     end
                     while not canCarryTable do Wait(0) end
-                    print(json.encode(canCarryTable, {indent = true}))
                     if Config.System.Debug then print("^6Bridge^7: ^2Checking"..(data.stashName and " ^7'^6"..data.stashName.."^7'" or "").." ^2ingredients^7 - ^6"..k.."^7") end
                     if data.stashName then disable = not stashhasItem(stashItems, itemTable)
                     else disable = not hasItem(itemTable) end
