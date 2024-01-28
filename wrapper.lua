@@ -1326,13 +1326,13 @@ function invImg(item)
     return imgLink
 end
 
-function registerStash(name, label)
+function registerStash(name, label, slots, weight)
     if GetResourceState(OXInv):find("start") then
         --print("Registering OX Stash:", name, label)
-        exports[OXInv]:RegisterStash(name, label, 50, 4000000)
+        exports[OXInv]:RegisterStash(name, label, slots or 50, weight or 4000000)
     elseif GetResourceState(QSInv):find("start") then
         --print("Registering QS Stash:", name, label)
-        exports[QSInv]:RegisterStash(name, 50, 4000000)
+        exports[QSInv]:RegisterStash(name, slots or 50, weight or 4000000)
     end
 end
 -- IN NO WAY PERFECT --
