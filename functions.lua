@@ -527,7 +527,7 @@ end)
 RegisterNetEvent(GetCurrentResourceName()..":server:setNeed", function(type, amount) local src = source
 	if type == "thirst" then
 		setThirst(src, amount)
-	elseif type == "thirst" then
+	elseif type == "hunger" then
 		setHunger(src, amount)
 	end
 end)
@@ -564,8 +564,8 @@ end
 -- [[CONSUME]] --
 function ConsumeSuccess(itemName, type)
 	ExecuteCommand("e c")
-	toggleItem(false, itemName, 1)
-	if GetResourceState(ESXEport):find("start") then
+	removeItem(itemName, 1)
+	if GetResourceState(ESXExport):find("start") then
 		if Items[itemName].hunger then
 			TriggerServerEvent(GetCurrentResourceName()..":server:setNeed", "hunger", Items[itemName].hunger * 10000)
 		end
@@ -581,9 +581,14 @@ function ConsumeSuccess(itemName, type)
 		end
 	end
 	if type == "alcohol" then alcoholCount += 1
-		if alcoholCount > 1 and alcoholCount < 4 then TriggerEvent("evidence:client:SetStatus", "alcohol", 200)	elseif alcoholCount >= 4 then TriggerEvent("evidence:client:SetStatus", "heavyalcohol", 200) AlienEffect() end
+		if alcoholCount > 1 and alcoholCount < 4 then
+			TriggerEvent("evidence:client:SetStatus", "alcohol", 200)
+		elseif alcoholCount >= 4 then
+			TriggerEvent("evidence:client:SetStatus", "heavyalcohol", 200)
+			AlienEffect()
+		end
 	end
-	if Config.RewardItem == itemName then toggleItem(true, Config.RewardPool[math.random(1, #Config.RewardPool)], 1) end
+	if Config.RewardItem == itemName then addItem(Config.RewardPool[math.random(1, #Config.RewardPool)], 1) end
 end
 
 function addItem(item, amount, info)
