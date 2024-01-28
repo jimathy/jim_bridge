@@ -472,7 +472,6 @@ if IsDuplicityVersion() then
 end
 
 function canCarry(itemTable, src)
-    print("checking if player can carry")
     local resultTable = {}
     if src then
         if GetResourceState(OXInv):find("start") then
