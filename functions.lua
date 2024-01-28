@@ -65,8 +65,8 @@ function playAnim(animDict, animName, duration, flag, ped)
 	TaskPlayAnim(ped and ped or PlayerPedId(), animDict, animName, 8.0, -8.0, duration or 30000, flag or 50, 1, false, false, false)
 end
 
-function stopAnim(animDict, animName)
-	StopAnimTask(PlayerPedId(), animName, animDict)
+function stopAnim(animDict, animName, ped)
+	StopAnimTask(ped and ped or PlayerPedId(), animName, animDict)
 	unloadAnimDict(animDict)
 end
 
