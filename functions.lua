@@ -8,7 +8,7 @@ function jobCheck(job)
 	return canDo
 end
 
-local time = 100
+local time = 1000
 function loadModel(model)
 	if not IsModelValid(model) then print("^6Bridge^7: ^1ERROR^7: ^2Model^7 - '^6"..model.."^7' ^2does not exist in server") return
 	else
@@ -588,7 +588,7 @@ function ConsumeSuccess(itemName, type)
 			AlienEffect()
 		end
 	end
-	if Config.RewardItem == itemName then addItem(Config.RewardPool[math.random(1, #Config.RewardPool)], 1) end
+	getRandomReward(itemName) -- check if a reward item should be given
 end
 
 function addItem(item, amount, info)

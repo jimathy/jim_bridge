@@ -519,3 +519,39 @@ function canCarry(itemTable, src)
     end
     return resultTable
 end
+
+function getRandomReward(itemName) -- intended for job scripts
+    if Config.Rewards.RewardPool then
+        local reward = false
+        if type(Config.Rewards.RewardItem) == "string" then Config.Rewards.RewardItem = { Config.Rewards.RewardItem } end
+        for k, v in pairs(Config.Rewards.RewardItem) do
+            if v == itemName then reward = true break end
+        end
+        if reward then
+            removeItem(itemName, 1)
+            local totalRarity = 0
+            for i=1, #Config.Rewards.RewardPool do
+                totalRarity += Config.Rewards.RewardPool[i].rarity
+            end
+            if Config.System.Debug then
+                print("^6Bridge^7: ^3getRandomReward^7: ^2Total Rarity ^7'^6"..totalRarity.."^7'")
+            end
+
+            local randomNum = math.random(1, totalRarity)
+            if Config.System.Debug then
+                print("^6Bridge^7: ^3getRandomReward^7: ^2Random Number ^7'^6"..randomNum.."^7'")
+            end
+            local currentRarity = 0
+            for i=1, #Config.Rewards.RewardPool do
+                currentRarity += Config.Rewards.RewardPool[i].rarity
+                if randomNum <= currentRarity then
+                    if Config.System.Debug then
+                        print("^6Bridge^7: ^3getRandomReward^7: ^2Selected toy ^7'^6"..Config.Rewards.RewardPool[i].item.."^7'")
+                    end
+                    addItem(Config.Rewards.RewardPool[i].item, 1)
+                    return
+                end
+            end
+        end
+    end
+end
