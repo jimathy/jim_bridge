@@ -14,7 +14,7 @@ function loadModel(model)
 	else
 		if not HasModelLoaded(model) then
 			if Config.System.Debug then print("^6Bridge^7: ^2Loading Model^7: '^6"..model.."^7'") end
-			while not HasModelLoaded(model) and time > 0 do time -= 1 end
+			while not HasModelLoaded(model) and time > 0 do time -= 1 RequestModel(model) print(time) Wait(0) end
 			if not HasModelLoaded(model) then time = 500 print("^6Bridge^7: ^3LoadModel^7: ^2Timed out loading model ^7'^6"..model.."^7'") end
 		end
 	end
@@ -85,7 +85,7 @@ local Peds = {}
 local Props = {}
 function makePed(model, coords, freeze, collision, scenario, anim, synced)
 	loadModel(model)
-	local ped = CreatePed(0, model, coords.x, coords.y, coords.z-1.03, coords.w, synced and synced or true, false)
+	local ped = CreatePed(0, model, coords.x, coords.y, coords.z-1.03, coords.w, synced or true, false)
 	SetEntityInvincible(ped, true)
 	SetBlockingOfNonTemporaryEvents(ped, true)
 	FreezeEntityPosition(ped, freeze and freeze or true)
@@ -107,7 +107,7 @@ end
 
 function makeProp(data, freeze, synced)
     loadModel(data.prop)
-    local prop = CreateObject(data.prop, data.coords.x, data.coords.y, data.coords.z-1.03, synced or false, synced or false, false)
+    local prop = CreateObject(data.prop, data.coords.x, data.coords.y, data.coords.z-1.03, freeze or false, synced or false, false)
     SetEntityHeading(prop, data.coords.w + 180.0)
     FreezeEntityPosition(prop, freeze and freeze or 0)
     if Config.System.Debug then
