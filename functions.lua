@@ -8,17 +8,14 @@ function jobCheck(job)
 	return canDo
 end
 
-local time = 1000
+local time = 500
 function loadModel(model)
 	if not IsModelValid(model) then print("^6Bridge^7: ^1ERROR^7: ^2Model^7 - '^6"..model.."^7' ^2does not exist in server") return
 	else
 		if not HasModelLoaded(model) then
-			if Config.System.Debug then
-				print("^6Bridge^7: ^2Loading Model^7: '^6"..model.."^7'")
-			end
-			if lib then lib.requestModel(model, time)
-			else while not HasModelLoaded(model) and time > 0 do time -= 1 end end
-			if not HasModelLoaded(model) then time = 100 print("^6Bridge^7: ^3LoadModel^7: ^2Timed out loading model ^7'^6"..model.."^7'") end
+			if Config.System.Debug then print("^6Bridge^7: ^2Loading Model^7: '^6"..model.."^7'") end
+			while not HasModelLoaded(model) and time > 0 do time -= 1 end
+			if not HasModelLoaded(model) then time = 500 print("^6Bridge^7: ^3LoadModel^7: ^2Timed out loading model ^7'^6"..model.."^7'") end
 		end
 	end
 end
@@ -28,8 +25,7 @@ function loadAnimDict(animDict)
 	if not DoesAnimDictExist(animDict) then print("^6Bridge^7: ^1ERROR^7: ^2Anim Dictionary^7 - '^6"..animDict.."^7' ^2does not exist in server") return
 	else
 		if Config.System.Debug then print("^6Bridge^7: ^2Loading Anim Dictionary^7: '^6"..animDict.."^7'") end
-		if lib then lib.requestAnimDict(animDict, 100)
-		else while not HasAnimDictLoaded(animDict) do RequestAnimDict(animDict) Wait(5) end end
+		while not HasAnimDictLoaded(animDict) do RequestAnimDict(animDict) Wait(5) end
 	end
 end
 function unloadAnimDict(animDict) if Config.System.Debug then print("^6Bridge^7: ^2Removing Anim Dictionary from memory cache^7: '^6"..animDict.."^7'") end RemoveAnimDict(animDict) end
@@ -37,12 +33,9 @@ function unloadAnimDict(animDict) if Config.System.Debug then print("^6Bridge^7:
 function loadPtfxDict(ptFxName)
 	if not HasNamedPtfxAssetLoaded(ptFxName) then
 		if Config.System.Debug then
-			if not HasNamedPtfxAssetLoaded(ptFxName) then
-				print("^6Bridge^7: ^2Loading Ptfx Dictionary^7: '^6"..ptFxName.."^7'")
-			end
+			print("^6Bridge^7: ^2Loading Ptfx Dictionary^7: '^6"..ptFxName.."^7'")
 		end
-		if lib then lib.requestNamedPtfxAsset(ptFxName, 100)
-		else while not HasNamedPtfxAssetLoaded(ptFxName) do RequestNamedPtfxAsset(ptFxName) Wait(5) end end
+		while not HasNamedPtfxAssetLoaded(ptFxName) do RequestNamedPtfxAsset(ptFxName) Wait(5) end
 	end
 end
 function unloadPtfxDict(dict) if Config.System.Debug then print("^6Bridge^7: ^2Removing Ptfx Dictionary^7: '^6"..dict.."^7'") end RemoveNamedPtfxAsset(dict) end
@@ -51,8 +44,7 @@ function loadTextureDict(dict)
 		if Config.System.Debug then
 			print("^6Bridge^7: ^2Loading Texture Dictionary^7: '^6"..dict.."^7'")
 		end
-		if lib then lib.requestStreamedTextureDict(textureDict, timeout)
-		else while not HasStreamedTextureDictLoaded(dict) do RequestNamedPtfxAsset(dict) Wait(5) end end
+		while not HasStreamedTextureDictLoaded(dict) do RequestNamedPtfxAsset(dict) Wait(5) end
 	end
 end
 
