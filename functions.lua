@@ -14,7 +14,7 @@ function loadModel(model)
 	else
 		if not HasModelLoaded(model) then
 			if Config.System.Debug then print("^6Bridge^7: ^2Loading Model^7: '^6"..model.."^7'") end
-			while not HasModelLoaded(model) and time > 0 do time -= 1 RequestModel(model) print(time) Wait(0) end
+			while not HasModelLoaded(model) and time > 0 do time -= 1 RequestModel(model) Wait(0) end
 			if not HasModelLoaded(model) then time = 500 print("^6Bridge^7: ^3LoadModel^7: ^2Timed out loading model ^7'^6"..model.."^7'") end
 		end
 	end
