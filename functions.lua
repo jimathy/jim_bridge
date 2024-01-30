@@ -8,17 +8,14 @@ function jobCheck(job)
 	return canDo
 end
 
-local time = 100
+local time = 500
 function loadModel(model)
 	if not IsModelValid(model) then print("^6Bridge^7: ^1ERROR^7: ^2Model^7 - '^6"..model.."^7' ^2does not exist in server") return
 	else
 		if not HasModelLoaded(model) then
-			if Config.System.Debug then
-				print("^6Bridge^7: ^2Loading Model^7: '^6"..model.."^7'")
-			end
-			if lib then lib.requestModel(model, time)
-			else while not HasModelLoaded(model) and time > 0 do time -= 1 end end
-			if not HasModelLoaded(model) then time = 100 print("^6Bridge^7: ^3LoadModel^7: ^2Timed out loading model ^7'^6"..model.."^7'") end
+			if Config.System.Debug then print("^6Bridge^7: ^2Loading Model^7: '^6"..model.."^7'") end
+			while not HasModelLoaded(model) and time > 0 do time -= 1 RequestModel(model) Wait(0) end
+			if not HasModelLoaded(model) then time = 500 print("^6Bridge^7: ^3LoadModel^7: ^2Timed out loading model ^7'^6"..model.."^7'") end
 		end
 	end
 end
@@ -28,8 +25,7 @@ function loadAnimDict(animDict)
 	if not DoesAnimDictExist(animDict) then print("^6Bridge^7: ^1ERROR^7: ^2Anim Dictionary^7 - '^6"..animDict.."^7' ^2does not exist in server") return
 	else
 		if Config.System.Debug then print("^6Bridge^7: ^2Loading Anim Dictionary^7: '^6"..animDict.."^7'") end
-		if lib then lib.requestAnimDict(animDict, 100)
-		else while not HasAnimDictLoaded(animDict) do RequestAnimDict(animDict) Wait(5) end end
+		while not HasAnimDictLoaded(animDict) do RequestAnimDict(animDict) Wait(5) end
 	end
 end
 function unloadAnimDict(animDict) if Config.System.Debug then print("^6Bridge^7: ^2Removing Anim Dictionary from memory cache^7: '^6"..animDict.."^7'") end RemoveAnimDict(animDict) end
@@ -37,12 +33,9 @@ function unloadAnimDict(animDict) if Config.System.Debug then print("^6Bridge^7:
 function loadPtfxDict(ptFxName)
 	if not HasNamedPtfxAssetLoaded(ptFxName) then
 		if Config.System.Debug then
-			if not HasNamedPtfxAssetLoaded(ptFxName) then
-				print("^6Bridge^7: ^2Loading Ptfx Dictionary^7: '^6"..ptFxName.."^7'")
-			end
+			print("^6Bridge^7: ^2Loading Ptfx Dictionary^7: '^6"..ptFxName.."^7'")
 		end
-		if lib then lib.requestNamedPtfxAsset(ptFxName, 100)
-		else while not HasNamedPtfxAssetLoaded(ptFxName) do RequestNamedPtfxAsset(ptFxName) Wait(5) end end
+		while not HasNamedPtfxAssetLoaded(ptFxName) do RequestNamedPtfxAsset(ptFxName) Wait(5) end
 	end
 end
 function unloadPtfxDict(dict) if Config.System.Debug then print("^6Bridge^7: ^2Removing Ptfx Dictionary^7: '^6"..dict.."^7'") end RemoveNamedPtfxAsset(dict) end
@@ -51,8 +44,7 @@ function loadTextureDict(dict)
 		if Config.System.Debug then
 			print("^6Bridge^7: ^2Loading Texture Dictionary^7: '^6"..dict.."^7'")
 		end
-		if lib then lib.requestStreamedTextureDict(textureDict, timeout)
-		else while not HasStreamedTextureDictLoaded(dict) do RequestNamedPtfxAsset(dict) Wait(5) end end
+		while not HasStreamedTextureDictLoaded(dict) do RequestNamedPtfxAsset(dict) Wait(5) end
 	end
 end
 
@@ -65,8 +57,8 @@ function playAnim(animDict, animName, duration, flag, ped)
 	TaskPlayAnim(ped and ped or PlayerPedId(), animDict, animName, 8.0, -8.0, duration or 30000, flag or 50, 1, false, false, false)
 end
 
-function stopAnim(animDict, animName)
-	StopAnimTask(PlayerPedId(), animName, animDict)
+function stopAnim(animDict, animName, ped)
+	StopAnimTask(ped and ped or PlayerPedId(), animName, animDict)
 	unloadAnimDict(animDict)
 end
 
@@ -93,7 +85,7 @@ local Peds = {}
 local Props = {}
 function makePed(model, coords, freeze, collision, scenario, anim, synced)
 	loadModel(model)
-	local ped = CreatePed(0, model, coords.x, coords.y, coords.z-1.03, coords.w, synced and synced or true, false)
+	local ped = CreatePed(0, model, coords.x, coords.y, coords.z-1.03, coords.w, synced or true, false)
 	SetEntityInvincible(ped, true)
 	SetBlockingOfNonTemporaryEvents(ped, true)
 	FreezeEntityPosition(ped, freeze and freeze or true)
@@ -115,7 +107,7 @@ end
 
 function makeProp(data, freeze, synced)
     loadModel(data.prop)
-    local prop = CreateObject(data.prop, data.coords.x, data.coords.y, data.coords.z-1.03, synced or false, synced or false, false)
+    local prop = CreateObject(data.prop, data.coords.x, data.coords.y, data.coords.z-1.03, freeze or false, synced or false, false)
     SetEntityHeading(prop, data.coords.w + 180.0)
     FreezeEntityPosition(prop, freeze and freeze or 0)
     if Config.System.Debug then
@@ -527,7 +519,7 @@ end)
 RegisterNetEvent(GetCurrentResourceName()..":server:setNeed", function(type, amount) local src = source
 	if type == "thirst" then
 		setThirst(src, amount)
-	elseif type == "thirst" then
+	elseif type == "hunger" then
 		setHunger(src, amount)
 	end
 end)
@@ -564,8 +556,8 @@ end
 -- [[CONSUME]] --
 function ConsumeSuccess(itemName, type)
 	ExecuteCommand("e c")
-	toggleItem(false, itemName, 1)
-	if GetResourceState(ESXEport):find("start") then
+	removeItem(itemName, 1)
+	if GetResourceState(ESXExport):find("start") then
 		if Items[itemName].hunger then
 			TriggerServerEvent(GetCurrentResourceName()..":server:setNeed", "hunger", Items[itemName].hunger * 10000)
 		end
@@ -581,17 +573,22 @@ function ConsumeSuccess(itemName, type)
 		end
 	end
 	if type == "alcohol" then alcoholCount += 1
-		if alcoholCount > 1 and alcoholCount < 4 then TriggerEvent("evidence:client:SetStatus", "alcohol", 200)	elseif alcoholCount >= 4 then TriggerEvent("evidence:client:SetStatus", "heavyalcohol", 200) AlienEffect() end
+		if alcoholCount > 1 and alcoholCount < 4 then
+			TriggerEvent("evidence:client:SetStatus", "alcohol", 200)
+		elseif alcoholCount >= 4 then
+			TriggerEvent("evidence:client:SetStatus", "heavyalcohol", 200)
+			AlienEffect()
+		end
 	end
-	if Config.RewardItem == itemName then toggleItem(true, Config.RewardPool[math.random(1, #Config.RewardPool)], 1) end
+	getRandomReward(itemName) -- check if a reward item should be given
 end
 
 function addItem(item, amount, info)
-    TriggerServerEvent(GetCurrentResourceName()..":server:toggleItem", true, item, amount)
+    TriggerServerEvent(GetCurrentResourceName()..":server:toggleItem", true, item, amount, nil, info)
 end
 
 function removeItem(item, amount)
-    TriggerServerEvent(GetCurrentResourceName()..":server:toggleItem", false, item, amount)
+    TriggerServerEvent(GetCurrentResourceName()..":server:toggleItem", false, item, amount, nil, info)
 end
 
 RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, item, amount, newsrc)
@@ -653,7 +650,7 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
 				print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
 			end
 		else
-            dupeWarn(src, item) -- if not boot the player
+            dupeWarn(src, item, amount) -- if not boot the player
         end
 	else
         local amount = amount and amount or 1
@@ -708,10 +705,10 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
 end)
 
 --Item Exploit protection
-function dupeWarn(src, item)
+function dupeWarn(src, item, amount)
     print("^5DupeWarn^7: (^1"..tostring(src).."^7) ^2Tried to remove item ^7('^3"..item.."^7')^2 but it wasn't there^7")
     if Config.System.Debug == false then
-        DropPlayer(src, src.." ^1Kicked for attempting to duplicate items")
+        DropPlayer(src, src.." ^1Kicked for suspected duplicating items:"..item)
     end
     print("^5DupeWarn:^7: (^1"..tostring(src).."^7) ^2Dropped from server - exploit protection detected an item not being found in players inventory^7")
 end

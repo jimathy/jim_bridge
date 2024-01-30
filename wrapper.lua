@@ -1003,30 +1003,57 @@ AddStateBagChangeHandler(GetCurrentResourceName()..':setVehicleProperties', '', 
     end
 end)
 
-RegisterNetEvent(GetCurrentResourceName()..":server:ChargePlayer", function(cost, type) local src = source
-    if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type) end
+RegisterNetEvent(GetCurrentResourceName()..":server:ChargePlayer", function(cost, type, newsrc)
+    local src = newsrc or source
+    local fundResource = ""
     if type == "cash" then
-        if GetResourceState(OXInv):find("start") then
+        if GetResourceState(OXInv):find("start") then fundResource = OXInv
             exports[OXInv]:RemoveItem(src, "money", cost)
-            if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type, OXInv) end
-        elseif GetResourceState(QBExport):find("start") then
+        elseif GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then fundResource = QBExport
             Core.Functions.GetPlayer(src).Functions.RemoveMoney("cash", cost)
-            if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type, QBExport) end
-        elseif GetResourceState(ESXExport):find("start") then
+        elseif GetResourceState(ESXExport):find("start") then fundResource = ESXExport
             local Player = ESX.GetPlayerFromId(src)
             Player.removeMoney(cost, "")
-            if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type, ESXExport) end
         end
     end
     if type == "bank" then
-        if GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then
+        if GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then fundResource = QBExport
             Core.Functions.GetPlayer(src).Functions.RemoveMoney("bank", cost)
-            if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type, QBExport) end
-        elseif GetResourceState(ESXExport):find("start") then
+        elseif GetResourceState(ESXExport):find("start") then fundResource = ESXExport
             local Player = ESX.GetPlayerFromId(src)
             Player.removeMoney(cost, "")
-            if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type, ESXExport) end
         end
+    end
+    if fundResource == "" then print("error - check exports.lua")
+    else
+        if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player^7: '^6"..cost.."^7'", type, fundResource) end
+    end
+end)
+
+RegisterNetEvent(GetCurrentResourceName()..":server:FundPlayer", function(fund, type, newsrc)
+    local src = newsrc or source
+    local fundResource = ""
+    if type == "cash" then
+        if GetResourceState(OXInv):find("start") then fundResource = OXInv
+            exports[OXInv]:AddItem(src, "money", fund)
+        elseif GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then fundResource = QBExport
+            Core.Functions.GetPlayer(src).Functions.AddMoney("cash", fund)
+        elseif GetResourceState(ESXExport):find("start") then fundResource = ESXExport
+            local Player = ESX.GetPlayerFromId(src)
+            Player.addMoney(fund, "")
+        end
+    end
+    if type == "bank" then
+        if GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then fundResource = QBExport
+            Core.Functions.GetPlayer(src).Functions.AddMoney("bank", fund)
+        elseif GetResourceState(ESXExport):find("start") then fundResource = ESXExport
+            local Player = ESX.GetPlayerFromId(src)
+            Player.addMoney(fund, "")
+        end
+    end
+    if fundResource == "" then print("error - check exports.lua")
+    else
+        if Config.System.Debug then print("^6Bridge^7: ^2Funding ^2Player^7: '^2"..fund.."^7'", type, fundResource) end
     end
 end)
 
@@ -1326,13 +1353,13 @@ function invImg(item)
     return imgLink
 end
 
-function registerStash(name, label)
+function registerStash(name, label, slots, weight)
     if GetResourceState(OXInv):find("start") then
         --print("Registering OX Stash:", name, label)
-        exports[OXInv]:RegisterStash(name, label, 50, 4000000)
+        exports[OXInv]:RegisterStash(name, label, slots or 50, weight or 4000000)
     elseif GetResourceState(QSInv):find("start") then
         --print("Registering QS Stash:", name, label)
-        exports[QSInv]:RegisterStash(name, 50, 4000000)
+        exports[QSInv]:RegisterStash(name, slots or 50, weight or 4000000)
     end
 end
 -- IN NO WAY PERFECT --

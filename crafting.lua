@@ -129,9 +129,9 @@ function makeItem(data)
 	CraftLock = true
 
 	local bartime = data.craftable.progressBar and data.craftable.progressBar.time or 5000
-	local bartext = data.craftable.progressBar and data.craftable.progressBar.label or Loc[Config.Lan].progressbar["progress_make"]
-	local animDict = data.craftable.Anims.animDict or "amb@prop_human_parking_meter@male@idle_a"
-	local anim = data.craftable.Anims.anim or "idle_a"
+	local bartext = (data.craftable.progressBar and data.craftable.progressBar.label) or (Loc[Config.Lan].progressbar and Loc[Config.Lan].progressbar["progress_make"]) or "Making a"
+	local animDict = data.craftable.Anims and data.craftable.Anims.animDict or "amb@prop_human_parking_meter@male@idle_a"
+	local anim = data.craftable.Anims and data.craftable.Anims.anim or "idle_a"
 	local amount = data.amount and (data.amount ~= 1) and data.amount or 1
 
 	local crafted, crafting = true, true
@@ -226,15 +226,18 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
     if type(items) ~= "table" then items = { [items] = amount and amount or 1, } end
     if GetResourceState(OXInv):find("start") then
         foundInv = OXInv
-        grabInv = src and exports.ox_inventory:GetInventoryItems(src) or exports[OXInv]:GetPlayerItems()
+        if src then grabInv = exports[OXInv]:GetInventoryItems(src)
+        else grabInv = exports[OXInv]:GetPlayerItems() end
 
     elseif GetResourceState(QSInv):find("start") then
         foundInv = QSInv
-        grabInv = src and exports[QSInv]:GetInventory(src) or exports[QSInv]:getUserInventory()
+        if src then grabInv = exports[QSInv]:GetInventory(src)
+        else grabInv = exports[QSInv]:getUserInventory() end
 
     elseif GetResourceState(OrigenInv):find("start") then
         foundInv = OrigenInv
-        grabInv = src and exports[OrigenInv]:getPlayerInventory(src) or exports[OrigenInv]:getPlayerInventory()
+        if src then grabInv = exports[OrigenInv]:getPlayerInventory(src)
+        else grabInv = exports[OrigenInv]:getPlayerInventory() end
 
     elseif GetResourceState(CoreInv):find("start") then
         foundInv = CoreInv
@@ -472,7 +475,6 @@ if IsDuplicityVersion() then
 end
 
 function canCarry(itemTable, src)
-    print("checking if player can carry")
     local resultTable = {}
     if src then
         if GetResourceState(OXInv):find("start") then
@@ -519,4 +521,40 @@ function canCarry(itemTable, src)
         end
     end
     return resultTable
+end
+
+function getRandomReward(itemName) -- intended for job scripts
+    if Config.Rewards.RewardPool then
+        local reward = false
+        if type(Config.Rewards.RewardItem) == "string" then Config.Rewards.RewardItem = { Config.Rewards.RewardItem } end
+        for k, v in pairs(Config.Rewards.RewardItem) do
+            if v == itemName then reward = true break end
+        end
+        if reward then
+            removeItem(itemName, 1)
+            local totalRarity = 0
+            for i=1, #Config.Rewards.RewardPool do
+                totalRarity += Config.Rewards.RewardPool[i].rarity
+            end
+            if Config.System.Debug then
+                print("^6Bridge^7: ^3getRandomReward^7: ^2Total Rarity ^7'^6"..totalRarity.."^7'")
+            end
+
+            local randomNum = math.random(1, totalRarity)
+            if Config.System.Debug then
+                print("^6Bridge^7: ^3getRandomReward^7: ^2Random Number ^7'^6"..randomNum.."^7'")
+            end
+            local currentRarity = 0
+            for i=1, #Config.Rewards.RewardPool do
+                currentRarity += Config.Rewards.RewardPool[i].rarity
+                if randomNum <= currentRarity then
+                    if Config.System.Debug then
+                        print("^6Bridge^7: ^3getRandomReward^7: ^2Selected toy ^7'^6"..Config.Rewards.RewardPool[i].item.."^7'")
+                    end
+                    addItem(Config.Rewards.RewardPool[i].item, 1)
+                    return
+                end
+            end
+        end
+    end
 end
