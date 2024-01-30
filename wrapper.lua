@@ -1003,30 +1003,57 @@ AddStateBagChangeHandler(GetCurrentResourceName()..':setVehicleProperties', '', 
     end
 end)
 
-RegisterNetEvent(GetCurrentResourceName()..":server:ChargePlayer", function(cost, type) local src = source
-    if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type) end
+RegisterNetEvent(GetCurrentResourceName()..":server:ChargePlayer", function(cost, type, newsrc)
+    local src = newsrc or source
+    local fundResource = ""
     if type == "cash" then
-        if GetResourceState(OXInv):find("start") then
+        if GetResourceState(OXInv):find("start") then fundResource = OXInv
             exports[OXInv]:RemoveItem(src, "money", cost)
-            if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type, OXInv) end
-        elseif GetResourceState(QBExport):find("start") then
+        elseif GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then fundResource = QBExport
             Core.Functions.GetPlayer(src).Functions.RemoveMoney("cash", cost)
-            if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type, QBExport) end
-        elseif GetResourceState(ESXExport):find("start") then
+        elseif GetResourceState(ESXExport):find("start") then fundResource = ESXExport
             local Player = ESX.GetPlayerFromId(src)
             Player.removeMoney(cost, "")
-            if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type, ESXExport) end
         end
     end
     if type == "bank" then
-        if GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then
+        if GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then fundResource = QBExport
             Core.Functions.GetPlayer(src).Functions.RemoveMoney("bank", cost)
-            if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type, QBExport) end
-        elseif GetResourceState(ESXExport):find("start") then
+        elseif GetResourceState(ESXExport):find("start") then fundResource = ESXExport
             local Player = ESX.GetPlayerFromId(src)
             Player.removeMoney(cost, "")
-            if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player: '^6"..cost.."^7'", type, ESXExport) end
         end
+    end
+    if fundResource == "" then print("error - check exports.lua")
+    else
+        if Config.System.Debug then print("^6Bridge^7: ^2Charging ^2Player^7: '^6"..cost.."^7'", type, fundResource) end
+    end
+end)
+
+RegisterNetEvent(GetCurrentResourceName()..":server:FundPlayer", function(fund, type, newsrc)
+    local src = newsrc or source
+    local fundResource = ""
+    if type == "cash" then
+        if GetResourceState(OXInv):find("start") then fundResource = OXInv
+            exports[OXInv]:AddItem(src, "money", fund)
+        elseif GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then fundResource = QBExport
+            Core.Functions.GetPlayer(src).Functions.AddMoney("cash", fund)
+        elseif GetResourceState(ESXExport):find("start") then fundResource = ESXExport
+            local Player = ESX.GetPlayerFromId(src)
+            Player.addMoney(fund, "")
+        end
+    end
+    if type == "bank" then
+        if GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then fundResource = QBExport
+            Core.Functions.GetPlayer(src).Functions.AddMoney("bank", fund)
+        elseif GetResourceState(ESXExport):find("start") then fundResource = ESXExport
+            local Player = ESX.GetPlayerFromId(src)
+            Player.addMoney(fund, "")
+        end
+    end
+    if fundResource == "" then print("error - check exports.lua")
+    else
+        if Config.System.Debug then print("^6Bridge^7: ^2Funding ^2Player^7: '^2"..fund.."^7'", type, fundResource) end
     end
 end)
 
