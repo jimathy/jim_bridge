@@ -584,11 +584,11 @@ function ConsumeSuccess(itemName, type)
 end
 
 function addItem(item, amount, info)
-    TriggerServerEvent(GetCurrentResourceName()..":server:toggleItem", true, item, amount)
+    TriggerServerEvent(GetCurrentResourceName()..":server:toggleItem", true, item, amount, nil, info)
 end
 
 function removeItem(item, amount)
-    TriggerServerEvent(GetCurrentResourceName()..":server:toggleItem", false, item, amount)
+    TriggerServerEvent(GetCurrentResourceName()..":server:toggleItem", false, item, amount, nil, info)
 end
 
 RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, item, amount, newsrc)
@@ -650,7 +650,7 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
 				print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
 			end
 		else
-            dupeWarn(src, item) -- if not boot the player
+            dupeWarn(src, item, amount) -- if not boot the player
         end
 	else
         local amount = amount and amount or 1
@@ -705,10 +705,10 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
 end)
 
 --Item Exploit protection
-function dupeWarn(src, item)
+function dupeWarn(src, item, amount)
     print("^5DupeWarn^7: (^1"..tostring(src).."^7) ^2Tried to remove item ^7('^3"..item.."^7')^2 but it wasn't there^7")
     if Config.System.Debug == false then
-        DropPlayer(src, src.." ^1Kicked for attempting to duplicate items")
+        DropPlayer(src, src.." ^1Kicked for suspected duplicating items:"..item)
     end
     print("^5DupeWarn:^7: (^1"..tostring(src).."^7) ^2Dropped from server - exploit protection detected an item not being found in players inventory^7")
 end
