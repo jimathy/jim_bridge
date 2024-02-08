@@ -229,7 +229,7 @@ function ensureNetToVeh(vehNetID)
 	return vehicle
 end
 
-local previewTxd = CreateRuntimeTxd(GetCurrentResourceName()..'previewTxd')
+local previewTxd = not IsDuplicityVersion() and CreateRuntimeTxd(GetCurrentResourceName()..'previewTxd') or nil
 function makeBlip(data)
 	local blip = AddBlipForCoord(vec3(data.coords.x, data.coords.y, data.coords.z))
 	SetBlipAsShortRange(blip, true)
