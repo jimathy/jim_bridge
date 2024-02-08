@@ -26,7 +26,7 @@ for k, v in pairs(Exports) do
     if GetResourceState(v):find("start") then print("^6Bridge^7: '^3"..v.."^7' ^2export found ^7") end
 end
 
-local itemResource, vehResource, jobResource = "", "", ""
+local itemResource, jobResource = "", ""
 
 -- Load item lists
 if GetResourceState(OXInv):find("start") then itemResource = OXInv
@@ -56,7 +56,7 @@ else
 end
 
 -- Load Vehicles
-if GetResourceState(QBXExport):find("start") or GetResourceState(QBExport):find("start") then vehResource = QBExport
+if GetResourceState(QBXExport):find("start") or GetResourceState(QBExport):find("start") then
     Core = Core or exports[QBExport]:GetCoreObject()
     if GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
         RegisterNetEvent('QBCore:Client:UpdateObject', function()

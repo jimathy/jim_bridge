@@ -75,7 +75,7 @@ function craftingMenu(data)
                         header = setheader,
                         txt = settext,
                         onSelect = function()
-                            local transdata = { item = k, craft = data.craftable.Recipes[i], craftable = data.craftable, coords = data.coords, stashName = data.stashName, onBack = data.onBack }
+                            local transdata = { item = k, craft = data.craftable.Recipes[i], craftable = data.craftable, coords = data.coords, stashName = data.stashName, onBack = data.onBack, }
                             if Config.Crafting.MultiCraft then multiCraft(transdata) else makeItem(transdata) end
                         end,
                     }
@@ -137,7 +137,6 @@ function makeItem(data)
 	local crafted, crafting = true, true
 	local cam = createTempCam(PlayerPedId(), data.coords)
 	startTempCam(cam)
-
     for i = 1, amount do
         for k, v in pairs(data.craft) do
             if k ~= "amount" and k ~= "job" then
@@ -209,6 +208,80 @@ RegisterNetEvent(GetCurrentResourceName()..":Crafting:GetItem", function(ItemMak
 end)
 
 --[[SHOPS]]--
+function sellMenu(data)
+    local origData = data
+    local Menu = {}
+	if data.sellTable.Items then
+		local itemList = {}
+		for k, v in pairs(data.sellTable.Items) do itemList[k] = 1 end
+		local hasitems, hasTable = hasItem(itemList)
+        for k, v in pairsByKeys(data.sellTable.Items) do
+			Menu[#Menu +1] = {
+                isMenuHeader = not hasTable[k].hasItem,
+                icon = invImg(k),
+				header = Items[k].label.. (hasTable[k].hasItem and "💰 (x"..hasTable[k].count..")" or ""),
+				txt = Loc[Config.Lan].info["sell_all"].." "..v.." "..Loc[Config.Lan].info["sell_each"],
+				onSelect = function()
+					sellAnim({ item = k, price = v, ped = data.ped, onBack = function() sellMenu(data) end })
+				end,
+			}
+		end
+	else
+		for k, v in pairsByKeys(data.sellTable) do
+            if type(v) == "table" then
+                Menu[#Menu +1] = {
+                    arrow = true,
+                    header = k,
+                    txt = "Amount of items: "..countTable(v.Items),
+                    onSelect = function()
+                        v.onBack = function() sellMenu(origData) end
+                        v.sellTable = data.sellTable[k]
+                        sellMenu(v)
+                    end,
+                }
+            end
+		end
+	end
+	openMenu(Menu, { header = data.sellTable.Header or "Amount of items: "..countTable(data.sellTable.Items), canClose = true, onBack = data.onBack })
+end
+
+function sellAnim(data)
+	if not hasItem(data.item, 1) then
+		triggerNotify(nil, Loc[Config.Lan].error["dont_have"].." "..Items[data.item].label, "error")
+		return
+	end
+	for k, v in pairs(GetGamePool('CObject')) do
+		for _, model in pairs({`p_cs_clipboard`}) do
+			if GetEntityModel(v) == model then
+				if IsEntityAttachedToEntity(data.ped, v) then
+					DeleteObject(v) DetachEntity(v, 0, 0) SetEntityAsMissionEntity(v, true, true)
+					Wait(100) DeleteEntity(v)
+				end
+			end
+		end
+	end
+	TriggerServerEvent(GetCurrentResourceName().."Sellitems", data) -- Had to slip in the sell command during the animation command
+	lookEnt(data.ped)
+    local dict = "mp_common"
+    playAnim(dict, "givetake2_a", 0.3, 2)
+	playAnim(dict, "givetake2_b", 0.3, 2, data.ped)
+	Wait(2000)
+    StopAnimTask(PlayerPedId(), dict, "givetake2_a", 0.5)
+    StopAnimTask(data.ped, dict, "givetake2_b", 0.5)
+    if data.onBack then data.onBack() end
+end
+
+RegisterNetEvent(GetCurrentResourceName().."Sellitems", function(data)
+    local src = source
+	local hasItems, hasTable = hasItem(data.item, 1, src)
+    if hasItems then
+		TriggerEvent(GetCurrentResourceName()..":server:toggleItem", false, data.item, hasTable[data.item].count, src)
+		TriggerEvent(GetCurrentResourceName()..":server:FundPlayer", (hasTable[data.item].count * data.price), "cash", src)
+    else
+		triggerNotify(nil,Loc[Config.Lan].error["dont_have"].." "..Items[data.item].label, "error", src)
+    end
+end)
+
 function openShop(data)
 	if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
     if GetResourceState(OXInv):find("start") then
@@ -236,7 +309,7 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
 
     elseif GetResourceState(OrigenInv):find("start") then
         foundInv = OrigenInv
-        if src then grabInv = exports[OrigenInv]:getPlayerInventory(src)
+        if src then grabInv = exports[OrigenInv]:GetInventory(src)
         else grabInv = exports[OrigenInv]:getPlayerInventory() end
 
     elseif GetResourceState(CoreInv):find("start") then
@@ -405,7 +478,7 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
 
     elseif GetResourceState(OrigenInv):find("start") then
         for k, v in pairs(items) do
-            exports[OrigenInv]:RemoveItem(stashName, k, v)
+            exports[OrigenInv]:RemoveFromStash(stashName, nil, k, v)
             if Config.System.Debug then print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..OrigenInv, k, v) end
         end
 
