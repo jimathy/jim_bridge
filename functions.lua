@@ -14,7 +14,7 @@ function loadModel(model)
 	else
 		if not HasModelLoaded(model) then
 			if Config.System.Debug then print("^6Bridge^7: ^2Loading Model^7: '^6"..model.."^7'") end
-			while not HasModelLoaded(model) and time > 0 do time -= 1 RequestModel(model) Wait(0) end
+			while not HasModelLoaded(model) and time > 0 do time -= 1 RequestModel(model) print(time) Wait(0) end
 			if not HasModelLoaded(model) then time = 500 print("^6Bridge^7: ^3LoadModel^7: ^2Timed out loading model ^7'^6"..model.."^7'") end
 		end
 	end
@@ -58,7 +58,8 @@ function playAnim(animDict, animName, duration, flag, ped)
 end
 
 function stopAnim(animDict, animName, ped)
-	StopAnimTask(ped and ped or PlayerPedId(), animName, animDict)
+	StopAnimTask(ped or PlayerPedId(), animDict, animName, 0.5)
+	StopAnimTask(ped or PlayerPedId(), animName, animDict, 0.5)
 	unloadAnimDict(animDict)
 end
 
@@ -227,8 +228,9 @@ function ensureNetToVeh(vehNetID)
 	return vehicle
 end
 
+local previewTxd = CreateRuntimeTxd(GetCurrentResourceName()..'previewTxd')
 function makeBlip(data)
-	local blip = AddBlipForCoord(data.coords)
+	local blip = AddBlipForCoord(vec3(data.coords.x, data.coords.y, data.coords.z))
 	SetBlipAsShortRange(blip, true)
 	SetBlipSprite(blip, data.sprite or 106)
 	SetBlipColour(blip, data.col or 5)
@@ -238,8 +240,23 @@ function makeBlip(data)
 	BeginTextCommandSetBlipName('STRING')
 	AddTextComponentString(tostring(data.name))
 	EndTextCommandSetBlipName(blip)
+	if GetResourceState("blip_info"):find("start") or GetResourceState("blip-info"):find("start") or GetResourceState("blipinfo"):find("start") then
+		if data.preview then
+			local txname = tostring('preview'..keyGen()..keyGen())
+			if data.preview:find("http") then
+				local newTxt = CreateDui(data.preview, 512, 256)
+				local duihandle = GetDuiHandle(newTxt)
+				while not GetDuiHandle(newTxt) do Wait(0) end
+				CreateRuntimeTextureFromDuiHandle(previewTxd, txname, duihandle)
+			else
+				CreateRuntimeTextureFromImage(previewTxd, txname, data.preview)
+			end
+			exports["blip_info"]:SetBlipInfoImage(blip, GetCurrentResourceName()..'previewTxd', txname)
+			exports["blip_info"]:SetBlipInfoTitle(blip, data.name, false)
+		end
+	end
 	if Config.System.Debug then print("^6Bridge^7: ^6Blip ^2created for location^7: '^6"..data.name.."^7'") end
-    return blip
+	return blip
 end
 
 function makeEntityBlip(data)
@@ -254,6 +271,21 @@ function makeEntityBlip(data)
 	BeginTextCommandSetBlipName('STRING')
 	AddTextComponentString(tostring(data.name))
 	EndTextCommandSetBlipName(blip)
+	if GetResourceState("blip_info"):find("start") or GetResourceState("blip-info"):find("start") or GetResourceState("blipinfo"):find("start") then
+		if data.preview then
+			local txname = tostring('preview'..keyGen()..keyGen())
+			if data.preview:find("http") then
+				local newTxt = CreateDui(data.preview, 512, 256)
+				local duihandle = GetDuiHandle(newTxt)
+				while not GetDuiHandle(newTxt) do Wait(0) end
+				CreateRuntimeTextureFromDuiHandle(previewTxd, txname, duihandle)
+			else
+				CreateRuntimeTextureFromImage(previewTxd, txname, data.preview)
+			end
+			exports["blip_info"]:SetBlipInfoImage(blip, GetCurrentResourceName()..'previewTxd', txname)
+			exports["blip_info"]:SetBlipInfoTitle(blip, data.name, false)
+		end
+	end
 	if Config.System.Debug then print("^6Bridge^7: ^6Blip ^2created for Entity^7: '^6"..data.name.."^7'") end
     return blip
 end
