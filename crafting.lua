@@ -389,7 +389,7 @@ function getStash(stashName) local stashResource = ""
         stashItems = exports[CodeMInv]:GetInventoryItems('Stash', stashName)
 
     elseif GetResourceState(OrigenInv):find("start") then stashResource = OrigenInv
-stashItems = exports[OrigenInv]:GetStashItems(stashName)
+        stashItems = exports[OrigenInv]:GetStashItems(stashName)
 
     elseif GetResourceState(QBInv):find("start") then stashResource = QBInv
         local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
@@ -478,7 +478,7 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
 
     elseif GetResourceState(OrigenInv):find("start") then
         for k, v in pairs(items) do
-            exports[OrigenInv]:RemoveItem(stashName, k, v)
+            exports[OrigenInv]:RemoveFromStash(stashName, nil, k, v)
             if Config.System.Debug then print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..OrigenInv, k, v) end
         end
 
