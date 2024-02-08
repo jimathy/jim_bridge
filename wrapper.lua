@@ -56,7 +56,7 @@ else
 end
 
 -- Load Vehicles
-if GetResourceState(QBXExport):find("start") or GetResourceState(QBExport):find("start") then vehResource = QBExport
+if GetResourceState(QBXExport):find("start") or GetResourceState(QBExport):find("start") then
     Core = Core or exports[QBExport]:GetCoreObject()
     if GetResourceState(QBExport):find("start") and not GetResourceState(QBXExport):find("start") then
         RegisterNetEvent('QBCore:Client:UpdateObject', function()
