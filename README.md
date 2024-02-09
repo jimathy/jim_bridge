@@ -50,7 +50,7 @@ This will now use events from `ps-inventory` and use it through out the scripts.
 # WIP
 ## Documentation
 
-This script brings alot of features to simplify making scripts with preset functions and automations. 
+This script brings alot of features to simplify making scripts with preset functions and automations.
 
 It attempts to make use of configs from the scripts its loaded into. For example:
 
@@ -77,7 +77,7 @@ Config = {
 							-- "qb" = `qb-core`'s drawText system
 							-- "ox" = `ox_lib`'s drawTextUI system
 							-- "gta" = Native GTA style popups
-		
+
 
 		progressBar = "gta" -- The style of progressBar you want to use
 							-- "qb" = `qb-core`'s style progressBar
@@ -90,6 +90,7 @@ Config = {
 ### `openMenu(Menu, data)`
 
 This handles creation of menus using `OX_Lib`, `qb-menu` or `WarMenu`
+
 It uses mixed/new functions to bring more compatability to one another
 
 `Menu` is your button entries and works like qb-menu or ox_lib, for example:
@@ -103,7 +104,7 @@ Menu[#Menu + 1] = {
 	arrow = true,					-- Adds a arrow icon to the button (in qb-menu overrides the icon)
 	header = "Header Test",			-- The header/title for the button
 	txt = "Text test",				-- The txt/description for the button
-	
+
 	onSelect = function()			-- This brings the onSelect function to qb-menu
 		TriggerEvent("lolhi", { lol = hi }),
 	end,
@@ -123,7 +124,7 @@ openMenu(Menu, 						-- Menu here is your table name you created above
 	onExit = function()				-- Will create a "Close button"
 		TriggerEvent("lolhi", { lol = hi }),
 	end,							-- When clicked it will trigger the onExit event
-	
+
 	onBack = function()				-- Will create a "Back button"
 		TriggerEvent("lolhi", { lol = hi }),
 	end,							-- When clicked it will trigger the onBack event
@@ -132,7 +133,8 @@ openMenu(Menu, 						-- Menu here is your table name you created above
 
 ### Support for multiple target events
 These automatically detect what target script you are using
-They are also automatically removed when the script is stopped (for helping 
+
+They are also automatically removed when the script is stopped (for helping optimization)
 ### `createEntityTarget(entity, opts, dist)`
 Create an entity based target
 ```lua
@@ -162,7 +164,7 @@ createBoxTarget(
 		vec3(0, 0, 0),				-- The coordinates of your target
 		2.0,						-- The width of your target box
 		2.0,						-- The depth of your target box
-		{ 
+		{
 			name = "TargetName",	-- The name/id of your target here
 			heading = 200.0,		-- The direction your target will be placed
 			debugPoly = true,		-- Wether to show debug boxes to help place targets
@@ -193,7 +195,7 @@ createCircleTarget(
 		"TargetName",				-- The name/id of your target here
 		vec3(0, 0, 0),				-- The coordinates of your target
 		2.0,						-- The radius of your target circle
-		{ 
+		{
 			name = "TargetName",	-- The name/id of your target here
 			heading = 200.0,		-- The direction your target will be placed
 			debugPoly = true,		-- Wether to show debug boxes to help place targets
@@ -222,7 +224,7 @@ Triggers removal of the target entity, by checking the entity name
 ### `removeZoneTarget(target)`
 Triggers removal of a zone(Box/Circle) target by calling the target's name/id
 
-## `triggerNotify(title, message, type, src)`
+### `triggerNotify(title, message, type, src)`
 Handles notifications for the script called from either the server or client
 
 Supports:
@@ -241,7 +243,7 @@ triggerNotify(
 )
 ```
 
-## `drawText(image, input, style)`
+### `drawText(image, input, style)`
 This handles calling drawText functions
 
 Supports:
@@ -251,8 +253,8 @@ Supports:
 - `esx`
 
 ```lua
-drawText(	
-	187,								-- Very specific for adding blip images to drawtexts, usually nil 
+drawText(
+	187,								-- Very specific for adding blip images to drawtexts, usually nil
 	{
 		"Line 1",						-- Supports multiple lines, helpful for displaying button prompts
 		"Line 2",
@@ -261,11 +263,12 @@ drawText(
 )
 ```
 
-## `hideText()`
+### `hideText()`
 Simply used to hide drawText prompts when not needed anymore
 
-## `createCallback(callbackName, funct)`
+### `createCallback(callbackName, funct)`
 This is my attempt at making multiframework server callbacks by using their provided events
+
 (Only works server side)
 
 ```lua
@@ -277,10 +280,10 @@ createCallback(
 end
 ```
 
-## `triggerCallback(callBackName, value)`
+### `triggerCallback(callBackName, value)`
 This is an attempt at a mutliframework callback
 
-## `onPlayerLoaded(func)`
+### `onPlayerLoaded(func)`
 This is a multiframework event that is triggered when a player has fully loaded their character in
 
 ```lua
@@ -291,53 +294,65 @@ onPlayerLoaded(
 )
 ```
 
-## createInput(title, opts)
+### `createInput(title, opts)`
 
-## searchCar(vehicle)
+### `searchCar(vehicle)`
 
 This function was made for `jim-mechanic` but can be used in other instances
+
 I searches the model name of a currently spawned vehicle and retrieves info about it
+
 It is smart, in terms of, if you use this multiple times it reteives the previously found info instead of searching again
+
 It retrieves data from your vehicles.lua/database:
 - `name` for example: "Zentorno Pegassi"
 - `price` for example: 100000
 - `class` this converts the class number to a String, for example: if the class is 10 it converts this to "Off-road"
 
-## getVehicleProperties(vehicle)
+### `getVehicleProperties(vehicle)`
 Gets the current properties of the vehicle in a table
 
-## setVehicleProperties(vehicle, props)
+### `setVehicleProperties(vehicle, props)`
 Set's the vehicles properites using the `props` table provided
 
-## checkDifferences(vehicle, newProps)
-This function is used by `setVehicleProperties` 
+### `checkDifferences(vehicle, newProps)`
+This function is used by `setVehicleProperties`
+
 It determine's what differences there are between the current vehicle and the new set of properites
+
 If there are differences, return `true`
 
-## RegisterNetEvent(GetCurrentResourceName()..":server:ChargePlayer", function(cost, type, newsrc)
+### `RegisterNetEvent(GetCurrentResourceName()..":server:ChargePlayer", function(cost, type, newsrc)`
 This event is made to REMOVE money from a player
+
 It can be called from client with `TriggerServerEvent`
+
 Also can be called from server with `TriggerEvent` and a source id in `newsrc`
-The name of the event uses GetCurrentResourceName() so it doesn't double up results with other scripts
+
+The name of the event uses `GetCurrentResourceName()` so it doesn't double up results with other scripts
 ```lua
 cost = 100 -- The amount of money to be removed
 type = "cash" or "card" -- The type of money that should be removed
 newsrc = 1			-- The source of the player, must be nil if calling from client
 ```
 
-## RegisterNetEvent(GetCurrentResourceName()..":server:FundPlayer", function(fund, type, newsrc)
+## `RegisterNetEvent(GetCurrentResourceName()..":server:FundPlayer", function(fund, type, newsrc)`
 This event is made to ADD money from a player
+
 It can be called from client with `TriggerServerEvent`
+
 Also can be called from server with `TriggerEvent` and a source id in `newsrc`
-The name of the event uses GetCurrentResourceName() so it doesn't double up results with other scripts
+
+The name of the event uses `GetCurrentResourceName()` so it doesn't double up results with other scripts
 ```lua
 fund = 100 -- The amount of money to be added
 type = "cash" or "card" -- The type of money that should be added
 newsrc = 1			-- The source of the player, must be `nil` if calling from client
 ```
 
-## createUseableItem(item, funct)
+### `createUseableItem(item, funct)`
 This is a server side event to make an item usable
+
 Note: If using ox-inv and the item info has event info, this will be ignored
 
 ```lua
@@ -349,9 +364,11 @@ createUseableItem(
 )
 ```
 
-## hasJob(job, source, grade)
+### `hasJob(job, source, grade)`
 This is an event that makes checking if the player has the requested job simple
+
 It works both client side and server side
+
 returns `true` or `false` and if they are on duty or not
 ```lua
 local hasjob, duty =
@@ -362,8 +379,9 @@ local hasjob, duty =
 	)
 ```
 
-## getPlayer(source)
+### `getPlayer(source)`
 This retrieves basic info of the player
+
 works client side and server side
 Retrieves:
 - Players Name
@@ -373,13 +391,13 @@ Retrieves:
 ```lua
 local PlayerInfo =
 	getPlayer(
-		1				-- The 
+		1				-- The
 	)
 print(json.encode(PlayerInfo, { indent = true })
 ```
 
-## registerCommand(command, options)
-This is a server side event that uses 
+### `registerCommand(command, options)`
+This is a server side event that uses
 - `ox_lib`'s - `lib.addCommand`
 - `qb-core`'s - `QBCore.Commands.Add`
 
@@ -397,8 +415,9 @@ registerCommand(
 )
 ```
 
-## invImg(item)
+### `invImg(item)`
 This is used mainly for menu's to retrieve the item images
+
 It detects what inventory you are using and automatically generates an `nui://` link
 
 ```lua
@@ -406,7 +425,7 @@ local imgLink = invImg("lockpick")
 print(imgLink)
 ```
 
-## registerStash(name, label, slots, weight)
+### `registerStash(name, label, slots, weight)`
 This is a serverside function used to register a new stash in `ox_inventory` and `qs-inventory`
 
 ```lua
@@ -418,35 +437,35 @@ registerStash(
 )
 ```
 
-##	loadModel(model)
+### `loadModel(model)`
 This loads the requested model into the memory cache to help spawning of props
 - Checks if the model exists in the server
 - Attempts to load the model with a timeout, if not loaded, sends warning
 
-## unloadModel(model)
+### `unloadModel(model)`
 This unloads a model to help clear the memory cache and help optimization
 - Recommended to run after spawning a prop
 
-##	loadAnimDict(animDict)
+### `loadAnimDict(animDict)`
 This loads the requested animDict into the memory cache to help loading anims
 - Checks if the dict exists in the server
 
-## unloadAnimDict(animDict)
+### `unloadAnimDict(animDict)`
 This unloads the animDict to help clear the memory cache and help optimization
 - Recommended to run after running an animation
 
-## loadPtfxDict(ptFxName)
+### `loadPtfxDict(ptFxName)`
 This loads the requested ptFx dict into the memory cache to help loading particle effects
 - Skips if the effect is alredy loaded
 
-## unloadPtfxDict(dict)
+### `unloadPtfxDict(dict)`
 This unloads a particle effect to help clear the memory cache and help optimization
 - Recommended to run after running an ptfx
 
-## loadTextureDict(dict)
+### `loadTextureDict(dict)`
 This loads the requested texture dictionary into memory
 
-## countTable(table)
+### `countTable(table)`
 This is a simple function to count how many entires are in a table, for if your table keys aren't numbered
 ```lua
 local table = {
@@ -456,8 +475,9 @@ local table = {
 print("countTable", countTable(table))
 ```
 
-## pairsByKeys(t)
+### `pairsByKeys(t)`
 Searches through a table alphabetically instead of randomly
+
 This is an optional function made to replace:
 ```lua
 for k, v in pairs(table) do end
@@ -467,9 +487,11 @@ with:
 for k, v in pairsByKeys(table) do end
 ```
 
-## playAnim(animDict, animName, duration, flag, ped)
+### `playAnim(animDict, animName, duration, flag, ped)`
 A simplified version of `TaskPlayAnim()`
+
 Has some settings already set and basic ones ready to change
+
 Loads the animDict automatically with `loadAnimDict()`
 ```lua
 playAnim(
@@ -481,8 +503,9 @@ playAnim(
 )
 ```
 
-## stopAnim(animDict, animName, ped)
+### `stopAnim(animDict, animName, ped)`
 Similar to `StopAnimTask()`
+
 Made to stop the given animation with being able to choose which ped
 ```lua
 stopAnim(
@@ -491,31 +514,36 @@ stopAnim(
 	ped,		-- Optional, for if you want any one other than the player to do the animation
 )
 ```
-## makeVeh(model, coords)
+### `makeVeh(model, coords)`
 
-## makePed(model, coords, freeze, collision, scenario, anim, synced)
+### `makePed(model, coords, freeze, collision, scenario, anim, synced)`
 
-## makeProp(data, freeze, synced)
+### `makeProp(data, freeze, synced)`
 
-## instantLookEnt(ent, ent2)
+### `instantLookEnt(ent, ent2)`
 This function forcibly changes `ent`'s heading to face `ent2`
 Helpful for animations
 
-## lookEnt(entity)
+### `lookEnt(entity)`
 This function attempts to slowly turn the player to the given entity/coords
+
 Accepts either a `entity ID` or `vector3`
 
-## destroyProp(entity)
+### `destroyProp(entity)`
 Attempts to remove a spawned prop
+
 If its attached to a player it attempts to to detatch it first
 
-## pushVehicle(entity)
+### `pushVehicle(entity)`
 This attempts to make the current entity(vehicle) network controlled
+
 This helps with syncing it with other players (used in jim-mechanic alot)
 
-## ensureNetToVeh(vehNetId)
+### `ensureNetToVeh(vehNetId)`
 This was created to get around fivem's warnings of failing to get network objects
+
 Although these warnings mean't nothing, it is annoying
+
 This is made to replace the native `NetToVeh()` but checking first if it exists
 
 
