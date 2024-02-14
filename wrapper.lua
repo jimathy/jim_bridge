@@ -491,7 +491,7 @@ function createBoxTarget(data, opts, dist)
         local options = { options = opts, distance = dist }
         local target = exports[QBTargetExport]:AddBoxZone(data[1], data[2], data[3], data[4], data[5], options)
         boxTargets[#boxTargets+1] = target
-        return target
+        return data[1]
     else
         local tempText = ""
         local keyTable = { 38, 29, 303, }
@@ -540,7 +540,7 @@ function createCircleTarget(data, opts, dist)
         local target = exports[QBTargetExport]:AddCircleZone(data[1], data[2], data[3], data[4], options)
 
         circleTargets[#circleTargets+1] = target
-        return target
+        return data[1]
     else
         local tempText = ""
         local keyTable = { 38, 29, 303, }
