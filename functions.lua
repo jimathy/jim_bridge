@@ -746,6 +746,50 @@ function dupeWarn(src, item, amount)
     print("^5DupeWarn:^7: (^1"..tostring(src).."^7) ^2Dropped from server - exploit protection detected an item not being found in players inventory^7")
 end
 
+function getDurability(item)
+	local lowestSlot = 100
+	local durability = nil
+	if GetResourceState(QBInv):find("start") then
+		local itemcheck = Core.Functions.GetPlayerData().items
+		for k, v in pairs(itemcheck) do
+			if v.name == item then
+				if v.slot <= lowestSlot then
+					lowestSlot = v.slot
+					durability = itemcheck[k].info.durability
+				end
+			end
+		end
+	end
+	if GetResourceState(OXInv):find("start") then
+		local itemcheck = exports[OXInv]:Search('slots', item)
+		for k, v in pairs(itemcheck) do
+			if v.slot <= lowestSlot then
+				lowestSlot = v.slot
+				durability = itemcheck[k].metadata.durability
+			end
+		end
+	end
+	return durability, lowestSlot
+end
+
+RegisterNetEvent(GetCurrentResourceName()..":server:setMetaData", function(data)
+	local src = source
+	if GetResourceState(QBInv):find("start") then
+		print(src, data.item, 1, data.slot)
+		local Player = Core.Functions.GetPlayer(src)
+
+		Player.PlayerData.items[data.slot].info = data.metadata
+		Player.PlayerData.items[data.slot].description = "HP : "..data.metadata.durability
+		Player.Functions.SetInventory(Player.PlayerData.items)
+
+	end
+	if GetResourceState(OXInv):find("start") then
+		exports[OXInv]:SetMetadata(source, data.slot, data.metadata)
+	end
+end)
+
+
+
 function toggleDuty()
 	if GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then
 		TriggerServerEvent("QBCore:ToggleDuty")
