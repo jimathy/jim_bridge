@@ -1291,6 +1291,9 @@ function sendPhoneMail(data) local phoneResource = ""
 
     elseif GetResourceState("qb-phone"):find("start") then phoneResource = "qb-phone"
         TriggerServerEvent('qb-phone:server:sendNewMail', data)
+
+    elseif GetResourceState("jpr-phonesystem"):find("start") then phoneResource = "jpr-phonesystem"
+        TriggerServerEvent(GetCurrentResourceName()..":jpr:SendMail", data)
     end
 
     if phoneResource ~= "" then if Config.System.Debug then print("^6Bridge^7[^3"..phoneResource.."^7]: ^2Sending mail to player") end
@@ -1321,6 +1324,19 @@ RegisterNetEvent(GetCurrentResourceName()..":yflip:SendMail", function(data)
         content = data.message,
         actions = data.buttons,
     }, 'source', src)
+end)
+
+RegisterNetEvent(GetCurrentResourceName()..":jpr:SendMail", function(data)
+    local QBCore = exports['qb-core']:GetCoreObject()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    TriggerEvent('jpr-phonesystem:server:sendEmail', {
+        Assunto = data.subject, -- Subject
+        Conteudo = data.message, -- Content
+        Enviado = data.sender, -- Submitted by
+        Destinatario = Player.PlayerData.citizenid, -- Target
+        Event = {}, -- Optional 
+    })
 end)
 
 function registerCommand(command, options)
