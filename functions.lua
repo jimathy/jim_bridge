@@ -40,12 +40,13 @@ function loadPtfxDict(ptFxName)
 	end
 end
 function unloadPtfxDict(dict) if Config.System.Debug then print("^6Bridge^7: ^2Removing Ptfx Dictionary^7: '^6"..dict.."^7'") end RemoveNamedPtfxAsset(dict) end
+
 function loadTextureDict(dict)
 	if not HasStreamedTextureDictLoaded(dict) then
 		if Config.System.Debug then
 			print("^6Bridge^7: ^2Loading Texture Dictionary^7: '^6"..dict.."^7'")
 		end
-		while not HasStreamedTextureDictLoaded(dict) do RequestNamedPtfxAsset(dict) Wait(5) end
+		while not HasStreamedTextureDictLoaded(dict) do RequestStreamedTextureDict(dict) Wait(5) end
 	end
 end
 
@@ -230,6 +231,7 @@ function ensureNetToVeh(vehNetID)
 end
 
 local previewTxd = not IsDuplicityVersion() and CreateRuntimeTxd(GetCurrentResourceName()..'previewTxd') or nil
+local customDUIList = {}
 function makeBlip(data)
 	local blip = AddBlipForCoord(vec3(data.coords.x, data.coords.y, data.coords.z))
 	SetBlipAsShortRange(blip, true)
@@ -243,12 +245,9 @@ function makeBlip(data)
 	EndTextCommandSetBlipName(blip)
 	if GetResourceState("blip_info"):find("start") or GetResourceState("blip-info"):find("start") or GetResourceState("blipinfo"):find("start") then
 		if data.preview then
-			local txname = tostring('preview'..keyGen()..keyGen())
+			local txname = tostring(data.name..'preview'..string.gsub(data.coords.z, "%.", ""))
 			if data.preview:find("http") then
-				local newTxt = CreateDui(data.preview, 512, 256)
-				local duihandle = GetDuiHandle(newTxt)
-				while not GetDuiHandle(newTxt) do Wait(0) end
-				CreateRuntimeTextureFromDuiHandle(previewTxd, txname, duihandle)
+				createNewDui(txname, data.preview, { 512, 256 })
 			else
 				CreateRuntimeTextureFromImage(previewTxd, txname, data.preview)
 			end
@@ -258,6 +257,16 @@ function makeBlip(data)
 	end
 	if Config.System.Debug then print("^6Bridge^7: ^6Blip ^2created for location^7: '^6"..data.name.."^7'") end
 	return blip
+end
+
+function createNewDui(name, http, size)
+	if not customDUIList[name] then
+		local newTxt = CreateDui(http, size[1], size[2])
+		local duihandle = GetDuiHandle(newTxt)
+		while not GetDuiHandle(newTxt) do Wait(0) end
+		CreateRuntimeTextureFromDuiHandle(previewTxd, name, duihandle)
+		customDUIList[name] = true
+	else return end
 end
 
 function makeEntityBlip(data)
@@ -274,12 +283,9 @@ function makeEntityBlip(data)
 	EndTextCommandSetBlipName(blip)
 	if GetResourceState("blip_info"):find("start") or GetResourceState("blip-info"):find("start") or GetResourceState("blipinfo"):find("start") then
 		if data.preview then
-			local txname = tostring('preview'..keyGen()..keyGen())
+			local txname = data.name..'preview'
 			if data.preview:find("http") then
-				local newTxt = CreateDui(data.preview, 512, 256)
-				local duihandle = GetDuiHandle(newTxt)
-				while not GetDuiHandle(newTxt) do Wait(0) end
-				CreateRuntimeTextureFromDuiHandle(previewTxd, txname, duihandle)
+				createNewDui(txname, data.preview, { 512, 256 })
 			else
 				CreateRuntimeTextureFromImage(previewTxd, txname, data.preview)
 			end
@@ -747,7 +753,7 @@ function dupeWarn(src, item, amount)
 end
 
 function getDurability(item)
-	local lowestSlot = 100
+	local lowestSlot = 100		-- anything above your players max slots
 	local durability = nil
 	if GetResourceState(QBInv):find("start") then
 		local itemcheck = Core.Functions.GetPlayerData().items
@@ -775,7 +781,6 @@ end
 RegisterNetEvent(GetCurrentResourceName()..":server:setMetaData", function(data)
 	local src = source
 	if GetResourceState(QBInv):find("start") then
-		print(src, data.item, 1, data.slot)
 		local Player = Core.Functions.GetPlayer(src)
 
 		Player.PlayerData.items[data.slot].info = data.metadata

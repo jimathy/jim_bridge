@@ -478,7 +478,7 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
 
     elseif GetResourceState(OrigenInv):find("start") then
         for k, v in pairs(items) do
-            exports[OrigenInv]:RemoveFromStash(stashName, nil, k, v)
+            exports[OrigenInv]:RemoveFromStash(stashName, k, v)
             if Config.System.Debug then print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..OrigenInv, k, v) end
         end
 
