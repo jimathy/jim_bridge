@@ -88,7 +88,7 @@ local Peds = {}
 local Props = {}
 function makePed(model, coords, freeze, collision, scenario, anim, synced)
 	loadModel(model)
-	local ped = CreatePed(0, model, coords.x, coords.y, coords.z-1.03, coords.w, synced or true, false)
+	local ped = CreatePed(0, model, coords.x, coords.y, coords.z-1.03, coords.w, synced and synced or false, false)
 	SetEntityInvincible(ped, true)
 	SetBlockingOfNonTemporaryEvents(ped, true)
 	FreezeEntityPosition(ped, freeze and freeze or true)
@@ -142,13 +142,6 @@ function DrawText3D(x, y, z, text)
     DrawRect(0.0, 0.0 + 0.0125, 0.017 + factor, 0.03, 0, 0, 0, 75)
     ClearDrawOrigin()
 end
-
-AddEventHandler('onResourceStop', function(r)
-    if r ~= GetCurrentResourceName() then return end
-	stopSpinner()
-	for i = 1, #Peds do DeletePed(Peds[i]) end
-    for i = 1, #Props do destroyProp(Props[i]) end
-end)
 
 function instantLookEnt(ent, ent2)
     local p1 = GetEntityCoords(ent, true)
@@ -230,7 +223,8 @@ function ensureNetToVeh(vehNetID)
 	return vehicle
 end
 
-local previewTxd = not IsDuplicityVersion() and CreateRuntimeTxd(GetCurrentResourceName()..'previewTxd') or nil
+local scriptTxd = not IsDuplicityVersion() and CreateRuntimeTxd(GetCurrentResourceName()..'scriptTxd') or nil
+
 local customDUIList = {}
 function makeBlip(data)
 	local blip = AddBlipForCoord(vec3(data.coords.x, data.coords.y, data.coords.z))
@@ -247,26 +241,16 @@ function makeBlip(data)
 		if data.preview then
 			local txname = tostring(data.name..'preview'..string.gsub(data.coords.z, "%.", ""))
 			if data.preview:find("http") then
-				createNewDui(txname, data.preview, { 512, 256 })
+				createDui(txname, data.preview, vec2(512, 256), scriptTxd)
 			else
-				CreateRuntimeTextureFromImage(previewTxd, txname, data.preview)
+				CreateRuntimeTextureFromImage(scriptTxd, txname, data.preview)
 			end
-			exports["blip_info"]:SetBlipInfoImage(blip, GetCurrentResourceName()..'previewTxd', txname)
+			exports["blip_info"]:SetBlipInfoImage(blip, GetCurrentResourceName()..'scriptTxd', txname)
 			exports["blip_info"]:SetBlipInfoTitle(blip, data.name, false)
 		end
 	end
 	if Config.System.Debug then print("^6Bridge^7: ^6Blip ^2created for location^7: '^6"..data.name.."^7'") end
 	return blip
-end
-
-function createNewDui(name, http, size)
-	if not customDUIList[name] then
-		local newTxt = CreateDui(http, size[1], size[2])
-		local duihandle = GetDuiHandle(newTxt)
-		while not GetDuiHandle(newTxt) do Wait(0) end
-		CreateRuntimeTextureFromDuiHandle(previewTxd, name, duihandle)
-		customDUIList[name] = true
-	else return end
 end
 
 function makeEntityBlip(data)
@@ -285,9 +269,9 @@ function makeEntityBlip(data)
 		if data.preview then
 			local txname = data.name..'preview'
 			if data.preview:find("http") then
-				createNewDui(txname, data.preview, { 512, 256 })
+				createDui(txname, data.preview, vec2(512, 256), scriptTxd)
 			else
-				CreateRuntimeTextureFromImage(previewTxd, txname, data.preview)
+				CreateRuntimeTextureFromImage(scriptTxd, txname, data.preview)
 			end
 			exports["blip_info"]:SetBlipInfoImage(blip, GetCurrentResourceName()..'previewTxd', txname)
 			exports["blip_info"]:SetBlipInfoTitle(blip, data.name, false)
@@ -296,6 +280,119 @@ function makeEntityBlip(data)
 	if Config.System.Debug then print("^6Bridge^7: ^6Blip ^2created for Entity^7: '^6"..data.name.."^7'") end
     return blip
 end
+
+-- DUI STUFF - WIP --
+
+-- DUI CLIENT
+function createDui(name, http, size, txd)
+	if not customDUIList[name] then
+		local newTxt = CreateDui(http, math.floor(size.x), math.floor(size.y))
+		while not GetDuiHandle(newTxt) do Wait(0) end
+		CreateRuntimeTextureFromDuiHandle(txd, name, GetDuiHandle(newTxt))
+		customDUIList[name] = newTxt
+		SetDuiUrl(customDUIList[name], http)
+	else
+		SetDuiUrl(customDUIList[name], http)
+	end
+end
+
+function DuiSelect(data)
+    local image = ""
+	for k, v in pairs(duiList[data.name]) do
+		if v.tex.texn == data.texn then
+			if duiList[data.name][k] then
+				image = "<center>- Current Image -<br>"..
+						"<img src="..duiList[data.name][k].url.." width=150px><br>"..
+						"Size: ["..math.floor(data.size.x)..", "..math.floor(data.size.y).."]<br><br>"
+			end
+		end
+	end
+    local dialog = exports['qb-input']:ShowInput({
+        header = image..Loc[Config.Lan].menu["dui_new"],
+        submitText = Loc[Config.Lan].menu["dui_change"],
+        inputs = { { type = 'text', isRequired = true, name = 'url', text = Loc[Config.Lan].menu["dui_url"] } } })
+    if dialog then
+        if not dialog.url then return end
+        data.url = dialog.url
+        --Scan the link to see if it has an image extention otherwise, stop here.
+        local searchList = { "png", "jpg", "jpeg", "gif", "webp", "bmp" }
+        --Scan the link for certain terms that will flag it and refuse to show it
+        local banList = { "porn" } -- I dunno, let me know what links people manage to find
+        local searchFound = false
+        for k, v in pairs(searchList) do
+			if string.find(tostring(data.url), tostring(v))then
+				searchFound = true
+			end
+		end
+        for k, v in pairs(banList) do
+			if string.find(tostring(data.url), tostring(v)) then
+				searchFound = false print("BANNED WORD: "..v)
+			end
+		end
+        if searchFound then
+			TriggerServerEvent(GetCurrentResourceName()..":Server:ChangeDUI", data)
+		end
+    end
+end
+
+RegisterNetEvent(GetCurrentResourceName()..":Client:ChangeDUI", function(data)
+    if Config.System.Debug then print("^6Bridge^7: ^2Recieving new DUI ^7- ^6"..data.url.."^7") end
+    if tostring(data.url) ~= "-" then
+		createDui(data.texn, tostring(data.url), data.size, scriptTxd)
+        AddReplaceTexture(tostring(data.texd), tostring(data.texn), GetCurrentResourceName()..'scriptTxd', tostring(data.texn))
+    end
+end)
+
+RegisterNetEvent(GetCurrentResourceName()..":Client:ClearDUI", function(data)
+    if customDUIList[tostring(data.texn)] then
+        RemoveReplaceTexture(tostring(data.texd), tostring(data.texn))
+        if IsDuiAvailable(customDUIList[tostring(data.texn)]) then
+			SetDuiUrl(customDUIList[data.name], nil)
+		end
+    end
+end)
+
+-- DUI SERVER
+RegisterNetEvent(GetCurrentResourceName()..":Server:ChangeDUI", function(data)
+    -- if no url given, "reset" it back to preset
+    if not data.url then
+		for k, v in pairs(duiList[data.name]) do
+			if v.tex.texn == data.texn then
+				if Config.System.Debug then print("^6Bridge^7: ^2Preset^7: ^6"..tostring(duiList[data.name][k].preset).."^7") end
+				data.url = duiList[data.name][k].preset
+			end
+		end
+    end
+    -- if it has a url, update server DUI list and send to players
+	for k, v in pairs(duiList[data.name]) do
+		if v.tex.texn == data.texn then
+			duiList[data.name][k].url = data.url
+		end
+	end
+	if Config.System.Debug then print("^6Bridge^7: ^3DUI^2 Sending new DUI to all players^7 - ^6"..data.url.."^7") end
+	TriggerClientEvent(GetCurrentResourceName()..":Client:ChangeDUI", -1, data)
+end)
+
+RegisterNetEvent(GetCurrentResourceName()..":Server:ClearDUI", function(data)
+    if data.url == "-" then
+		for k, v in pairs(duiList[data.name]) do
+			if v.tex.texn == data.texn then
+				duiList[data.name][k].url = "-"
+			end
+		end
+	end
+    -- Clear the DUI from loading
+    TriggerClientEvent(GetCurrentResourceName()..":Client:ClearDUI", -1, data)
+    --duiList[tostring(data.tex)].url = ""
+end)
+
+AddEventHandler('onResourceStop', function(r) if r ~= GetCurrentResourceName() then return end
+    for k, v in pairs(duiList) do
+		for i = 1, #v do
+			RemoveReplaceTexture(tostring(v[i].tex.texd), tostring(v[i].tex.texn))
+		end
+    end
+end)
 
 function lockInv(toggle)
 	FreezeEntityPosition(PlayerPedId(), toggle)
@@ -969,15 +1066,15 @@ function FocusEffect()
     focusEffect = false
     if Config.System.Debug then print("^5Debug^7: ^3FocusEffect^7() ^2stopped") end
 end
-local NightVisionEffect = false
+local nightVisionEffect = false
 function NightVisionEffect()
-    if NightVisionEffect then return else NightVisionEffect = true end
+    if NightVisionEffect then return else nightVisionEffect = true end
     if Config.System.Debug then print("^5Debug^7: ^3NightVisionEffect^7() ^2activated") end
     SetNightvision(true)
     Wait(math.random(3000, 4000))  -- FEEL FREE TO CHANGE THIS
     SetNightvision(false)
     SetSeethrough(false)
-    NightVisionEffect = false
+    nightVisionEffect = false
     if Config.System.Debug then print("^5Debug^7: ^3NightVisionEffect^7() ^2stopped") end
 end
 local thermalEffect = false
@@ -1049,3 +1146,10 @@ function StopEffects() -- Used to clear up any effects stuck on screen
     AnimpostfxStop('FocusIn')
     AnimpostfxStop('Rampage')
 end
+
+AddEventHandler('onResourceStop', function(r)
+    if r ~= GetCurrentResourceName() then return end
+	stopSpinner()
+	for i = 1, #Peds do DeletePed(Peds[i]) end
+    for i = 1, #Props do destroyProp(Props[i]) end
+end)
