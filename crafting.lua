@@ -331,11 +331,13 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
 
     elseif GetResourceState(CodeMInv):find("start") then
         foundInv = CodeMInv
-        grabInv = src and exports[CodeMInv]:GetUserInventory(src) or exports[CodeMInv]:GetClientPlayerInventory()
+        if src then grabInv = exports[CodeMInv]:GetUserInventory(src)
+        else grabInv = exports[CodeMInv]:GetClientPlayerInventory() end
 
     elseif GetResourceState(QBInv):find("start") then
         foundInv = QBInv
-        grabInv = src and Core.Functions.GetPlayer(src).PlayerData.items or Core.Functions.GetPlayerData().items
+        if src then grabInv = Core.Functions.GetPlayer(src).PlayerData.items
+        else grabInv = Core.Functions.GetPlayerData().items end
 
     else
         print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
