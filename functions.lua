@@ -766,10 +766,31 @@ function getDurability(item)
 			end
 		end
 	end
+
 	if GetResourceState(OXInv):find("start") then
 		local itemcheck = exports[OXInv]:Search('slots', item)
 		for k, v in pairs(itemcheck) do
 			if v.slot <= lowestSlot then
+				lowestSlot = v.slot
+				durability = itemcheck[k].metadata.durability
+			end
+		end
+	end
+
+	if GetResourceState(QSInv):find("start") then
+		local itemcheck = exports[QSInv]:getUserInventory()
+		for k, v in pairs(itemcheck) do
+			if v.name == item and v.slot <= lowestSlot then
+				lowestSlot = v.slot
+				durability = itemcheck[k].metadata.durability
+			end
+		end
+	end
+
+	if GetResourceState(OrigenInv):find("start") then
+		local itemcheck = exports[OrigenInv]:getPlayerInventory()
+		for k, v in pairs(itemcheck) do
+			if v.name == item and v.slot <= lowestSlot then
 				lowestSlot = v.slot
 				durability = itemcheck[k].metadata.durability
 			end
@@ -782,18 +803,26 @@ RegisterNetEvent(GetCurrentResourceName()..":server:setMetaData", function(data)
 	local src = source
 	if GetResourceState(QBInv):find("start") then
 		local Player = Core.Functions.GetPlayer(src)
-
 		Player.PlayerData.items[data.slot].info = data.metadata
 		Player.PlayerData.items[data.slot].description = "HP : "..data.metadata.durability
 		Player.Functions.SetInventory(Player.PlayerData.items)
-
 	end
+
 	if GetResourceState(OXInv):find("start") then
 		exports[OXInv]:SetMetadata(source, data.slot, data.metadata)
 	end
+
+	if GetResourceState(QSInv):find("start") then
+		exports[QSInv]:SetItemMetadata(source, data.slot, data.metadata)
+	end
+
+	if GetResourceState(OrigenInv):find("start") then
+		local item = exports[OrigenInv]:GetItemBySlot(source, data.slot)
+		if item then
+			exports[OrigenInv]:SetItemData(source, item.name, "durability", data.metadata.durability)
+		end
+	end
 end)
-
-
 
 function toggleDuty()
 	if GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then
