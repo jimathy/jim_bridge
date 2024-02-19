@@ -26,7 +26,7 @@ for k, v in pairs(Exports) do
     if GetResourceState(v):find("start") then print("^6Bridge^7: '^3"..v.."^7' ^2export found ^7") end
 end
 
-local itemResource, jobResource = "", ""
+local itemResource, vehResource, jobResource = "", "", ""
 
 -- Load item lists
 if GetResourceState(OXInv):find("start") then itemResource = OXInv
@@ -1293,10 +1293,6 @@ function sendPhoneMail(data) local phoneResource = ""
         TriggerServerEvent('qb-phone:server:sendNewMail', data)
     end
 
-    elseif GetResourceState("jpr-phonesystem"):find("start") then phoneResource = "jpr-phonesystem"
-        TriggerServerEvent(GetCurrentResourceName()..":jpr:SendMail", data)
-    end
-
     if phoneResource ~= "" then if Config.System.Debug then print("^6Bridge^7[^3"..phoneResource.."^7]: ^2Sending mail to player") end
     else print("^6Bridge^7: ^1ERROR ^2Sending mail to player ^7 - ^2No supported phone found") end
 end
@@ -1325,19 +1321,6 @@ RegisterNetEvent(GetCurrentResourceName()..":yflip:SendMail", function(data)
         content = data.message,
         actions = data.buttons,
     }, 'source', src)
-end)
-
-RegisterNetEvent(GetCurrentResourceName()..":jpr:SendMail", function(data)
-    local QBCore = exports['qb-core']:GetCoreObject()
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    TriggerEvent('jpr-phonesystem:server:sendEmail', {
-        Assunto = data.subject, -- Subject
-        Conteudo = data.message, -- Content
-        Enviado = data.sender, -- Submitted by
-        Destinatario = Player.PlayerData.citizenid, -- Target
-        Event = {}, -- Optional
-    })
 end)
 
 function registerCommand(command, options)
@@ -1379,4 +1362,18 @@ function registerStash(name, label, slots, weight)
         exports[QSInv]:RegisterStash(name, slots or 50, weight or 4000000)
     end
 end
+
+-- duiList callback here because it wouldnt load in functions.lua
+
+if IsDuplicityVersion() then
+    createCallback(GetCurrentResourceName()..":Server:duiList", function(source, cb)
+        if GetResourceState(OXLibExport):find("start") then
+            return duiList
+        else
+            cb(duiList)
+        end
+    end)
+end
+
+
 -- IN NO WAY PERFECT --
