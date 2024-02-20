@@ -1291,7 +1291,6 @@ function sendPhoneMail(data) local phoneResource = ""
 
     elseif GetResourceState("qb-phone"):find("start") then phoneResource = "qb-phone"
         TriggerServerEvent('qb-phone:server:sendNewMail', data)
-    end
 
     elseif GetResourceState("jpr-phonesystem"):find("start") then phoneResource = "jpr-phonesystem"
         TriggerServerEvent(GetCurrentResourceName()..":jpr:SendMail", data)
