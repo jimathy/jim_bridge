@@ -110,7 +110,7 @@ end
 
 function makeProp(data, freeze, synced)
     loadModel(data.prop)
-    local prop = CreateObject(data.prop, data.coords.x, data.coords.y, data.coords.z-1.03, freeze or false, synced or false, false)
+    local prop = CreateObject(data.prop, data.coords.x, data.coords.y, data.coords.z-1.03, synced and synced or false, synced and synced or false, false)
     SetEntityHeading(prop, data.coords.w + 180.0)
     FreezeEntityPosition(prop, freeze and freeze or 0)
     if Config.System.Debug then
@@ -387,7 +387,7 @@ RegisterNetEvent(GetCurrentResourceName()..":Server:ClearDUI", function(data)
 end)
 
 AddEventHandler('onResourceStop', function(r) if r ~= GetCurrentResourceName() then return end
-    for k, v in pairs(duiList) do
+    for k, v in pairs(duiList or {}) do
 		for i = 1, #v do
 			RemoveReplaceTexture(tostring(v[i].tex.texd), tostring(v[i].tex.texn))
 		end
@@ -847,6 +847,19 @@ function dupeWarn(src, item, amount)
         DropPlayer(src, src.." ^1Kicked for suspected duplicating items:"..item)
     end
     print("^5DupeWarn:^7: (^1"..tostring(src).."^7) ^2Dropped from server - exploit protection detected an item not being found in players inventory^7")
+end
+
+function breakTool(data) --wip
+	local durability, slot = getDurability(item)
+	durability -= data.damage
+	if not durability then durability = 100 end
+	if durability <= 0 then
+		removeItem(data.item, 1)
+		local breakId = GetSoundId()
+		PlaySoundFromEntity(breakId, "Drill_Pin_Break", PlayerPedId(), "DLC_HEIST_FLEECA_SOUNDSET", 1, 0)
+	else
+		TriggerServerEvent(GetCurrentResourceName()..":server:setMetaData", { item = data.item, slot = slot, metadata = { durability = durability }})
+	end
 end
 
 function getDurability(item)
