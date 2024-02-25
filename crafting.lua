@@ -331,11 +331,13 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
 
     elseif GetResourceState(CodeMInv):find("start") then
         foundInv = CodeMInv
-        grabInv = src and exports[CodeMInv]:GetUserInventory(src) or exports[CodeMInv]:GetClientPlayerInventory()
+        if src then grabInv = exports[CodeMInv]:GetUserInventory(src)
+        else grabInv = exports[CodeMInv]:GetClientPlayerInventory() end
 
     elseif GetResourceState(QBInv):find("start") then
         foundInv = QBInv
-        grabInv = src and Core.Functions.GetPlayer(src).PlayerData.items or Core.Functions.GetPlayerData().items
+        if src then grabInv = Core.Functions.GetPlayer(src).PlayerData.items
+        else grabInv = Core.Functions.GetPlayerData().items end
 
     else
         print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
@@ -478,7 +480,7 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
 
     elseif GetResourceState(OrigenInv):find("start") then
         for k, v in pairs(items) do
-            exports[OrigenInv]:RemoveFromStash(stashName, nil, k, v)
+            exports[OrigenInv]:RemoveFromStash(stashName, k, v)
             if Config.System.Debug then print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..OrigenInv, k, v) end
         end
 

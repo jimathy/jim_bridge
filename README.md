@@ -55,6 +55,9 @@ This script brings alot of features to simplify making scripts with preset funct
 It attempts to make use of configs from the scripts its loaded into. For example:
 
 ### `Config`
+This needs to be in every script that uses it, a `System` table with Debug, Menu, Notify, drawText, progressBar
+
+This is required to use jim_bridge with your script
 ```lua
 Config = {
 	System = {
@@ -311,9 +314,13 @@ It retrieves data from your vehicles.lua/database:
 
 ### `getVehicleProperties(vehicle)`
 Gets the current properties of the vehicle in a table
+- if using qb-core it will default to its version
+- if not it will attempt to use ox_libs version
 
 ### `setVehicleProperties(vehicle, props)`
 Set's the vehicles properites using the `props` table provided
+- if using qb-core it will default to its version
+- if not it will attempt to use ox_libs version
 
 ### `checkDifferences(vehicle, newProps)`
 This function is used by `setVehicleProperties`
@@ -335,8 +342,16 @@ cost = 100 -- The amount of money to be removed
 type = "cash" or "card" -- The type of money that should be removed
 newsrc = 1			-- The source of the player, must be nil if calling from client
 ```
+Examples of use:
+```lua
+-- Client
+TriggerEvent(GetCurrentResourceName()..":server:ChargePlayer", function(1000, "cash")
 
-## `RegisterNetEvent(GetCurrentResourceName()..":server:FundPlayer", function(fund, type, newsrc)`
+-- Server
+TriggerServerEvent(GetCurrentResourceName()..":server:ChargePlayer", function(1000, "bank", 1)
+```
+
+## `RegisterNetEvent(GetCurrentResourceName()..":server:FundPlayer", function(cost, type, newsrc)`
 This event is made to ADD money from a player
 
 It can be called from client with `TriggerServerEvent`
@@ -349,11 +364,19 @@ fund = 100 -- The amount of money to be added
 type = "cash" or "card" -- The type of money that should be added
 newsrc = 1			-- The source of the player, must be `nil` if calling from client
 ```
+Examples of use:
+```lua
+-- Client
+TriggerEvent(GetCurrentResourceName()..":server:FundPlayer", function(1000, "cash")
+
+-- Server
+TriggerServerEvent(GetCurrentResourceName()..":server:FundPlayer", function(1000, "bank", newsrc)
+```
 
 ### `createUseableItem(item, funct)`
 This is a server side event to make an item usable
 
-Note: If using ox-inv and the item info has event info, this will be ignored
+Note: If using ox_inv and the items.lua info has event or a `status` section, this will be ignored
 
 ```lua
 createUseableItem(
@@ -404,9 +427,9 @@ This is a server side event that uses
 Example:
 ```lua
 registerCommand(
-	"hello",			-- /hello the command to be used
+	"hello",						-- /hello the command to be used
 	"Print 'hello world'",			-- text to show in chat
-	{ name = "lol", help = "hi }, 	-- Help text for the command
+	{ name = "lol", help = "hi" }, 	-- Help text for the command
 	false,
 	function()						-- Function to be ran when the command is triggered
 		print("Hello World")
@@ -467,6 +490,8 @@ This loads the requested texture dictionary into memory
 
 ### `countTable(table)`
 This is a simple function to count how many entires are in a table, for if your table keys aren't numbered
+
+Example:
 ```lua
 local table = {
 	["tableentry"] = true,
@@ -515,14 +540,68 @@ stopAnim(
 )
 ```
 ### `makeVeh(model, coords)`
+Spawns a vehicle for the player to use
+- Server Synced
+- Easy creation
+- Returns entity id for further control through the script
+- Loads model before spawning
+- Unloads model from memory cache after spawn
+
+Example of use:
+```lua
+local vehicle = makeVeh(
+	`zentorno`,
+	vec4(-596.74, 2090.99, 131.41, 16.6)
+)
+print(vehicle, GetEntityCoords(vehicle))
+```
 
 ### `makePed(model, coords, freeze, collision, scenario, anim, synced)`
+Spawns a controllable ped
+- Loads the model before spawning
+- Unloads model from memory cache after spawn
+- Several options for creation
+- Can spawn with scenario name or anims
+- Spawns invincible
+
+Example of use:
+```lua
+local ped = makePed(
+	`MP_M_Freemode_011,
+	vec4(-596.74, 2090.99, 131.41, 16.6),
+	true,
+	false,
+	nil,	
+	{ "amb@prop_human_parking_meter@male@idle_a", "idle_a" },
+	false
+)
+print(ped, GetEntityCoords(ped))
+```
 
 ### `makeProp(data, freeze, synced)`
+This function is made to easily load a prop in the world
+- Has a simplified process
+- Lodas model before spawning prop
+- Unloads model from memory cache when done
+- Returns entity id for control through the script
+
+Example of use:
+```lua
+local entityid = makeProp(
+	{
+		prop = "v_serv_plas_boxgt2", 						-- Prop model, can be a string or hash key
+		coords = vec4(-596.74, 2090.99, 131.41, 16.6),		-- needs to be vector4 or vec4, 4th variable is heading
+	},
+	true,													-- Decide if the entiy is frozen in place
+	false													-- Does this prop spawn for everyone or just the client
+)
+print(entityid, GetEntityCoords(entityid))
+```
 
 ### `instantLookEnt(ent, ent2)`
 This function forcibly changes `ent`'s heading to face `ent2`
-Helpful for animations
+
+Helpful for animations in a specific direction
 
 ### `lookEnt(entity)`
 This function attempts to slowly turn the player to the given entity/coords
@@ -537,7 +616,7 @@ If its attached to a player it attempts to to detatch it first
 ### `pushVehicle(entity)`
 This attempts to make the current entity(vehicle) network controlled
 
-This helps with syncing it with other players (used in jim-mechanic alot)
+This helps with syncing it with other players (used in jim-mechanic often)
 
 ### `ensureNetToVeh(vehNetId)`
 This was created to get around fivem's warnings of failing to get network objects
@@ -545,6 +624,8 @@ This was created to get around fivem's warnings of failing to get network object
 Although these warnings mean't nothing, it is annoying
 
 This is made to replace the native `NetToVeh()` but checking first if it exists
+
+### `makeBlip(data)`
 
 
 ---

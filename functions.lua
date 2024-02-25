@@ -40,12 +40,13 @@ function loadPtfxDict(ptFxName)
 	end
 end
 function unloadPtfxDict(dict) if Config.System.Debug then print("^6Bridge^7: ^2Removing Ptfx Dictionary^7: '^6"..dict.."^7'") end RemoveNamedPtfxAsset(dict) end
+
 function loadTextureDict(dict)
 	if not HasStreamedTextureDictLoaded(dict) then
 		if Config.System.Debug then
 			print("^6Bridge^7: ^2Loading Texture Dictionary^7: '^6"..dict.."^7'")
 		end
-		while not HasStreamedTextureDictLoaded(dict) do RequestNamedPtfxAsset(dict) Wait(5) end
+		while not HasStreamedTextureDictLoaded(dict) do RequestStreamedTextureDict(dict) Wait(5) end
 	end
 end
 
@@ -87,7 +88,7 @@ local Peds = {}
 local Props = {}
 function makePed(model, coords, freeze, collision, scenario, anim, synced)
 	loadModel(model)
-	local ped = CreatePed(0, model, coords.x, coords.y, coords.z-1.03, coords.w, synced or true, false)
+	local ped = CreatePed(0, model, coords.x, coords.y, coords.z-1.03, coords.w, synced and synced or false, false)
 	SetEntityInvincible(ped, true)
 	SetBlockingOfNonTemporaryEvents(ped, true)
 	FreezeEntityPosition(ped, freeze and freeze or true)
@@ -109,7 +110,7 @@ end
 
 function makeProp(data, freeze, synced)
     loadModel(data.prop)
-    local prop = CreateObject(data.prop, data.coords.x, data.coords.y, data.coords.z-1.03, freeze or false, synced or false, false)
+    local prop = CreateObject(data.prop, data.coords.x, data.coords.y, data.coords.z-1.03, synced and synced or false, synced and synced or false, false)
     SetEntityHeading(prop, data.coords.w + 180.0)
     FreezeEntityPosition(prop, freeze and freeze or 0)
     if Config.System.Debug then
@@ -141,13 +142,6 @@ function DrawText3D(x, y, z, text)
     DrawRect(0.0, 0.0 + 0.0125, 0.017 + factor, 0.03, 0, 0, 0, 75)
     ClearDrawOrigin()
 end
-
-AddEventHandler('onResourceStop', function(r)
-    if r ~= GetCurrentResourceName() then return end
-	stopSpinner()
-	for i = 1, #Peds do DeletePed(Peds[i]) end
-    for i = 1, #Props do destroyProp(Props[i]) end
-end)
 
 function instantLookEnt(ent, ent2)
     local p1 = GetEntityCoords(ent, true)
@@ -229,7 +223,9 @@ function ensureNetToVeh(vehNetID)
 	return vehicle
 end
 
-local previewTxd = not IsDuplicityVersion() and CreateRuntimeTxd(GetCurrentResourceName()..'previewTxd') or nil
+local scriptTxd = not IsDuplicityVersion() and CreateRuntimeTxd(GetCurrentResourceName()..'scriptTxd') or nil
+
+local customDUIList = {}
 function makeBlip(data)
 	local blip = AddBlipForCoord(vec3(data.coords.x, data.coords.y, data.coords.z))
 	SetBlipAsShortRange(blip, true)
@@ -243,16 +239,13 @@ function makeBlip(data)
 	EndTextCommandSetBlipName(blip)
 	if GetResourceState("blip_info"):find("start") or GetResourceState("blip-info"):find("start") or GetResourceState("blipinfo"):find("start") then
 		if data.preview then
-			local txname = tostring('preview'..keyGen()..keyGen())
+			local txname = tostring(data.name..'preview'..string.gsub(data.coords.z, "%.", ""))
 			if data.preview:find("http") then
-				local newTxt = CreateDui(data.preview, 512, 256)
-				local duihandle = GetDuiHandle(newTxt)
-				while not GetDuiHandle(newTxt) do Wait(0) end
-				CreateRuntimeTextureFromDuiHandle(previewTxd, txname, duihandle)
+				createDui(txname, data.preview, vec2(512, 256), scriptTxd)
 			else
-				CreateRuntimeTextureFromImage(previewTxd, txname, data.preview)
+				CreateRuntimeTextureFromImage(scriptTxd, txname, data.preview)
 			end
-			exports["blip_info"]:SetBlipInfoImage(blip, GetCurrentResourceName()..'previewTxd', txname)
+			exports["blip_info"]:SetBlipInfoImage(blip, GetCurrentResourceName()..'scriptTxd', txname)
 			exports["blip_info"]:SetBlipInfoTitle(blip, data.name, false)
 		end
 	end
@@ -274,14 +267,11 @@ function makeEntityBlip(data)
 	EndTextCommandSetBlipName(blip)
 	if GetResourceState("blip_info"):find("start") or GetResourceState("blip-info"):find("start") or GetResourceState("blipinfo"):find("start") then
 		if data.preview then
-			local txname = tostring('preview'..keyGen()..keyGen())
+			local txname = data.name..'preview'
 			if data.preview:find("http") then
-				local newTxt = CreateDui(data.preview, 512, 256)
-				local duihandle = GetDuiHandle(newTxt)
-				while not GetDuiHandle(newTxt) do Wait(0) end
-				CreateRuntimeTextureFromDuiHandle(previewTxd, txname, duihandle)
+				createDui(txname, data.preview, vec2(512, 256), scriptTxd)
 			else
-				CreateRuntimeTextureFromImage(previewTxd, txname, data.preview)
+				CreateRuntimeTextureFromImage(scriptTxd, txname, data.preview)
 			end
 			exports["blip_info"]:SetBlipInfoImage(blip, GetCurrentResourceName()..'previewTxd', txname)
 			exports["blip_info"]:SetBlipInfoTitle(blip, data.name, false)
@@ -290,6 +280,119 @@ function makeEntityBlip(data)
 	if Config.System.Debug then print("^6Bridge^7: ^6Blip ^2created for Entity^7: '^6"..data.name.."^7'") end
     return blip
 end
+
+-- DUI STUFF - WIP --
+
+-- DUI CLIENT
+function createDui(name, http, size, txd)
+	if not customDUIList[name] then
+		local newTxt = CreateDui(http, math.floor(size.x), math.floor(size.y))
+		while not GetDuiHandle(newTxt) do Wait(0) end
+		CreateRuntimeTextureFromDuiHandle(txd, name, GetDuiHandle(newTxt))
+		customDUIList[name] = newTxt
+		SetDuiUrl(customDUIList[name], http)
+	else
+		SetDuiUrl(customDUIList[name], http)
+	end
+end
+
+function DuiSelect(data)
+    local image = ""
+	for k, v in pairs(duiList[data.name]) do
+		if v.tex.texn == data.texn then
+			if duiList[data.name][k] then
+				image = "<center>- Current Image -<br>"..
+						"<img src="..duiList[data.name][k].url.." width=150px><br>"..
+						"Size: ["..math.floor(data.size.x)..", "..math.floor(data.size.y).."]<br><br>"
+			end
+		end
+	end
+    local dialog = exports['qb-input']:ShowInput({
+        header = image..Loc[Config.Lan].menu["dui_new"],
+        submitText = Loc[Config.Lan].menu["dui_change"],
+        inputs = { { type = 'text', isRequired = true, name = 'url', text = Loc[Config.Lan].menu["dui_url"] } } })
+    if dialog then
+        if not dialog.url then return end
+        data.url = dialog.url
+        --Scan the link to see if it has an image extention otherwise, stop here.
+        local searchList = { "png", "jpg", "jpeg", "gif", "webp", "bmp" }
+        --Scan the link for certain terms that will flag it and refuse to show it
+        local banList = { "porn" } -- I dunno, let me know what links people manage to find
+        local searchFound = false
+        for k, v in pairs(searchList) do
+			if string.find(tostring(data.url), tostring(v))then
+				searchFound = true
+			end
+		end
+        for k, v in pairs(banList) do
+			if string.find(tostring(data.url), tostring(v)) then
+				searchFound = false print("BANNED WORD: "..v)
+			end
+		end
+        if searchFound then
+			TriggerServerEvent(GetCurrentResourceName()..":Server:ChangeDUI", data)
+		end
+    end
+end
+
+RegisterNetEvent(GetCurrentResourceName()..":Client:ChangeDUI", function(data)
+    if Config.System.Debug then print("^6Bridge^7: ^2Recieving new DUI ^7- ^6"..data.url.."^7") end
+    if tostring(data.url) ~= "-" then
+		createDui(data.texn, tostring(data.url), data.size, scriptTxd)
+        AddReplaceTexture(tostring(data.texd), tostring(data.texn), GetCurrentResourceName()..'scriptTxd', tostring(data.texn))
+    end
+end)
+
+RegisterNetEvent(GetCurrentResourceName()..":Client:ClearDUI", function(data)
+    if customDUIList[tostring(data.texn)] then
+        RemoveReplaceTexture(tostring(data.texd), tostring(data.texn))
+        if IsDuiAvailable(customDUIList[tostring(data.texn)]) then
+			SetDuiUrl(customDUIList[data.name], nil)
+		end
+    end
+end)
+
+-- DUI SERVER
+RegisterNetEvent(GetCurrentResourceName()..":Server:ChangeDUI", function(data)
+    -- if no url given, "reset" it back to preset
+    if not data.url then
+		for k, v in pairs(duiList[data.name]) do
+			if v.tex.texn == data.texn then
+				if Config.System.Debug then print("^6Bridge^7: ^2Preset^7: ^6"..tostring(duiList[data.name][k].preset).."^7") end
+				data.url = duiList[data.name][k].preset
+			end
+		end
+    end
+    -- if it has a url, update server DUI list and send to players
+	for k, v in pairs(duiList[data.name]) do
+		if v.tex.texn == data.texn then
+			duiList[data.name][k].url = data.url
+		end
+	end
+	if Config.System.Debug then print("^6Bridge^7: ^3DUI^2 Sending new DUI to all players^7 - ^6"..data.url.."^7") end
+	TriggerClientEvent(GetCurrentResourceName()..":Client:ChangeDUI", -1, data)
+end)
+
+RegisterNetEvent(GetCurrentResourceName()..":Server:ClearDUI", function(data)
+    if data.url == "-" then
+		for k, v in pairs(duiList[data.name]) do
+			if v.tex.texn == data.texn then
+				duiList[data.name][k].url = "-"
+			end
+		end
+	end
+    -- Clear the DUI from loading
+    TriggerClientEvent(GetCurrentResourceName()..":Client:ClearDUI", -1, data)
+    --duiList[tostring(data.tex)].url = ""
+end)
+
+AddEventHandler('onResourceStop', function(r) if r ~= GetCurrentResourceName() then return end
+    for k, v in pairs(duiList or {}) do
+		for i = 1, #v do
+			RemoveReplaceTexture(tostring(v[i].tex.texd), tostring(v[i].tex.texn))
+		end
+    end
+end)
 
 function lockInv(toggle)
 	FreezeEntityPosition(PlayerPedId(), toggle)
@@ -746,6 +849,91 @@ function dupeWarn(src, item, amount)
     print("^5DupeWarn:^7: (^1"..tostring(src).."^7) ^2Dropped from server - exploit protection detected an item not being found in players inventory^7")
 end
 
+function breakTool(data) --wip
+	local durability, slot = getDurability(item)
+	durability -= data.damage
+	if not durability then durability = 100 end
+	if durability <= 0 then
+		removeItem(data.item, 1)
+		local breakId = GetSoundId()
+		PlaySoundFromEntity(breakId, "Drill_Pin_Break", PlayerPedId(), "DLC_HEIST_FLEECA_SOUNDSET", 1, 0)
+	else
+		TriggerServerEvent(GetCurrentResourceName()..":server:setMetaData", { item = data.item, slot = slot, metadata = { durability = durability }})
+	end
+end
+
+function getDurability(item)
+	local lowestSlot = 100		-- anything above your players max slots
+	local durability = nil
+	if GetResourceState(QBInv):find("start") then
+		local itemcheck = Core.Functions.GetPlayerData().items
+		for k, v in pairs(itemcheck) do
+			if v.name == item then
+				if v.slot <= lowestSlot then
+					lowestSlot = v.slot
+					durability = itemcheck[k].info.durability
+				end
+			end
+		end
+	end
+
+	if GetResourceState(OXInv):find("start") then
+		local itemcheck = exports[OXInv]:Search('slots', item)
+		for k, v in pairs(itemcheck) do
+			if v.slot <= lowestSlot then
+				lowestSlot = v.slot
+				durability = itemcheck[k].metadata.durability
+			end
+		end
+	end
+
+	if GetResourceState(QSInv):find("start") then
+		local itemcheck = exports[QSInv]:getUserInventory()
+		for k, v in pairs(itemcheck) do
+			if v.name == item and v.slot <= lowestSlot then
+				lowestSlot = v.slot
+				durability = itemcheck[k].metadata.durability
+			end
+		end
+	end
+
+	if GetResourceState(OrigenInv):find("start") then
+		local itemcheck = exports[OrigenInv]:getPlayerInventory()
+		for k, v in pairs(itemcheck) do
+			if v.name == item and v.slot <= lowestSlot then
+				lowestSlot = v.slot
+				durability = itemcheck[k].metadata.durability
+			end
+		end
+	end
+	return durability, lowestSlot
+end
+
+RegisterNetEvent(GetCurrentResourceName()..":server:setMetaData", function(data)
+	local src = source
+	if GetResourceState(QBInv):find("start") then
+		local Player = Core.Functions.GetPlayer(src)
+		Player.PlayerData.items[data.slot].info = data.metadata
+		Player.PlayerData.items[data.slot].description = "HP : "..data.metadata.durability
+		Player.Functions.SetInventory(Player.PlayerData.items)
+	end
+
+	if GetResourceState(OXInv):find("start") then
+		exports[OXInv]:SetMetadata(source, data.slot, data.metadata)
+	end
+
+	if GetResourceState(QSInv):find("start") then
+		exports[QSInv]:SetItemMetadata(source, data.slot, data.metadata)
+	end
+
+	if GetResourceState(OrigenInv):find("start") then
+		local item = exports[OrigenInv]:GetItemBySlot(source, data.slot)
+		if item then
+			exports[OrigenInv]:SetItemData(source, item.name, "durability", data.metadata.durability)
+		end
+	end
+end)
+
 function toggleDuty()
 	if GetResourceState(QBExport):find("start") or GetResourceState(QBXExport):find("start") then
 		TriggerServerEvent("QBCore:ToggleDuty")
@@ -891,15 +1079,15 @@ function FocusEffect()
     focusEffect = false
     if Config.System.Debug then print("^5Debug^7: ^3FocusEffect^7() ^2stopped") end
 end
-local NightVisionEffect = false
+local nightVisionEffect = false
 function NightVisionEffect()
-    if NightVisionEffect then return else NightVisionEffect = true end
+    if NightVisionEffect then return else nightVisionEffect = true end
     if Config.System.Debug then print("^5Debug^7: ^3NightVisionEffect^7() ^2activated") end
     SetNightvision(true)
     Wait(math.random(3000, 4000))  -- FEEL FREE TO CHANGE THIS
     SetNightvision(false)
     SetSeethrough(false)
-    NightVisionEffect = false
+    nightVisionEffect = false
     if Config.System.Debug then print("^5Debug^7: ^3NightVisionEffect^7() ^2stopped") end
 end
 local thermalEffect = false
@@ -971,3 +1159,10 @@ function StopEffects() -- Used to clear up any effects stuck on screen
     AnimpostfxStop('FocusIn')
     AnimpostfxStop('Rampage')
 end
+
+AddEventHandler('onResourceStop', function(r)
+    if r ~= GetCurrentResourceName() then return end
+	stopSpinner()
+	for i = 1, #Peds do DeletePed(Peds[i]) end
+    for i = 1, #Props do destroyProp(Props[i]) end
+end)
