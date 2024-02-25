@@ -1335,7 +1335,7 @@ RegisterNetEvent(GetCurrentResourceName()..":jpr:SendMail", function(data)
         Conteudo = data.message, -- Content
         Enviado = data.sender, -- Submitted by
         Destinatario = Player.PlayerData.citizenid, -- Target
-        Event = {}, -- Optional
+        Event = {},
     })
 end)
 
