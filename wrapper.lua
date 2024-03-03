@@ -1287,6 +1287,7 @@ function sendPhoneMail(data) local phoneResource = ""
         exports['roadphone']:sendMail(data)
 
     elseif GetResourceState("lb-phone"):find("start") then phoneResource = "lb-phone"
+        data.message = data.message:gsub("%<br>", "\n")
         TriggerServerEvent(GetCurrentResourceName()..":lbphone:SendMail", data)
 
     elseif GetResourceState("qb-phone"):find("start") then phoneResource = "qb-phone"
@@ -1304,13 +1305,13 @@ RegisterNetEvent(GetCurrentResourceName()..":lbphone:SendMail", function(data)
     local src = source
     local phoneNumber = exports["lb-phone"]:GetEquippedPhoneNumber(src)
     local emailAddress = exports["lb-phone"]:GetEmailAddress(phoneNumber)
+    if data.actions then data.buttons = data.actions end
+
     exports["lb-phone"]:SendMail({
         to = emailAddress,
         subject = data.subject,
         message = data.message,
-        --[[attachments = {
-            "https://cdn.discordapp.com/attachments/1035667053115363349/1042500877426110474/upload.png",
-        },]]
+        attachments = data.attachments or nil,
         actions = data.buttons,
     })
 end)
