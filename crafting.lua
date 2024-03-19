@@ -5,7 +5,7 @@ if IsDuplicityVersion() then
         createCallback(GetCurrentResourceName()..':server:GetStashItems', function(source, cb, stashName) local stash = getStash(stashName) cb(stash) end)
     end
 end
-
+local inventoryweight = 120000
 local timeout, timing, stashItems = 0, false, {}
 function GetStashTimeout(stashName, stop)
     if stop then stashItems, timing, timeout = {}, false, 0 return end
@@ -590,7 +590,7 @@ function canCarry(itemTable, src)
                     triggerNotify(nil, 'Item does not exist', 'error', src)
                     resultTable[k] = true
                 else
-                    resultTable[k] = (totalWeight + (Items[k]['weight'] * v)) <= 120000
+                    resultTable[k] = (totalWeight + (Items[k]['weight'] * v)) <= inventoryweight
                 end
             end
         end
