@@ -8,7 +8,7 @@ function jobCheck(job)
 	return canDo
 end
 
-local time = 2000
+local time = 500
 function loadModel(model)
 	if not IsModelValid(model) then print("^6Bridge^7: ^1ERROR^7: ^2Model^7 - '^6"..model.."^7' ^2does not exist in server") return
 	else
@@ -17,7 +17,7 @@ function loadModel(model)
 			while not HasModelLoaded(model) and time > 0 do time -= 1 RequestModel(model) Wait(0) end
 			if not HasModelLoaded(model) then print("^6Bridge^7: ^3LoadModel^7: ^2Timed out loading model ^7'^6"..model.."^7'") end
 		end
-		time = 2000
+		time = 500
 	end
 end
 function unloadModel(model) if Config.System.Debug then print("^6Bridge^7: ^2Removing Model from memory cache^7: '^6"..model.."^7'") end SetModelAsNoLongerNeeded(model) end
@@ -777,11 +777,22 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
                     remamount -= 1
                 end
 				if Config.Crafting.showItemBox then
-                    TriggerClientEvent('inventory:client:ItemBox', src, Items[item], "remove", (amount and amount or 1))
+                    TriggerClientEvent('qb-inventory:client:ItemBox', src, Items[item], "remove", (amount and amount or 1))
                 end
 				if Config.System.Debug then
 					print("^6Bridge^7: ^3"..addremove.."^7[^6"..QBInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
 				end
+			elseif GetResourceState(PSInv):find("start") then
+				while remamount > 0 do
+                    if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1) then end
+                    remamount -= 1
+                end
+				if Config.Crafting.showItemBox then
+                    TriggerClientEvent('inventory:client:ItemBox', src, Items[item], "remove", (amount and amount or 1))
+                end
+				if Config.System.Debug then
+					print("^6Bridge^7: ^3"..addremove.."^7[^6"..PSInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
+				end	
 			else
 				print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
 			end
@@ -827,11 +838,20 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
 		elseif GetResourceState(QBInv):find("start") then
 			if Core.Functions.GetPlayer(src).Functions.AddItem(item, amount or 1) then
 				--if Config.Crafting.showItemBox then
-                    TriggerClientEvent("inventory:client:ItemBox", src, Items[item], "add", amount and amount or 1)
+                    TriggerClientEvent("qb-inventory:client:ItemBox", src, Items[item], "add", amount and amount or 1)
                 --end
 			end
 			if Config.System.Debug then
 				print("^6Bridge^7: ^3"..addremove.."^7[^6"..QBInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
+            end
+		elseif GetResourceState(PSInv):find("start") then
+			if Core.Functions.GetPlayer(src).Functions.AddItem(item, amount or 1) then
+				--if Config.Crafting.showItemBox then
+                    TriggerClientEvent("inventory:client:ItemBox", src, Items[item], "add", amount and amount or 1)
+                --end
+			end
+			if Config.System.Debug then
+				print("^6Bridge^7: ^3"..addremove.."^7[^6"..PSInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
             end
 
 		else
@@ -876,7 +896,17 @@ function getDurability(item)
 			end
 		end
 	end
-
+	if GetResourceState(PSInv):find("start") then
+		local itemcheck = Core.Functions.GetPlayerData().items
+		for k, v in pairs(itemcheck) do
+			if v.name == item then
+				if v.slot <= lowestSlot then
+					lowestSlot = v.slot
+					durability = itemcheck[k].info.durability
+				end
+			end
+		end
+	end
 	if GetResourceState(OXInv):find("start") then
 		local itemcheck = exports[OXInv]:Search('slots', item)
 		for k, v in pairs(itemcheck) do
@@ -917,7 +947,12 @@ RegisterNetEvent(GetCurrentResourceName()..":server:setMetaData", function(data)
 		Player.PlayerData.items[data.slot].description = "HP : "..data.metadata.durability
 		Player.Functions.SetInventory(Player.PlayerData.items)
 	end
-
+	if GetResourceState(PSInv):find("start") then
+		local Player = Core.Functions.GetPlayer(src)
+		Player.PlayerData.items[data.slot].info = data.metadata
+		Player.PlayerData.items[data.slot].description = "HP : "..data.metadata.durability
+		Player.Functions.SetInventory(Player.PlayerData.items)
+	end
 	if GetResourceState(OXInv):find("start") then
 		exports[OXInv]:SetMetadata(source, data.slot, data.metadata)
 	end

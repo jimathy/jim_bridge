@@ -30,22 +30,11 @@ The installation of this script is simple
 ---
 
 ### Support for different exports and scripts
+In Crafting.lua Head To The first 2 lines and adjust weights as necessary
+StashWeight matters for Codem and QBInv because of the way they were written
+InventoryWeight matters for QB and PS because of the way they were written,
 
-In exports.lua is the list of script folder names
-
-This is for people who have customised/renamed scripts
-
-eg. for people who use `ps-inventory`, this is mainly based on qb-inventory
-so you need to rename
-```lua
-    QBInv = "qb-inventory",
-```
-to
-```lua
-    QBInv = "ps-inventory",
-```
-
-This will now use events from `ps-inventory` and use it through out the scripts.
+you can ignore if you dont use those inventories
 
 # WIP
 ## Documentation

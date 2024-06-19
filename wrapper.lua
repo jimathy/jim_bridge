@@ -1,10 +1,9 @@
 Items, Vehicles, Jobs, Gangs, Core, ESX = {}, nil, nil, nil, nil, nil
 
-Exports.QBInv = GetResourceState("ps-inventory"):find("start") and "ps-inventory" or GetResourceState("lj-inventory"):find("start") and "lj-inventory" or Exports.QBInv
 
 OXLibExport, QBXExport, QBExport, ESXExport, OXCoreExport = Exports.OXLibExport or "", Exports.QBXExport or "", Exports.QBExport or "", Exports.ESXExport or "", Exports.OXCoreExport or ""
 
-OXInv, QBInv, QSInv, CoreInv, CodeMInv, OrigenInv = Exports.OXInv or "", Exports.QBInv or "", Exports.QSInv or "", Exports.CoreInv or "", Exports.CodeMInv or "", Exports.OrigenInv or ""
+OXInv, QBInv, QSInv, CoreInv, CodeMInv, OrigenInv, PSInv = Exports.OXInv or "", Exports.QBInv or "", Exports.QSInv or "", Exports.CoreInv or "", Exports.CodeMInv or "", Exports.OrigenInv or "",  Exports.PSInv or ""
 
 QBMenuExport = Exports.QBMenuExport or ""
 
@@ -1362,6 +1361,8 @@ function invImg(item)
             imgLink = "nui://"..OrigenInv.."/html/img/"..(Items[item].image or "")
         elseif GetResourceState(QBInv):find("start") then
             imgLink = "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
+        elseif GetResourceState(PSInv):find("start") then
+            imgLink = "nui://"..PSInv.."/html/images/"..(Items[item].image or "")
         else
             print("^4ERROR^7: ^2No Inventory detected for invImg ^7- ^2Check ^3exports^1.^2lua^7")
         end
@@ -1376,6 +1377,10 @@ function registerStash(name, label, slots, weight)
     elseif GetResourceState(QSInv):find("start") then
         --print("Registering QS Stash:", name, label)
         exports[QSInv]:RegisterStash(name, slots or 50, weight or 4000000)
+    elseif GetResourceState(QBInv):find("start") then    
+        print("Registering QS Stash:", name, label)
+        local data = {label = label, maxweight = weight or 4000000, slots = slots or 50}
+        exports['qb-inventory']:OpenInventory(source, name, data)
     end
 end
 

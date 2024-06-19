@@ -1,3 +1,6 @@
+local StashWeight = 400000
+local InventoryWeight = 120000
+
 if IsDuplicityVersion() then
     if GetResourceState(OXLibExport):find("start") then
         createCallback(GetCurrentResourceName()..':server:GetStashItems', function(source, stashName) local stash = getStash(stashName) return stash end)
@@ -5,7 +8,7 @@ if IsDuplicityVersion() then
         createCallback(GetCurrentResourceName()..':server:GetStashItems', function(source, cb, stashName) local stash = getStash(stashName) cb(stash) end)
     end
 end
-local inventoryweight = 120000
+
 local timeout, timing, stashItems = 0, false, {}
 function GetStashTimeout(stashName, stop)
     if stop then stashItems, timing, timeout = {}, false, 0 return end
@@ -151,7 +154,7 @@ function makeItem(data)
                             flag = 48,
                             icon = l,
                         }) then
-                            --TriggerEvent('inventory:client:ItemBox', Items[l], "use", b) -- Show item box for each item
+                            TriggerEvent('qb-inventory:client:ItemBox', Items[l], "use", b) -- Show item box for each item
                         else
 							crafted, crafting = false, false
 							break
@@ -286,11 +289,18 @@ function openShop(data)
 	if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
     if GetResourceState(OXInv):find("start") then
         exports[OXInv]:openInventory('shop', { type = data.shop })
+    elseif GetResourceState(QBInv):find("start") then
+       TriggerServerEvent(GetCurrentResourceName()..':server:OpenShopNewQB', data.shop)
     else
         TriggerServerEvent(Config.General.JimShops and "jim-shops:ShopOpen" or "inventory:server:OpenInventory", "shop", data.items.label, data.items)
     end
 	lookEnt(data.coords)
 end
+
+RegisterNetEvent(GetCurrentResourceName()..':server:OpenShopNewQB', function(data)
+    
+    exports['qb-inventory']:OpenShop(source, data)
+end)
 
 -- Client & Server side
 function hasItem(items, amount, src) local amount = amount and amount or 1
@@ -333,14 +343,17 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
         foundInv = CodeMInv
         if src then grabInv = exports[CodeMInv]:GetUserInventory(src)
         else grabInv = exports[CodeMInv]:GetClientPlayerInventory() end
+
     elseif GetResourceState(QBInv):find("start") then
         foundInv = QBInv
         if src then grabInv = Core.Functions.GetPlayer(src).PlayerData.items
         else grabInv = Core.Functions.GetPlayerData().items end
-
-    else
     elseif GetResourceState(PSInv):find("start") then
         foundInv = PSInv
+        if src then grabInv = Core.Functions.GetPlayer(src).PlayerData.items
+        else grabInv = Core.Functions.GetPlayerData().items end
+    elseif GetResourceState(PSInv):find("start") then
+        foundInv = PSinv
         if src then grabInv = Core.Functions.GetPlayer(src).PlayerData.items
         else grabInv = Core.Functions.GetPlayerData().items end
 
@@ -373,7 +386,10 @@ function openStash(data)
     if GetResourceState(OXInv):find("start") then
         exports[OXInv]:openInventory('stash', data.stash)
     elseif GetResourceState(CodeMInv):find("start") then
-        exports[CodeMInv]:OpenStash(data.stash, 400000, 100)
+        exports[CodeMInv]:OpenStash(data.stash, StashWeight, 100)
+    elseif GetResourceState(QBInv):find("start") then
+        local data2 = { label = data.stash, maxweight = StashWeight, slots = 500 }
+        TriggerServerEvent(GetCurrentResourceName()..':server:OpenStashQB', data2)
     else
         TriggerEvent("inventory:client:SetCurrentStash", data.stash)
         TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, data.stashOptions)
@@ -397,13 +413,12 @@ function getStash(stashName) local stashResource = ""
 
     elseif GetResourceState(OrigenInv):find("start") then stashResource = OrigenInv
         stashItems = exports[OrigenInv]:GetStashItems(stashName)
-
     elseif GetResourceState(PSInv):find("start") then stashResource = PSInv
         local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
 		if result then stashItems = json.decode(result) end
-     elseif GetResourceState(QBInv):find("start") then stashResource = QBInv
+    elseif GetResourceState(QBInv):find("start") then stashResource = QBInv
         local result = MySQL.scalar.await('SELECT items FROM inventories WHERE identifier = ?', { stashName })
-		if result then stashItems = json.decode(result) end	
+		if result then stashItems = json.decode(result) end
     end
 
     if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..stashResource) end
@@ -492,28 +507,6 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
             if Config.System.Debug then print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..OrigenInv, k, v) end
         end
 
-    elseif GetResourceState(QBInv):find("start") then
-        for k, v in pairs(items) do
-            for l in pairs(stashItems) do
-                if stashItems[l].name == k then
-                    if (stashItems[l].amount - v) <= 0 then
-                        if Config.System.Debug then
-                            print("^6Bridge^7: ^2None of this item left in stash ^3Stash^7", k, v)
-                        end
-                        stashItems[l] = nil
-                    else
-                        if Config.System.Debug then
-                            print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QBInv, k, v)
-                        end
-                        stashItems[l].amount -= v
-                    end
-                end
-            end
-        end
-        if Config.System.Debug then
-            print("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName.."^7'")
-        end
-        MySQL.Async.insert('INSERT INTO inventories (identifier, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', { ['stash'] = stashName, ['items'] = json.encode(stashItems) })
     elseif GetResourceState(PSInv):find("start") then
         for k, v in pairs(items) do
             for l in pairs(stashItems) do
@@ -535,7 +528,16 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
         if Config.System.Debug then
             print("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName.."^7'")
         end
-        MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', { ['stash'] = stashName, ['items'] = json.encode(stashItems) })	
+        MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', { ['stash'] = stashName, ['items'] = json.encode(stashItems) })
+    elseif GetResourceState(QBInv):find("start") then
+            for k, v in pairs(items) do
+                exports['qb-inventory']:RemoveItem(stashName, k, v, false, 'crafting')
+                if Config.System.Debug then print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..PSInv, k, v) end
+            end
+        if Config.System.Debug then
+            print("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName.."^7'")
+        end
+        MySQL.Async.insert('INSERT INTO inventories (identifier, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', { ['stash'] = stashName, ['items'] = json.encode(stashItems) })
     else
         print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
     end
@@ -620,10 +622,10 @@ function canCarry(itemTable, src)
                     triggerNotify(nil, 'Item does not exist', 'error', src)
                     resultTable[k] = true
                 else
-                    resultTable[k] = (totalWeight + (Items[k]['weight'] * v)) <= inventoryweight
+                    resultTable[k] = (totalWeight + (Items[k]['weight'] * v)) <= InventoryWeight
                 end
-			end
-	elseif GetResourceState(PSInv):find("start") then
+            end
+        elseif GetResourceState(PSInv):find("start") then
             local Player = Core.Functions.GetPlayer(src)
             local items = Player.PlayerData.items
             local weight, totalWeight = 0, 0
@@ -637,7 +639,7 @@ function canCarry(itemTable, src)
                     triggerNotify(nil, 'Item does not exist', 'error', src)
                     resultTable[k] = true
                 else
-                    resultTable[k] = (totalWeight + (Items[k]['weight'] * v)) <= inventoryweight
+                    resultTable[k] = (totalWeight + (Items[k]['weight'] * v)) <= InventoryWeight
                 end
             end
         end
@@ -680,3 +682,8 @@ function getRandomReward(itemName) -- intended for job scripts
         end
     end
 end
+
+RegisterServerEvent(GetCurrentResourceName()..':server:OpenStashQB', function(data)
+    local data2 = { label = data.label, maxweight = data.maxweight, slots = data.slots }
+    exports['qb-inventory']:OpenInventory(source, data.label, data2)
+end)
