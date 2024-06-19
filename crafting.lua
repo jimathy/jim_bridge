@@ -333,9 +333,14 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
         foundInv = CodeMInv
         if src then grabInv = exports[CodeMInv]:GetUserInventory(src)
         else grabInv = exports[CodeMInv]:GetClientPlayerInventory() end
-
     elseif GetResourceState(QBInv):find("start") then
         foundInv = QBInv
+        if src then grabInv = Core.Functions.GetPlayer(src).PlayerData.items
+        else grabInv = Core.Functions.GetPlayerData().items end
+
+    else
+    elseif GetResourceState(PSInv):find("start") then
+        foundInv = PSInv
         if src then grabInv = Core.Functions.GetPlayer(src).PlayerData.items
         else grabInv = Core.Functions.GetPlayerData().items end
 
@@ -393,9 +398,12 @@ function getStash(stashName) local stashResource = ""
     elseif GetResourceState(OrigenInv):find("start") then stashResource = OrigenInv
         stashItems = exports[OrigenInv]:GetStashItems(stashName)
 
-    elseif GetResourceState(QBInv):find("start") then stashResource = QBInv
+    elseif GetResourceState(PSInv):find("start") then stashResource = PSInv
         local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
 		if result then stashItems = json.decode(result) end
+     elseif GetResourceState(QBInv):find("start") then stashResource = QBInv
+        local result = MySQL.scalar.await('SELECT items FROM inventories WHERE identifier = ?', { stashName })
+		if result then stashItems = json.decode(result) end	
     end
 
     if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..stashResource) end
@@ -505,7 +513,29 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
         if Config.System.Debug then
             print("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName.."^7'")
         end
-        MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', { ['stash'] = stashName, ['items'] = json.encode(stashItems) })
+        MySQL.Async.insert('INSERT INTO inventories (identifier, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', { ['stash'] = stashName, ['items'] = json.encode(stashItems) })
+    elseif GetResourceState(PSInv):find("start") then
+        for k, v in pairs(items) do
+            for l in pairs(stashItems) do
+                if stashItems[l].name == k then
+                    if (stashItems[l].amount - v) <= 0 then
+                        if Config.System.Debug then
+                            print("^6Bridge^7: ^2None of this item left in stash ^3Stash^7", k, v)
+                        end
+                        stashItems[l] = nil
+                    else
+                        if Config.System.Debug then
+                            print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QBInv, k, v)
+                        end
+                        stashItems[l].amount -= v
+                    end
+                end
+            end
+        end
+        if Config.System.Debug then
+            print("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName.."^7'")
+        end
+        MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', { ['stash'] = stashName, ['items'] = json.encode(stashItems) })	
     else
         print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
     end
@@ -513,7 +543,7 @@ end
 RegisterNetEvent(GetCurrentResourceName()..":server:stashRemoveItem", stashRemoveItem)
 
 function stashhasItem(stashItems, items, amount)
-    local invs = {OXInv, QSInv, CoreInv, CodeMInv, OrigenInv, QBInv}
+    local invs = {OXInv, QSInv, CoreInv, CodeMInv, OrigenInv, QBInv, PSInv}
     local foundInv = ""
     for _, inv in ipairs(invs) do
         if GetResourceState(inv):find("start") then
@@ -577,6 +607,23 @@ function canCarry(itemTable, src)
             end
 
         elseif GetResourceState(QBInv):find("start") then
+            local Player = Core.Functions.GetPlayer(src)
+            local items = Player.PlayerData.items
+            local weight, totalWeight = 0, 0
+            if not items then return false end
+            for _, item in pairs(items) do weight += item.weight * item.amount end
+            totalWeight = tonumber(weight)
+
+            for k, v in pairs(itemTable) do
+                local itemInfo = Items[k]
+                if not itemInfo and not Player.Offline then
+                    triggerNotify(nil, 'Item does not exist', 'error', src)
+                    resultTable[k] = true
+                else
+                    resultTable[k] = (totalWeight + (Items[k]['weight'] * v)) <= inventoryweight
+                end
+			end
+	elseif GetResourceState(PSInv):find("start") then
             local Player = Core.Functions.GetPlayer(src)
             local items = Player.PlayerData.items
             local weight, totalWeight = 0, 0
