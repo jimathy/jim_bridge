@@ -683,7 +683,3 @@ function getRandomReward(itemName) -- intended for job scripts
     end
 end
 
-RegisterServerEvent(GetCurrentResourceName()..':server:OpenStashQB', function(data)
-    local data2 = { label = data.label, maxweight = data.maxweight, slots = data.slots }
-    exports['qb-inventory']:OpenInventory(source, data.label, data2)
-end)

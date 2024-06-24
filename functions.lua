@@ -8,7 +8,7 @@ function jobCheck(job)
 	return canDo
 end
 
-local time = 2000
+local time = 500
 function loadModel(model)
 	if not IsModelValid(model) then print("^6Bridge^7: ^1ERROR^7: ^2Model^7 - '^6"..model.."^7' ^2does not exist in server") return
 	else
@@ -17,7 +17,7 @@ function loadModel(model)
 			while not HasModelLoaded(model) and time > 0 do time -= 1 RequestModel(model) Wait(0) end
 			if not HasModelLoaded(model) then print("^6Bridge^7: ^3LoadModel^7: ^2Timed out loading model ^7'^6"..model.."^7'") end
 		end
-		time = 2000
+		time = 500
 	end
 end
 function unloadModel(model) if Config.System.Debug then print("^6Bridge^7: ^2Removing Model from memory cache^7: '^6"..model.."^7'") end SetModelAsNoLongerNeeded(model) end

@@ -1002,6 +1002,12 @@ AddStateBagChangeHandler(GetCurrentResourceName()..':setVehicleProperties', '', 
     end
 end)
 
+
+RegisterNetEvent(GetCurrentResourceName()..':server:OpenStashQB', function(data)
+    local data2 = { label = data.label, maxweight = data.maxweight, slots = data.slots }
+    exports['qb-inventory']:OpenInventory(source, data.label, data2)
+end)
+
 RegisterNetEvent(GetCurrentResourceName()..":server:ChargePlayer", function(cost, type, newsrc)
     local src = newsrc or source
     local fundResource = ""
