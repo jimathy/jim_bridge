@@ -30,11 +30,14 @@ The installation of this script is simple
 ---
 
 ### Support for different exports and scripts
+
 In Crafting.lua Head To The first 2 lines and adjust weights as necessary
 StashWeight matters for Codem and QBInv because of the way they were written
 InventoryWeight matters for QB and PS because of the way they were written,
 
 you can ignore if you dont use those inventories
+
+if you use lj-inventory go to exports.lua and change PSInv = 'ps-inventory' to PSInv = 'lj-inventory'
 
 # WIP
 ## Documentation
