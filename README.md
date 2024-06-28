@@ -30,22 +30,15 @@ The installation of this script is simple
 ---
 
 ### Support for different exports and scripts
+in Crafting.lua lines 1-3 adjust if needed
+**IF YOU USE QB-INVENTORY MAKE SURE TO MARK LINE 3 IF YOU USE THE NEW VERSION AS TRUE** 
 
-In exports.lua is the list of script folder names
+if you dont know what version you use, the easiest way to tell is look in your qb-inventory server folder and if you have more files than just main.lua you are on the newest build
+also head to functions.lua and do the same on line 2
+and in wrapper.lua line number 2
 
-This is for people who have customised/renamed scripts
+**if you use LJ inventory head to exports.lua and change PSInv = 'ps-inventroy' to PSInv = 'lj-inventory'**
 
-eg. for people who use `ps-inventory`, this is mainly based on qb-inventory
-so you need to rename
-```lua
-    QBInv = "qb-inventory",
-```
-to
-```lua
-    QBInv = "ps-inventory",
-```
-
-This will now use events from `ps-inventory` and use it through out the scripts.
 
 # WIP
 ## Documentation
@@ -567,7 +560,7 @@ Spawns a controllable ped
 Example of use:
 ```lua
 local ped = makePed(
-	`MP_M_Freemode_011,
+	`MP_M_Freemode_011`,
 	vec4(-596.74, 2090.99, 131.41, 16.6),
 	true,
 	false,

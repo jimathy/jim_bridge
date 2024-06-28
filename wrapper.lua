@@ -1,10 +1,9 @@
 Items, Vehicles, Jobs, Gangs, Core, ESX = {}, nil, nil, nil, nil, nil
-
-Exports.QBInv = GetResourceState("ps-inventory"):find("start") and "ps-inventory" or GetResourceState("lj-inventory"):find("start") and "lj-inventory" or Exports.QBInv
+local QBInvNew = false
 
 OXLibExport, QBXExport, QBExport, ESXExport, OXCoreExport = Exports.OXLibExport or "", Exports.QBXExport or "", Exports.QBExport or "", Exports.ESXExport or "", Exports.OXCoreExport or ""
 
-OXInv, QBInv, QSInv, CoreInv, CodeMInv, OrigenInv = Exports.OXInv or "", Exports.QBInv or "", Exports.QSInv or "", Exports.CoreInv or "", Exports.CodeMInv or "", Exports.OrigenInv or ""
+OXInv, QBInv, QSInv, CoreInv, CodeMInv, OrigenInv, PSInv = Exports.OXInv or "", Exports.QBInv or "", Exports.QSInv or "", Exports.CoreInv or "", Exports.CodeMInv or "", Exports.OrigenInv or "",  Exports.PSInv or ""
 
 QBMenuExport = Exports.QBMenuExport or ""
 
@@ -1003,6 +1002,12 @@ AddStateBagChangeHandler(GetCurrentResourceName()..':setVehicleProperties', '', 
     end
 end)
 
+
+RegisterNetEvent(GetCurrentResourceName()..':server:OpenStashQB', function(data)
+    local data2 = { label = data.label, maxweight = data.maxweight, slots = data.slots }
+    exports['qb-inventory']:OpenInventory(source, data.label, data2)
+end)
+
 RegisterNetEvent(GetCurrentResourceName()..":server:ChargePlayer", function(cost, type, newsrc)
     local src = newsrc or source
     local fundResource = ""
@@ -1287,6 +1292,7 @@ function sendPhoneMail(data) local phoneResource = ""
         exports['roadphone']:sendMail(data)
 
     elseif GetResourceState("lb-phone"):find("start") then phoneResource = "lb-phone"
+        data.message = data.message:gsub("%<br>", "\n")
         TriggerServerEvent(GetCurrentResourceName()..":lbphone:SendMail", data)
 
     elseif GetResourceState("qb-phone"):find("start") then phoneResource = "qb-phone"
@@ -1304,13 +1310,12 @@ RegisterNetEvent(GetCurrentResourceName()..":lbphone:SendMail", function(data)
     local src = source
     local phoneNumber = exports["lb-phone"]:GetEquippedPhoneNumber(src)
     local emailAddress = exports["lb-phone"]:GetEmailAddress(phoneNumber)
+    if data.actions then data.buttons = data.actions end
     exports["lb-phone"]:SendMail({
         to = emailAddress,
         subject = data.subject,
         message = data.message,
-        --[[attachments = {
-            "https://cdn.discordapp.com/attachments/1035667053115363349/1042500877426110474/upload.png",
-        },]]
+        attachments = data.attachments or nil,
         actions = data.buttons,
     })
 end)
@@ -1362,6 +1367,8 @@ function invImg(item)
             imgLink = "nui://"..OrigenInv.."/html/img/"..(Items[item].image or "")
         elseif GetResourceState(QBInv):find("start") then
             imgLink = "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
+        elseif GetResourceState(PSInv):find("start") then
+            imgLink = "nui://"..PSInv.."/html/images/"..(Items[item].image or "")
         else
             print("^4ERROR^7: ^2No Inventory detected for invImg ^7- ^2Check ^3exports^1.^2lua^7")
         end

@@ -6,6 +6,7 @@ Exports = {
 
     OXInv = "ox_inventory",
     QBInv = "qb-inventory",
+    PSInv = "ps-inventory",
     QSInv = "qs-inventory",
     CoreInv = "core_inventory",
     CodeMInv = "codem-inventory",
