@@ -1,5 +1,5 @@
 Items, Vehicles, Jobs, Gangs, Core, ESX = {}, nil, nil, nil, nil, nil
-
+local QBInvNew = false
 
 OXLibExport, QBXExport, QBExport, ESXExport, OXCoreExport = Exports.OXLibExport or "", Exports.QBXExport or "", Exports.QBExport or "", Exports.ESXExport or "", Exports.OXCoreExport or ""
 
@@ -1292,6 +1292,7 @@ function sendPhoneMail(data) local phoneResource = ""
         exports['roadphone']:sendMail(data)
 
     elseif GetResourceState("lb-phone"):find("start") then phoneResource = "lb-phone"
+        data.message = data.message:gsub("%<br>", "\n")
         TriggerServerEvent(GetCurrentResourceName()..":lbphone:SendMail", data)
 
     elseif GetResourceState("qb-phone"):find("start") then phoneResource = "qb-phone"
@@ -1309,13 +1310,12 @@ RegisterNetEvent(GetCurrentResourceName()..":lbphone:SendMail", function(data)
     local src = source
     local phoneNumber = exports["lb-phone"]:GetEquippedPhoneNumber(src)
     local emailAddress = exports["lb-phone"]:GetEmailAddress(phoneNumber)
+    if data.actions then data.buttons = data.actions end
     exports["lb-phone"]:SendMail({
         to = emailAddress,
         subject = data.subject,
         message = data.message,
-        --[[attachments = {
-            "https://cdn.discordapp.com/attachments/1035667053115363349/1042500877426110474/upload.png",
-        },]]
+        attachments = data.attachments or nil,
         actions = data.buttons,
     })
 end)
@@ -1383,10 +1383,6 @@ function registerStash(name, label, slots, weight)
     elseif GetResourceState(QSInv):find("start") then
         --print("Registering QS Stash:", name, label)
         exports[QSInv]:RegisterStash(name, slots or 50, weight or 4000000)
-    elseif GetResourceState(QBInv):find("start") then    
-        print("Registering QS Stash:", name, label)
-        local data = {label = label, maxweight = weight or 4000000, slots = slots or 50}
-        exports['qb-inventory']:OpenInventory(source, name, data)
     end
 end
 

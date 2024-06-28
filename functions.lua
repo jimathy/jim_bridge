@@ -1,4 +1,5 @@
 onDuty = false
+local QBInvNew = false
 function jobCheck(job)
 	canDo = true
 	if not hasJob(job) or not onDuty then
@@ -777,7 +778,11 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
                     remamount -= 1
                 end
 				if Config.Crafting.showItemBox then
-                    TriggerClientEvent('qb-inventory:client:ItemBox', src, Items[item], "remove", (amount and amount or 1))
+					if QBInvNew then
+                    	TriggerClientEvent('qb-inventory:client:ItemBox', src, Items[item], "remove", (amount and amount or 1))
+					else
+						TriggerClientEvent('inventory:client:ItemBox', src, Items[item], "remove", (amount and amount or 1))
+					end
                 end
 				if Config.System.Debug then
 					print("^6Bridge^7: ^3"..addremove.."^7[^6"..QBInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
@@ -837,9 +842,11 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
 
 		elseif GetResourceState(QBInv):find("start") then
 			if Core.Functions.GetPlayer(src).Functions.AddItem(item, amount or 1) then
-				--if Config.Crafting.showItemBox then
+				if QBInvNew then
                     TriggerClientEvent("qb-inventory:client:ItemBox", src, Items[item], "add", amount and amount or 1)
-                --end
+				else
+					TriggerClientEvent("inventory:client:ItemBox", src, Items[item], "add", amount and amount or 1)
+				end
 			end
 			if Config.System.Debug then
 				print("^6Bridge^7: ^3"..addremove.."^7[^6"..QBInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")

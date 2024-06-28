@@ -1,6 +1,6 @@
 local StashWeight = 400000
 local InventoryWeight = 120000
-
+local QBInvNew = false
 if IsDuplicityVersion() then
     if GetResourceState(OXLibExport):find("start") then
         createCallback(GetCurrentResourceName()..':server:GetStashItems', function(source, stashName) local stash = getStash(stashName) return stash end)
@@ -290,7 +290,11 @@ function openShop(data)
     if GetResourceState(OXInv):find("start") then
         exports[OXInv]:openInventory('shop', { type = data.shop })
     elseif GetResourceState(QBInv):find("start") then
-       TriggerServerEvent(GetCurrentResourceName()..':server:OpenShopNewQB', data.shop)
+        if QBInvNew then
+            TriggerServerEvent(GetCurrentResourceName()..':server:OpenShopNewQB', data.shop)
+        else
+            TriggerServerEvent(Config.General.JimShops and "jim-shops:ShopOpen" or "inventory:server:OpenInventory", "shop", data.items.label, data.items)
+        end    
     else
         TriggerServerEvent(Config.General.JimShops and "jim-shops:ShopOpen" or "inventory:server:OpenInventory", "shop", data.items.label, data.items)
     end
@@ -352,11 +356,6 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
         foundInv = PSInv
         if src then grabInv = Core.Functions.GetPlayer(src).PlayerData.items
         else grabInv = Core.Functions.GetPlayerData().items end
-    elseif GetResourceState(PSInv):find("start") then
-        foundInv = PSinv
-        if src then grabInv = Core.Functions.GetPlayer(src).PlayerData.items
-        else grabInv = Core.Functions.GetPlayerData().items end
-
     else
         print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
     end
@@ -388,8 +387,13 @@ function openStash(data)
     elseif GetResourceState(CodeMInv):find("start") then
         exports[CodeMInv]:OpenStash(data.stash, StashWeight, 100)
     elseif GetResourceState(QBInv):find("start") then
-        local data2 = { label = data.stash, maxweight = StashWeight, slots = 500 }
-        TriggerServerEvent(GetCurrentResourceName()..':server:OpenStashQB', data2)
+        if QBInvNew then
+            local data2 = { label = data.stash, maxweight = StashWeight, slots = 500 }
+            TriggerServerEvent(GetCurrentResourceName()..':server:OpenStashQB', data2)
+        else
+            TriggerEvent("inventory:client:SetCurrentStash", data.stash)
+            TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, data.stashOptions)
+        end
     else
         TriggerEvent("inventory:client:SetCurrentStash", data.stash)
         TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, data.stashOptions)
@@ -417,8 +421,13 @@ function getStash(stashName) local stashResource = ""
         local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
 		if result then stashItems = json.decode(result) end
     elseif GetResourceState(QBInv):find("start") then stashResource = QBInv
-        local result = MySQL.scalar.await('SELECT items FROM inventories WHERE identifier = ?', { stashName })
-		if result then stashItems = json.decode(result) end
+        if QBInvNew then
+            local result = MySQL.scalar.await('SELECT items FROM inventories WHERE identifier = ?', { stashName })
+		    if result then stashItems = json.decode(result) end
+        else
+            local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
+            if result then stashItems = json.decode(result) end
+        end
     end
 
     if Config.System.Debug then print("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..stashResource) end
@@ -530,14 +539,38 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
         end
         MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', { ['stash'] = stashName, ['items'] = json.encode(stashItems) })
     elseif GetResourceState(QBInv):find("start") then
+        if QBInvNew then
+                 for k, v in pairs(items) do
+                     exports['qb-inventory']:RemoveItem(stashName, k, v, false, 'crafting')
+                     if Config.System.Debug then print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..PSInv, k, v) end
+                 end
+             if Config.System.Debug then
+                 print("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName.."^7'")
+             end
+             MySQL.Async.insert('INSERT INTO inventories (identifier, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', { ['stash'] = stashName, ['items'] = json.encode(stashItems) })
+        else
             for k, v in pairs(items) do
-                exports['qb-inventory']:RemoveItem(stashName, k, v, false, 'crafting')
-                if Config.System.Debug then print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..PSInv, k, v) end
+                for l in pairs(stashItems) do
+                    if stashItems[l].name == k then
+                        if (stashItems[l].amount - v) <= 0 then
+                            if Config.System.Debug then
+                                print("^6Bridge^7: ^2None of this item left in stash ^3Stash^7", k, v)
+                            end
+                            stashItems[l] = nil
+                        else
+                            if Config.System.Debug then
+                                print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QBInv, k, v)
+                            end
+                            stashItems[l].amount -= v
+                        end
+                    end
+                end
             end
-        if Config.System.Debug then
-            print("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName.."^7'")
+            if Config.System.Debug then
+                print("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName.."^7'")
+            end
+            MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', { ['stash'] = stashName, ['items'] = json.encode(stashItems) })
         end
-        MySQL.Async.insert('INSERT INTO inventories (identifier, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', { ['stash'] = stashName, ['items'] = json.encode(stashItems) })
     else
         print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
     end

@@ -30,14 +30,15 @@ The installation of this script is simple
 ---
 
 ### Support for different exports and scripts
+in Crafting.lua lines 1-3 adjust if needed
+**IF YOU USE QB-INVENTORY MAKE SURE TO MARK LINE 3 IF YOU USE THE NEW VERSION AS TRUE** 
 
-In Crafting.lua Head To The first 2 lines and adjust weights as necessary
-StashWeight matters for Codem and QBInv because of the way they were written
-InventoryWeight matters for QB and PS because of the way they were written,
+if you dont know what version you use, the easiest way to tell is look in your qb-inventory server folder and if you have more files than just main.lua you are on the newest build
+also head to functions.lua and do the same on line 2
+and in wrapper.lua line number 2
 
-you can ignore if you dont use those inventories
+**if you use LJ inventory head to exports.lua and change PSInv = 'ps-inventroy' to PSInv = 'lj-inventory'**
 
-if you use lj-inventory go to exports.lua and change PSInv = 'ps-inventory' to PSInv = 'lj-inventory'
 
 # WIP
 ## Documentation
@@ -559,7 +560,7 @@ Spawns a controllable ped
 Example of use:
 ```lua
 local ped = makePed(
-	`MP_M_Freemode_011,
+	`MP_M_Freemode_011`,
 	vec4(-596.74, 2090.99, 131.41, 16.6),
 	true,
 	false,
