@@ -331,8 +331,8 @@ function hasItem(items, amount, src) local amount = amount and amount or 1
 
     elseif GetResourceState(CodeMInv):find("start") then
         foundInv = CodeMInv
-        if src then grabInv = exports[CodeMInv]:GetUserInventory(src)
-        else grabInv = exports[CodeMInv]:GetClientPlayerInventory() end
+        if src then grabInv = Core.Functions.GetPlayer(src).PlayerData.items
+        else grabInv = Core.Functions.GetPlayerData().items end
 
     elseif GetResourceState(QBInv):find("start") then
         foundInv = QBInv
@@ -368,8 +368,9 @@ function openStash(data)
     if GetResourceState(OXInv):find("start") then
         exports[OXInv]:openInventory('stash', data.stash)
     elseif GetResourceState(CodeMInv):find("start") then
-        exports[CodeMInv]:OpenStash(data.stash, 400000, 100)
-    else
+        TriggerEvent("inventory:client:SetCurrentStash", data.stash)
+        TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, data.stashOptions)
+   else
         TriggerEvent("inventory:client:SetCurrentStash", data.stash)
         TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, data.stashOptions)
 	end
