@@ -147,11 +147,12 @@ elseif GetResourceState(ESXExport):find("start") then
                 return Jobs
             end)
 
-            print("^6Bridge^7: ^2Loading ^6"..countTable(Jobs).." ^3Jobs^2 from ^7"..jobResource, "^6Bridge^7: ^2Loading ^6"..countTable(Gangs).." ^3Gangs^2 from ^7"..jobResource)
         else
             Jobs = triggerCallback(GetCurrentResourceName()..":getJobs")
             Gangs = Jobs
         end
+
+        print("^6Bridge^7: ^2Loading ^6"..countTable(Jobs).." ^3Jobs^2 from ^7"..jobResource, "^6Bridge^7: ^2Loading ^6"..countTable(Gangs).." ^3Gangs^2 from ^7"..jobResource)
     end)
 end
 if not GetResourceState(ESXExport):find("start") and Jobs then
