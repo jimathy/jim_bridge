@@ -124,24 +124,31 @@ elseif GetResourceState(QBExport):find("start") then jobResource = QBExport
     Jobs, Gangs = Core.Shared.Jobs, Core.Shared.Gangs
 
 elseif GetResourceState(ESXExport):find("start") then
-    print("^6Bridge^7: ^2Loading ^3Jobs^7/^3Gangs^2 from ^7"..ESXExport)
+    jobResource = ESXExport
     ESX = exports[ESXExport]:getSharedObject()
-    if IsDuplicityVersion() then
-        Jobs = ESX.GetJobs()
-        for k, v in pairs(Jobs) do
-            local count = countTable(Jobs[k].grades)-1
-            Jobs[k].grades[tostring(count)].isBoss = true
-        end
-        Gangs = Jobs
-    end
+
     CreateThread(function()
-        while not ESX do Wait(0) end
         if IsDuplicityVersion() then
+            Jobs = ESX.GetJobs()
+
+            while Jobs == nil or not next(Jobs) do
+                print("^6Bridge^7: ^2Waiting for ^3Jobs^2 to be loaded...")
+                Jobs = ESX.GetJobs()
+                Wait(500)
+            end
+
+            for k, v in pairs(Jobs) do
+                local count = countTable(Jobs[k].grades) - 1
+                Jobs[k].grades[tostring(count)].isBoss = true
+            end
+
+            Gangs = Jobs
             createCallback(GetCurrentResourceName()..":getJobs", function(source)
                 return Jobs
             end)
-        end
-        if not IsDuplicityVersion() then
+
+            print("^6Bridge^7: ^2Loading ^6"..countTable(Jobs).." ^3Jobs^2 from ^7"..jobResource, "^6Bridge^7: ^2Loading ^6"..countTable(Gangs).." ^3Gangs^2 from ^7"..jobResource)
+        else
             Jobs = triggerCallback(GetCurrentResourceName()..":getJobs")
             Gangs = Jobs
         end
