@@ -389,7 +389,8 @@ function getStash(stashName) local stashResource = ""
         stashItems = exports[CoreInv]:getInventory(stashName)
 
     elseif GetResourceState(CodeMInv):find("start") then stashResource = CodeMInv
-        stashItems = exports[CodeMInv]:GetInventoryItems('Stash', stashName)
+        local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
+		if result then stashItems = json.decode(result) end
 
     elseif GetResourceState(OrigenInv):find("start") then stashResource = OrigenInv
         stashItems = exports[OrigenInv]:GetStashItems(stashName)
@@ -567,9 +568,21 @@ function canCarry(itemTable, src)
             --??
 
         elseif GetResourceState(CodeMInv):find("start") then
+            local Player = Core.Functions.GetPlayer(src)
+            local items = Player.PlayerData.items
+            local weight, totalWeight = 0, 0
+            if not items then return false end
+            for _, item in pairs(items) do weight += item.weight * item.amount end
+            totalWeight = tonumber(weight)
+
             for k, v in pairs(itemTable) do
-                local weight = Items[k].weight
-                resultTable[k] = exports[CodeMInv]:CanCarryItem(src, weight, v)
+                local itemInfo = Items[k]
+                if not itemInfo and not Player.Offline then
+                    triggerNotify(nil, 'Item does not exist', 'error', src)
+                    resultTable[k] = true
+                else
+                    resultTable[k] = (totalWeight + (Items[k]['weight'] * v)) <= 120000
+                end
             end
 
         elseif GetResourceState(OrigenInv):find("start") then
