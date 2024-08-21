@@ -1289,8 +1289,8 @@ function sendPhoneMail(data) local phoneResource = ""
     elseif GetResourceState("lb-phone"):find("start") then phoneResource = "lb-phone"
         TriggerServerEvent(GetCurrentResourceName()..":lbphone:SendMail", data)
 
-    elseif GetResourceState("qb-phone"):find("start") then phoneResource = "qb-phone"
-        TriggerServerEvent('qb-phone:server:sendNewMail', data)
+    elseif GetResourceState("lb-phone"):find("start") then phoneResource = "lb-phone"
+        TriggerServerEvent('lb-phone:server:sendNewMail', data)
 
     elseif GetResourceState("jpr-phonesystem"):find("start") then phoneResource = "jpr-phonesystem"
         TriggerServerEvent(GetCurrentResourceName()..":jpr:SendMail", data)
@@ -1362,8 +1362,6 @@ function invImg(item)
             imgLink = "nui://"..OrigenInv.."/html/img/"..(Items[item].image or "")
         elseif GetResourceState(QBInv):find("start") then
             imgLink = "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
-        elseif GetGetResourceState(CodeMInv):find("start") then
-            imgLink = "nui://"..CodeMInv.."/html/img/"..(Items[item].image or "")
         else
             print("^4ERROR^7: ^2No Inventory detected for invImg ^7- ^2Check ^3exports^1.^2lua^7")
         end
