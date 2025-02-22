@@ -599,3 +599,17 @@ function getPlayer(source)
     end
     return Player
 end
+
+function GetPlayersFromCoords(coords, radius)
+    local players = {}
+    for _, playerId in ipairs(GetActivePlayers()) do
+        local ped = GetPlayerPed(playerId)
+        if ped and DoesEntityExist(ped) then
+            local playerCoords = GetEntityCoords(ped)
+            if #(coords - playerCoords) <= radius then
+                players[#players+1] = playerId
+            end
+        end
+    end
+    return players
+end
