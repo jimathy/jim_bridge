@@ -358,6 +358,24 @@ function DrawText3D(coord, text, highlight)
     ClearDrawOrigin()
 end
 
+-- readd missing function for drawtext
+function GetLineCountAndMaxLength(text)
+    local lineCount = 0
+    local maxLength = 0
+    for line in text:gmatch("[^\n]+") do
+        lineCount = lineCount + 1
+        local lineLength = string.len(line)
+        if lineLength > maxLength then
+            maxLength = lineLength
+        end
+    end
+    -- If there are no newline characters (or text is empty), treat it as a single line.
+    if lineCount == 0 then
+        lineCount = 1
+    end
+    return lineCount, maxLength
+end
+
 --- Displays a help message on the screen.
 ---
 --- @param text string The text to display as a help message.

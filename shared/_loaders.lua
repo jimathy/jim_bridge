@@ -50,6 +50,17 @@ function onPlayerLoaded(func, onStart)
     end
 end
 
+--trying to add unload functions for when players switch ped
+function onPlayerUnload(func)
+    AddEventHandler('QBCore:Client:OnPlayerUnload', function()
+        func()
+    end)
+    AddEventHandler('ox:playerLogout', function()
+        func()
+    end)
+end
+
+
 --- Executes a function when the resource starts.
 ---
 --- This function wraps the `onResourceStart` event, allowing you to execute code when the resource starts.

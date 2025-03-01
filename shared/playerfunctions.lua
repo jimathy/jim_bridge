@@ -475,6 +475,18 @@ function getPlayer(source)
                 name = info.getName(),
                 cash = info.getMoney(),
                 bank = info.getAccount("bank").money,
+
+                firstname = info.variables.firstName,
+                lastname = info.variables.lastName,
+
+                source = info.source,
+                job = info.job.name,
+                --jobBoss = info.job.isboss,
+                --gang = info.gang.name,
+                --gangBoss = info.gang.isboss,
+                onDuty = info.job.onDuty,
+                --account = info.charinfo.account,
+                --citizenId = info.citizenid,
             }
 
         elseif isStarted(OXCoreExport) then
@@ -492,9 +504,19 @@ function getPlayer(source)
         elseif isStarted(QBXExport) then
             local info = exports[QBXExport]:GetPlayer(src)
             Player = {
+                firstname = info.PlayerData.charinfo.firstname,
+                lastname = info.PlayerData.charinfo.lastname,
                 name = info.PlayerData.charinfo.firstname.." "..info.PlayerData.charinfo.lastname,
                 cash = exports[OXInv]:Search(src, 'count', "money"),
                 bank = info.Functions.GetMoney("bank"),
+                source = info.PlayerData.source,
+                job = info.PlayerData.job.name,
+                jobBoss = info.PlayerData.job.isboss,
+                gang = info.PlayerData.gang.name,
+                gangBoss = info.PlayerData.gang.isboss,
+                onDuty = info.PlayerData.job.onduty,
+                account = info.PlayerData.charinfo.account,
+                citizenId = info.PlayerData.citizenid,
             }
 
         elseif isStarted(QBExport) and not isStarted(QBXExport) then
@@ -541,13 +563,26 @@ function getPlayer(source)
     else
         if isStarted(ESXExport) and ESX ~= nil then
             local info = ESX.GetPlayerData()
+            --jsonPrint(info)
             local cash, bank = 0, 0
             for k, v in pairs(ESX.GetPlayerData().accounts) do
                 if v.name == "money" then cash = v.money end
                 if v.name == "bank" then bank = v.money end
             end
             Player = {
-                name = ('%s %s'):format(info.firstName, info.lastName),
+                firstname = info.firstName,
+                lastname = info.lastName,
+
+                source = GetPlayerServerId(PlayerId()),
+                job = info.job.name,
+                --jobBoss = info.job.isboss,
+                --gang = info.gang.name,
+                --gangBoss = info.gang.isboss,
+                onDuty = info.job.onDuty,
+                --account = info.charinfo.account,
+                --citizenId = info.citizenid,
+
+                name = info.firstName.." "..info.lastName,
                 cash = cash,
                 bank = bank,
             }

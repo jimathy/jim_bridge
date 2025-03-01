@@ -172,6 +172,11 @@ function registerCommand(command, options)
     elseif isStarted(QBExport) and not isStarted(QBXExport) then
         debugPrint("^6Bridge^7: ^2Registering ^3Command^2 with ^7 "..QBExport, command)
         Core.Commands.Add(command, options[1], options[2], options[3], options[4], options[5] and options[5] or nil)
+    elseif isStarted(ESXExport) then
+        debugPrint("^6Bridge^7: ^2Registering ^3Command^2 with ^7 ESX Legacy", command)
+        ESX.RegisterCommand(command, options[5] or 'admin', function(xPlayer, args, showError)
+            options[4](xPlayer.source, args, showError)
+        end, false, { help = options[1] })
     end
 end
 

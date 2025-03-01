@@ -56,7 +56,7 @@ function createInput(title, opts)
             if opts[i].type == "number" then
                 options[i] = {
                     type = "number",
-                    label = opts[i].text..(opts[i].txt and " - "..opts[i].txt or ""),
+                    label = (opts[i].label or opts[i].text)..(opts[i].txt and " - "..opts[i].txt or ""),
                     isRequired = opts[i].isRequired,
                     name = opts[i].name,
                     options = opts[i].options,
@@ -85,14 +85,10 @@ function createInput(title, opts)
         end
         dialog = exports[OXLibExport]:inputDialog(title, options)
         return dialog
-    end
-
-    if Config.System.Menu == "qb" then
+    elseif Config.System.Menu == "qb" then
         dialog = exports['qb-input']:ShowInput({ header = title, submitText = "Accept", inputs = opts })
         return dialog
-    end
-
-    if Config.System.Menu == "gta" then
+    elseif Config.System.Menu == "gta" then
         WarMenu.CreateMenu(tostring(opts),
             title,
             " ",
@@ -152,5 +148,44 @@ function createInput(title, opts)
             end
             Wait(0)
         end
+    elseif Config.System.Menu == "esx" then -- horrible input dialog, not even worth using, get OX
+
+        local results = {}
+        for i, opt in ipairs(opts) do
+            local prompt = opt.text or opt.label or "Enter value"
+            -- For radio/select types, append available options in the prompt.
+            if (opt.type == "radio" or opt.type == "select") and opt.options then
+                local choices = ""
+                for j, choice in ipairs(opt.options) do
+                    choices = choices .. choice.text .. " (" .. tostring(choice.value) .. ")"
+                    if j < #opt.options then choices = choices .. ", " end
+                end
+                prompt = prompt .. " [" .. choices .. "]"
+            elseif opt.type == "number" then
+                prompt = prompt .. " (number between " .. (opt.min or 0) .. " and " .. (opt.max or 100) .. ")"
+            end
+
+            local value = nil
+            ESX.UI.Menu.Open('dialog', getScript(), 'input_' .. i, {
+                title = prompt
+            }, function(data, menu)
+                value = data.value
+                menu.close()
+            end, function(data, menu)
+                menu.close()
+            end)
+
+            -- Wait until the player submits a value.
+            while value == nil do
+                Wait(0)
+            end
+
+            -- Convert to a number if needed.
+            if opt.type == "number" then
+                value = tonumber(value)
+            end
+            results[opt.name or i] = value
+        end
+        return results
     end
 end

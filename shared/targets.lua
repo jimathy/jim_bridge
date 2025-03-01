@@ -45,7 +45,7 @@ local targetEntities = {}
 function createEntityTarget(entity, opts, dist)
     targetEntities[#targetEntities + 1] = entity
     local entityCoords = GetEntityCoords(entity)
-    if Config.System.DontUseTarget then
+    if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
         debugPrint("^6Bridge^7: ^2Creating new ^3Entity^2 target with ^6DrawText ^7"..entity)
         local existingTarget = nil
         for key, target in pairs(TextTargets) do
@@ -138,7 +138,7 @@ local boxTargets = {}
 --- }, 1.5)
 --- ```
 function createBoxTarget(data, opts, dist)
-    if Config.System.DontUseTarget then
+    if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
         debugPrint("^6Bridge^7: ^2Creating new ^3Box^2 target with ^6DrawText ^7"..data[1])
         local existingTarget = nil
         for key, target in pairs(TextTargets) do
@@ -304,6 +304,59 @@ function createCircleTarget(data, opts, dist)
     end
 end
 
+local targetEntities = {}
+
+--- Creates a target for an entity with specified options and interaction distance.
+---
+--- This function supports different targeting systems (OX Target, QB Target, or custom DrawText3D targets)
+--- based on the server configuration. It translates qb-target style options into the appropriate format
+--- for the detected targeting system.
+---
+---@param entity number The entity ID to create a target for.
+---@param opts table A table of option configurations for the target.
+--- - **icon** (`string`): The icon to display for the option.
+--- - **label** (`string`): The label text for the option.
+--- - **item** (`string|nil`): (Optional) The item associated with the option.
+--- - **job** (`string|nil`): (Optional) The job required to interact with the option.
+--- - **gang** (`string|nil`): (Optional) The gang required to interact with the option.
+--- - **action** (`function|nil`): (Optional) The function to execute when the option is selected.
+---@param dist number The interaction distance for the target.
+---
+---@usage
+--- ```lua
+--- createEntityTarget(entityId, {
+---     { icon = "fas fa-car", label = "Open Vehicle", action = openVehicle },
+---     { icon = "fas fa-lock", label = "Lock Vehicle", action = lockVehicle }
+--- }, 2.5)
+--- ```
+function createModelTarget(models, opts, dist)
+    if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
+        --
+    elseif isStarted(OXTargetExport) then
+        debugPrint("^6Bridge^7: ^2Creating new ^3Model^2 target with ^6"..OXTargetExport)
+        local options = {}
+        for i = 1, #opts do
+            options[i] = {
+                icon = opts[i].icon,
+                label = opts[i].label,
+                item = opts[i].item or nil,
+                groups = opts[i].job or opts[i].gang,
+                onSelect = opts[i].action,
+                canInteract = function(_, distance)
+                    return distance < dist and true or false
+                end
+            }
+        end
+        exports[OXTargetExport]:addModel(models, options)
+    elseif isStarted(QBTargetExport) then
+        debugPrint("^6Bridge^7: ^2Creating new ^3Entity^2 target with ^6"..QBTargetExport)
+        local options = { options = opts, distance = dist }
+        exports[QBTargetExport]:AddTargetModel(models, options)
+    end
+end
+
+
+
 -- Simple function to remove an entity target created within the script --
 --- Removes a previously created entity target.
 ---
@@ -316,7 +369,7 @@ end
 function removeEntityTarget(entity)
     if isStarted(QBTargetExport) then exports[QBTargetExport]:RemoveTargetEntity(entity) end
     if isStarted(OXTargetExport) then exports[OXTargetExport]:removeLocalEntity(entity, nil) end
-    if Config.System.DontUseTarget then TextTargets[entity] = nil end
+    if (Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport))) then TextTargets[entity] = nil end
 end
 
 -- Simple function to remove circle or box targets in the script --
@@ -334,11 +387,11 @@ end
 function removeZoneTarget(target)
     if isStarted(QBTargetExport) then exports[QBTargetExport]:RemoveZone(target) end
     if isStarted(OXTargetExport) then exports[OXTargetExport]:removeZone(target, true) end
-    if Config.System.DontUseTarget then TextTargets[target] = nil end
+    if (Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport))) then TextTargets[target] = nil end
 end
 
 -- If no target script is found, default to DrawText3D targets -- * experimental *
-if Config.System.DontUseTarget and not isServer() then
+if (Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport))) and not isServer() then
     CreateThread(function()
         while true do
             local pedCoords = GetEntityCoords(PlayerPedId())

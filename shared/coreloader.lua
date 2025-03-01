@@ -27,7 +27,8 @@ local itemResource, jobResource, vehResource = "", "", ""
 -- Load item lists --
 -- Complies the items from ox_inventory, qb-core or esx into 'Items' and loads them in a layout similar to qb-core's Shared items.lua --
 -- For example this makes it so instead of QBCore.Shared.Items[item], you can load 'Item[item]' in the script --
-if isStarted(OXInv) then itemResource = OXInv
+if isStarted(OXInv) then
+    itemResource = OXInv
     Items = exports[OXInv]:Items()
     for k, v in pairs(Items) do
         if v.client and v.client.image then
@@ -39,7 +40,8 @@ if isStarted(OXInv) then itemResource = OXInv
         Items[k].thirst = v.client and v.client.thirst or nil
     end
 
-elseif isStarted(QBExport) then itemResource = QBExport
+elseif isStarted(QBExport) then
+    itemResource = QBExport
     Core = Core or exports[QBExport]:GetCoreObject()
     Items = Core and Core.Shared.Items or nil
     if isStarted(QBExport) and not isStarted(QBXExport) then
@@ -49,16 +51,41 @@ elseif isStarted(QBExport) then itemResource = QBExport
         end)
     end
 
-elseif isStarted(ESXExport) then itemResource = ESXExport
+elseif isStarted(ESXExport) then
+    itemResource = ESXExport
     ESX = exports[ESXExport]:getSharedObject()
-    Items = ESX and ESX.Items or nil
+    --Items = ESX and ESX.Items or nil
+    while ESX == nil do
+        print("Waiting for ESX")
+        Wait(0)
+    end
+    if isServer() then
+        Items = ESX.GetItems()
+        debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Items).." ^3Items^2 from ^7" .. itemResource)
+    end
+    CreateThread(function()
+        while not ESX do Wait(0) end
+        if isServer() then
+            createCallback(getScript()..":getItems", function(source)
+                return Items
+            end)
+        end
+        if not isServer() then
+            Items = triggerCallback(getScript()..":getItems")
+            debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Items).." ^3Items^2 from ^7" .. itemResource)
+        end
+    end)
+
+
 end
 -- If it fails to load items, then it will print the error below --
 -- If it loads them and debug is on, print how many items and where from --
-if not Items then
-    print("^4ERROR^7: ^2No Core Items detected ^7- ^2Check ^3exports^1.^2lua^7")
-else
-    debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Items).." ^3Items^2 from ^7" .. itemResource)
+if not isStarted(ESXExport) then
+    if not Items then
+        print("^4ERROR^7: ^2No Core Items detected ^7- ^2Check ^3exports^1.^2lua^7")
+    else
+        debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Items).." ^3Items^2 from ^7" .. itemResource)
+    end
 end
 
 -- Load Vehicles --
