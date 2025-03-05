@@ -1,3 +1,7 @@
+Make sure u do qb-properties install
+
+also to be noted multicrafting isnt supported!!
+
 # Jim_Bridge
 
 This script is intended to be used with my all my scripts (soon)

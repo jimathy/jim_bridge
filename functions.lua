@@ -813,10 +813,12 @@ RegisterNetEvent(GetCurrentResourceName()..":server:toggleItem", function(give, 
             end
 
         elseif GetResourceState(CodeMInv):find("start") then
-            local success = exports[CodeMInv]:AddItem(src, item, amount)
-			if Config.System.Debug then
-				print("^6Bridge^7: ^3"..addremove.."^7[^6"..CodeMInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
-            end
+            if not string.match(item, "0$") then -- Excludes items that end with '0'
+				local success = exports[CodeMInv]:AddItem(src, item, amount)
+				if Config.System.Debug then
+					print("^6Bridge^7: ^3"..addremove.."^7[^6"..CodeMInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
+				end
+			end
 
 		elseif GetResourceState(OrigenInv):find("start") then
 			local success = exports[OrigenInv]:AddItem(src, item, amount)
