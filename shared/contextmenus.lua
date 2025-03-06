@@ -157,6 +157,7 @@ function openMenu(Menu, data)
             end
             if not Menu[k].header then Menu[k].header = " " end
             if Menu[k].arrow then Menu[k].icon = "fas fa-angle-right" end
+            Menu[k].isMenuHeader = Menu[k].isMenuHeader or Menu[k].disable
         end
         exports[QBMenuExport]:openMenu(Menu)
 

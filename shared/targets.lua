@@ -263,7 +263,7 @@ function createCircleTarget(data, opts, dist)
             end
         else
             -- Create new target
-            local tempText = ""
+            local tempText = {}
             local keyTable = { 38, 29, 303, 45, 46, 47, 48 }
             for i = 1, #opts do
                 opts[i].key = keyTable[i]

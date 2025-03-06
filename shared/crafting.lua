@@ -40,75 +40,183 @@ local CraftLock = false
 --- })
 --- ```
 function craftingMenu(data)
+    -- Prevent opening the menu if crafting is locked.
     if CraftLock then return end
+
+    -- If a job or gang restriction exists and the player doesn't pass the job check, exit early.
     if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
+
+    -- Display a temporary "thinking" notification/menu depending on the configured system.
     if Config.System.Menu == "jim" then
         triggerNotify(nil, "Thinking", "info")
     else
         openMenu({ { header = "Thinking...", icon = "fas fa-hourglass-end", isMenuHeader = true } }, { header = "Crafting Menu" } )
     end
+
+    -- Normalize stash name: if stashTable is provided, assign it to stashName.
     if data.stashTable then data.stashName = data.stashTable end
+
+    -- Initialize an empty menu table and a flag for job verification.
     local Menu, hasjob = {}, false
+    -- Get the list of recipes from the provided data.
     local Recipes = data.craftable.Recipes
+    local craftingLevel = data.craftable.craftingLevel
+    local craftedItems = data.craftable.craftedItems
+
+    -- Create a temporary table to collect required item amounts for each recipe.
     local tempCarryTable = {}
     for i = 1, #Recipes do
+        -- Iterate over each key in the current recipe.
         for k in pairs(Recipes[i]) do
+            -- Ignore meta keys: "amount", "metadata", "job", and "gang".
             if k ~= "amount" and k ~= "metadata" and k ~= "job" and k ~= "gang" then
+                -- Record the required amount for this ingredient (default to 1 if not specified).
                 tempCarryTable[k] = Recipes[i].amount or 1
             end
         end
     end
 
+    -- Trigger a server callback to check if the player can carry the required items.
     local canCarryTable = triggerCallback(getScript()..':server:canCarry', tempCarryTable)
+
+    -- Process each recipe to build the menu entries.
     for i = 1, #Recipes do
+        -- Ensure the recipe has an "amount" field; default to 1 if missing.
         if not Recipes[i]["amount"] then Recipes[i]["amount"] = 1 end
+
+        -- Loop through each key-value pair in the recipe.
         for k, v in pairs(Recipes[i]) do
-            if k ~= "amount" and k ~= "metadata" and k ~= "job" and k ~= "gang" then
+            -- Skip meta keys that are not ingredients.
+            local excludeKeys = {
+                amount = true,
+                metadata = true,
+                description = true,
+                info = true,
+                job = true,
+                gang = true,
+                oneUse = true,
+                slot = true,
+                blueprintRef = true,
+                craftingLevel = true,
+                craftedItems = true,
+                hasCrafted = true,
+            }
+
+            if not excludeKeys[k] then
+
+                -- Check job requirements if specified for the recipe.
                 if Recipes[i].job then
                     for l, b in pairs(Recipes[i].job) do
+                        -- hasJob returns true if the player meets the job criteria.
                         hasjob = hasJob(l, nil, b)
                         if hasjob == true then break end
                     end
-                else hasjob = true end
-                local setheader, settext, disable, metadata = "", "", false, (Recipes[i]["metadata"] or nil)
+                else
+                    hasjob = true
+                end
+
+                -- Initialize variables for menu display text, disable flag, and any metadata.
+                local setheader, settext, disable, metadata = "", "", false, (Recipes[i]["metadata"] or Recipes[i]["info"] or nil)
+
                 if hasjob then
+                    -- Build tables for ingredient details.
                     local itemTable = {}
                     local metaTable = {}
+
+                    -- Iterate over the ingredients for the current key.
                     for l, b in pairs(Recipes[i][tostring(k)]) do
+                        -- Append item label and quantity to the settext string.
+                        -- Use a line break (br) if settext is not empty.
                         settext = settext..(settext ~= "" and br or "")..(Items[l] and Items[l].label or "error - "..l)..(b > 1 and " x"..b or "")
+                        -- Populate the metaTable with item labels and their amounts.
                         metaTable[Items[l] and Items[l].label or "error - "..l] = b
+                        -- Build a simple table of items required.
                         itemTable[l] = b
-                        Wait(0)
+                        Wait(0)  -- Yield to avoid freezing the game.
                     end
+
+                    -- Wait until the server callback (canCarryTable) has returned.
                     while not canCarryTable do Wait(0) end
+
+                    -- Determine if the recipe should be disabled by checking if the player has the required items.
                     disable = not checkHasItem(data.stashName, itemTable)
-                    setheader = ((metadata and metadata.label) or (Items[tostring(k)] and Items[tostring(k)].label) or "error - " .. tostring(k)) .. (Recipes[i]["amount"] > 1 and " x" .. Recipes[i]["amount"] or "")
+
+                    -- Construct the header text for this menu item using metadata or default item label.
+                    setheader = ((metadata and metadata.label) or (Items[tostring(k)] and Items[tostring(k)].label) or "error - " .. tostring(k))
+                                .. (Recipes[i]["amount"] > 1 and " x" .. Recipes[i]["amount"] or "")
+
+                    -- Append an emoji to indicate carry status:
+                    -- If not disabled and the player cannot carry the item, append 📦,
+                    -- otherwise append ✔️ if they can carry it.
+                    -- if jim-crafting and its a blueprint item that has/hasnt been crafting prefix with ✨ to represent its a new item
                     if not disable then
-                        if not canCarryTable[k] then setheader = setheader .. " 📦"
-                        else setheader = setheader .. " ✔️" end
-                    elseif not canCarryTable[k] then setheader = setheader .. " 📦" end
+                        if not canCarryTable[k] then
+                            setheader = setheader .. " 📦"
+                        else
+                            setheader = setheader .. " ✔️"
+                        end
+                    elseif not canCarryTable[k] then
+                        setheader = setheader .. " 📦"
+                    end
+                    if Recipes[i]["hasCrafted"] ~= nil then
+                        if craftedItems[k] == nil then
+                            setheader = "✨ "..setheader
+                        end
+                    end
+                    -- Add the constructed menu item into the Menu table.
                     Menu[#Menu + 1] = {
+                        -- Show an arrow if the item is enabled and can be carried.
                         arrow = not disable and canCarryTable[k],
-                        disable = isStarted(QBMenuExport) and disable and not canCarryTable[k],
+                        -- Disable the menu item based on the state of QBMenuExport and carry-check.
+                        isMenuHeader = disable or not canCarryTable[k],
+                        -- Set icon and image for the menu item (using metadata image if available).
                         icon = invImg((metadata and metadata.image) or tostring(k)),
                         image = invImg((metadata and metadata.image) or tostring(k)),
+                        -- Final header text, appending ❌ if disabled or cannot be carried.
                         header = setheader..((disable or not canCarryTable[k]) and " ❌" or ""),
-                        txt = isStarted(QBMenuExport) and settext or nil,
-                        --metadata = debugMode and Recipes[i]["metadata"] or nil,
+                        -- Set description text if QBMenuExport is started.
+                        txt = (isStarted(QBMenuExport) or disable) and settext or nil,
+                        -- Attach the metadata table containing ingredient details.
                         metadata = metaTable,
+                        -- Define the onSelect function to trigger crafting actions if the item is selectable.
                         onSelect = ((not disable and canCarryTable[k]) and (function()
-                            local transdata = { item = k, craft = data.craftable.Recipes[i], craftable = data.craftable, coords = data.coords, stashName = data.stashName, onBack = data.onBack, metadata = Recipes[i]["metadata"] }
-                            if Config.Crafting.MultiCraft then multiCraft(transdata) else makeItem(transdata) end
+                            -- Build transaction data with details needed for crafting.
+                            local transdata = {
+                                item = k,
+                                craft = data.craftable.Recipes[i],
+                                craftable = data.craftable,
+                                coords = data.coords,
+                                stashName = data.stashName,
+                                onBack = data.onBack,
+                                metadata = metadata
+                            }
+                            -- Call multiCraft or makeItem based on configuration.
+                            if Config.Crafting.MultiCraft then
+                                multiCraft(transdata)
+                            else
+                                makeItem(transdata)
+                            end
                         end) or nil),
                     }
                 end
             end
-            Wait(0)
+            Wait(0)  -- Yield within the loop to maintain responsiveness.
         end
     end
-    openMenu(Menu, { header = data.craftable.Header, onBack = data.onBack or nil, canClose = true, onExit = function() end, })
+
+    -- Open the final crafting menu with the built Menu table and provided header/onBack configuration.
+    openMenu(Menu, {
+        header = data.craftable.Header,
+        headertxt = data.craftable.Headertxt,
+        onBack = data.onBack or nil,
+        canClose = true,
+        onExit = function() end,
+    })
+
+    -- Trigger an action (likely camera or player focus) to look at the specified coordinates.
     lookEnt(data.coords)
 end
+
 
 --- Opens a menu for selecting the quantity to craft.
 ---
@@ -159,7 +267,17 @@ function multiCraft(data)
             header = "Craft - x"..k * data.craft.amount,
             txt = settext,
             onSelect = function ()
-                makeItem({item = data.item, craft = data.craft, craftable = data.craftable, amount = k, coords = data.coords, stashName = stashname, stashTable = data.stashName, onBack = data.onBack, metadata = data.metadata })
+                makeItem({
+                    item = data.item,
+                    craft = data.craft,
+                    craftable = data.craftable,
+                    amount = k,
+                    coords = data.coords,
+                    stashName = stashname,
+                    stashTable = data.stashName,
+                    onBack = data.onBack,
+                    metadata = data.metadata
+                })
             end,
         }
     end
@@ -199,20 +317,38 @@ function makeItem(data)
     CraftLock = true
     if data.stashTable then data.stashName = data.stashTable end
     local bartime = data.craftable.progressBar and data.craftable.progressBar.time or 5000
-    local bartext = (data.craftable.progressBar and data.craftable.progressBar.label) or (Loc[Config.Lan].progressbar and Loc[Config.Lan].progressbar["progress_make"]) or "Making a"
+    local bartext = (data.craftable.progressBar and data.craftable.progressBar.label) or (Loc[Config.Lan].progressbar and Loc[Config.Lan].progressbar["progress_make"]) or "Making "
     local animDict = data.craftable.Anims and data.craftable.Anims.animDict or "amb@prop_human_parking_meter@male@idle_a"
     local anim = data.craftable.Anims and data.craftable.Anims.anim or "idle_a"
     local amount = data.amount and (data.amount ~= 1) and data.amount or 1
     local metadata = data.metadata or nil
     local prop = data.craftable.Anims and data.craftable.Anims.prop or nil
 
+    local canReturn = true
+
     local crafted, crafting = true, true
     local cam = createTempCam(PlayerPedId(), data.coords)
     startTempCam(cam)
 
     for i = 1, amount do
+        countTable(data.craft)
         for k, v in pairs(data.craft) do
-            if k ~= "amount" and k ~= "metadata" and k ~= "job" and k ~= "gang" then
+            local excludeKeys = {
+                amount = true,
+                info = true,
+                metadata = true,
+                description = true,
+                job = true,
+                gang = true,
+                oneUse = true,
+                slot = true,
+                blueprintRef = true,
+                craftingLevel = true,
+                craftedItems = true,
+                hasCrafted = true,
+            }
+
+            if not excludeKeys[k] then
                 if type(v) == "table" then
                     for l, b in pairs(v) do
                         if crafting and progressBar({
@@ -248,6 +384,20 @@ function makeItem(data)
                             icon = data.item,
                         }) then
                             TriggerServerEvent(getScript()..":Crafting:GetItem", data.item, data.craft, data.stashName, metadata)
+                            if data.craft["hasCrafted"] ~= nil then
+                                debugPrint("hasCrafted Found, marking '"..data.item.."' as crafted for player")
+
+                                data.craftable.craftedItems[data.item] = true
+                                triggerCallback(getScript()..":server:SetMetadata", "craftedItems", data.craftable.craftedItems )
+                                --SetMetadata(nil, "craftedItems", data.craftable.craftedItems)
+                            end
+                            if data.craftable.Recipes[1].oneUse == true then
+                                removeItem("craftrecipe", 1, nil, data.craftable.Recipes[1].slot)
+                                local breakId = GetSoundId()
+                                PlaySoundFromEntity(breakId, "Drill_Pin_Break", PlayerPedId(), "DLC_HEIST_FLEECA_SOUNDSET", 1, 0)
+                                canReturn = false
+                                -- If recipe is removed it doesn't try to open menu again, it was causing blank menus for some reason
+                            end
                         else
                             crafting = false
                             break
@@ -262,7 +412,7 @@ function makeItem(data)
     stopTempCam()
     CraftLock = false
     lockInv(false)
-    craftingMenu(data)
+    if canReturn then craftingMenu(data) end
     ClearPedTasks(PlayerPedId())
 end
 
@@ -299,11 +449,11 @@ RegisterNetEvent(getScript()..":Crafting:GetItem", function(ItemMake, craftable,
     else
         if craftable then
             for k, v in pairs(craftable[ItemMake] or {}) do
-                TriggerEvent(getScript()..":server:toggleItem", false, tostring(k), v, src)
+                removeItem(tostring(k), v, src)
             end
         end
     end
-    TriggerEvent(getScript()..":server:toggleItem", true, ItemMake, amount, src, metadata)
+    addItem(ItemMake, amount, metadata, src)
     --if isStarted("core_skills") then exports["core_skills"]:AddExperience(src, 2) end
 end)
 
@@ -423,7 +573,7 @@ RegisterNetEvent(getScript().."Sellitems", function(data)
     local src = source
     local hasItems, hasTable = hasItem(data.item, 1, src)
     if hasItems then
-        TriggerEvent(getScript()..":server:toggleItem", false, data.item, hasTable[data.item].count, src)
+        removeItem(data.item, hasTable[data.item].count, src)
         TriggerEvent(getScript()..":server:FundPlayer", (hasTable[data.item].count * data.price), "cash", src)
     else
         triggerNotify(nil, Loc[Config.Lan].error["dont_have"].." "..Items[data.item].label, "error", src)

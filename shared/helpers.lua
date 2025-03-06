@@ -17,7 +17,7 @@
 --- end
 --- ```
 function isStarted(script)
-    return GetResourceState(script):find("start")
+    return GetResourceState(script):find("start") ~= nil
 end
 
 local scriptName = nil

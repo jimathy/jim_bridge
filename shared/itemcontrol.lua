@@ -95,12 +95,12 @@ end
 --- ```lua
 --- removeItem("health_potion", 1)
 --- ```
-function removeItem(item, amount, src)
+function removeItem(item, amount, src, slot)
     if not Items[item] then print("^6Debug^7: ^1Error^7 - ^2Tried to remove ^7'^3"..item.."^7'^2 but it doesn't exist") return end
     if src then
-        TriggerEvent(getScript()..":server:toggleItem", false, item, amount, src, info)
+        TriggerEvent(getScript()..":server:toggleItem", false, item, amount, src, nil, slot)
     else
-        TriggerServerEvent(getScript()..":server:toggleItem", false, item, amount, nil, info)
+        TriggerServerEvent(getScript()..":server:toggleItem", false, item, amount, nil, nil, slot)
     end
 end
 
@@ -119,7 +119,7 @@ end
 --- ```lua
 --- TriggerServerEvent("script:server:toggleItem", true, "health_potion", 1)
 --- ```
-RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount, newsrc, info)
+RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount, newsrc, info, slot)
     if not Items[item] then print("^6Debug^7: ^1Error^7 - ^2Tried to "..(tostring(give) == "true" and "add" or "remove").." ^7'^3"..item.."^7'^2 but it doesn't exist") return end
     local src = newsrc or source
     local addremove = (tostring(give) == "true" and "addItem" or "removeItem")
@@ -153,7 +153,7 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
 
             elseif isStarted(QBInv) then
                 while remamount > 0 do
-                    if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1) then
+                    if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1, slot) then
                         remamount -= 1
                     else
                         print("^1Error removing "..data.item.." Amount left to remove: "..remamount.."^7")

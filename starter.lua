@@ -58,6 +58,7 @@ for _, v in pairs({ -- This is a specific load order
     'polyZone.lua',
     'itemcontrol.lua',
     'playerfunctions.lua',
+    'metaHandlers.lua',
     'jobfunctions.lua',
 
     -- Interactions
@@ -79,11 +80,11 @@ for _, v in pairs({ -- This is a specific load order
     'versioncheck.lua'
 }) do
     if debugMode then
-        print("^5Loading^7: 'jim_bridge/shared/"..v.."' ^2into ^7'"..GetCurrentResourceName().."' ...")
+        --print("^5Loading^7: 'jim_bridge/shared/"..v.."' ^2into ^7'"..GetCurrentResourceName().."' ...")
     end
     local fileLoader = assert(load(LoadResourceFile('jim_bridge', ('shared/'..v)), ('@@jim_bridge/shared/'..v)))
     fileLoader()
     if debugMode then
-        print("^5Success^7: ^2loaded file^7: 'jim_bridge/shared/"..v.."'!")
+        print("^5Success^7: ^2loaded file^7: ^3"..(v):gsub("/", "^7/^3"):gsub("%.lua", "^7.lua").."^7")
     end
 end
