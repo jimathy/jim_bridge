@@ -54,20 +54,24 @@ function craftingMenu(data)
     end
 
     -- Normalize stash name: if stashTable is provided, assign it to stashName.
-    if data.stashTable then data.stashName = data.stashTable end
+    data.stashName = data.stashTable or data.stashName
 
     -- Initialize an empty menu table and a flag for job verification.
     local Menu, hasjob = {}, false
     -- Get the list of recipes from the provided data.
     local Recipes = data.craftable.Recipes
-    local craftingLevel = data.craftable.craftingLevel
-    local craftedItems = data.craftable.craftedItems
+
+    local craftedItems = {}
 
     -- Create a temporary table to collect required item amounts for each recipe.
     local tempCarryTable = {}
     for i = 1, #Recipes do
         -- Iterate over each key in the current recipe.
         for k in pairs(Recipes[i]) do
+            if k == "hasCrafted" and not data.craftable.craftedItems then
+                craftedItems = GetMetadata(nil, "craftedItems") or {}
+                data.craftable.craftedItems = craftedItems
+            end
             -- Ignore meta keys: "amount", "metadata", "job", and "gang".
             if k ~= "amount" and k ~= "metadata" and k ~= "job" and k ~= "gang" then
                 -- Record the required amount for this ingredient (default to 1 if not specified).
@@ -100,6 +104,7 @@ function craftingMenu(data)
                 craftingLevel = true,
                 craftedItems = true,
                 hasCrafted = true,
+                exp = true,
             }
 
             if not excludeKeys[k] then
@@ -346,6 +351,7 @@ function makeItem(data)
                 craftingLevel = true,
                 craftedItems = true,
                 hasCrafted = true,
+                exp = true,
             }
 
             if not excludeKeys[k] then
@@ -384,13 +390,22 @@ function makeItem(data)
                             icon = data.item,
                         }) then
                             TriggerServerEvent(getScript()..":Crafting:GetItem", data.item, data.craft, data.stashName, metadata)
-                            if data.craft["hasCrafted"] ~= nil then
-                                debugPrint("hasCrafted Found, marking '"..data.item.."' as crafted for player")
+                            CreateThread(function()
+                                if data.craft["hasCrafted"] ~= nil then
+                                    debugPrint("hasCrafted Found, marking '"..data.item.."' as crafted for player")
 
-                                data.craftable.craftedItems[data.item] = true
-                                triggerCallback(getScript()..":server:SetMetadata", "craftedItems", data.craftable.craftedItems )
-                                --SetMetadata(nil, "craftedItems", data.craftable.craftedItems)
-                            end
+                                    data.craftable.craftedItems[data.item] = true
+                                    triggerCallback(getScript()..":server:SetMetadata", "craftedItems", data.craftable.craftedItems )
+                                end
+                                Wait(100)
+                                if data.craft["exp"] ~= nil then
+                                    craftingLevel += data.craft["exp"].give
+
+                                    jsonPrint(data.craft["exp"])
+                                    debugPrint("exp Found, giving exp for '"..data.item.."'")
+                                    triggerCallback(getScript()..":server:SetMetadata", "craftingLevel", craftingLevel)
+                                end
+                            end)
                             if data.craftable.Recipes[1].oneUse == true then
                                 removeItem("craftrecipe", 1, nil, data.craftable.Recipes[1].slot)
                                 local breakId = GetSoundId()
