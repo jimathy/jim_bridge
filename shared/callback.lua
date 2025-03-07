@@ -13,21 +13,23 @@
 --- end)
 --- ```
 function createCallback(callbackName, funct)
-    if isStarted(OXLibExport) then
-        lib.callback.register(callbackName, funct)
-    else
-        local adaptedFunction = function(source, cb, ...)
-            local result = funct(source, ...)
-            cb(result)
-        end
-
-        if isStarted(QBExport) then
-            Core = Core or exports[QBExport]:GetCoreObject()
-            Core.Functions.CreateCallback(callbackName, adaptedFunction)
-        elseif isStarted(ESXExport) then
-            ESX.RegisterServerCallback(callbackName, adaptedFunction)
+    if isServer() then
+        if isStarted(OXLibExport) then
+            lib.callback.register(callbackName, funct)
         else
-            print("^6Bridge^7: ^1ERROR^7: ^3Can't find any script to register callback with", callbackName)
+            local adaptedFunction = function(source, cb, ...)
+                local result = funct(source, ...)
+                cb(result)
+            end
+
+            if isStarted(QBExport) then
+                Core = Core or exports[QBExport]:GetCoreObject()
+                Core.Functions.CreateCallback(callbackName, adaptedFunction)
+            elseif isStarted(ESXExport) then
+                ESX.RegisterServerCallback(callbackName, adaptedFunction)
+            else
+                print("^6Bridge^7: ^1ERROR^7: ^3Can't find any script to register callback with", callbackName)
+            end
         end
     end
 end
