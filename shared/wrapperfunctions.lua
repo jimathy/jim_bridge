@@ -230,7 +230,6 @@ function registerShop(name, label, items, society)
         )
     elseif isStarted(QBInv) and QBInvNew then
         debugPrint("^6Bridge^7: ^2Registering ^3QB ^2Store^7:", name, label)
-        print(json.encode(items, {indent = true}))
         exports[QBInv]:CreateShop({
             name = name,
             label = label,

@@ -48,7 +48,7 @@ if not isServer() then
                 end
             end
             if isAnimal then
-                debugPrint("^6Debug^7: ^2Ped is Animal^1")
+                debugPrint("^6Bridge^7: ^2Ped is Animal^1")
                 break
             end
         end

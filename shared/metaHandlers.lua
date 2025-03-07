@@ -1,16 +1,16 @@
 
 function GetPlayer(source)
     if isStarted(QBExport) then
-        debugPrint("^6Debug^7: ^3GetPlayer^7() QBExport")
+        debugPrint("^6Bridge^7: ^3GetPlayer^7() QBExport")
         return exports[QBExport]:GetCoreObject().Functions.GetPlayer(source)
     elseif isStarted(QBXExport) then
-        debugPrint("^6Debug^7: ^3GetPlayer^7() QBOXExport")
+        debugPrint("^6Bridge^7: ^3GetPlayer^7() QBOXExport")
         return exports[QBXExport]:GetCoreObject().Functions.GetPlayer(source)
     elseif isStarted(ESXExport) then
-        debugPrint("^6Debug^7: ^3GetPlayer^7() ESXExport")
+        debugPrint("^6Bridge^7: ^3GetPlayer^7() ESXExport")
         return exports[ESXExport]:GetPlayerFromId(source)
     elseif isStarted(OXCoreExport) then
-        debugPrint("^6Debug^7: ^3GetPlayer^7() OXCoreExport")
+        debugPrint("^6Bridge^7: ^3GetPlayer^7() OXCoreExport")
         return exports[OXCoreExport]:GetPlayer(source)
     end
     return nil
@@ -19,17 +19,17 @@ end
 -- Get Metadata
 function GetMetadata(player, key)
     if not player then -- This would be called client side
-        debugPrint("^6Debug^7: ^3GetMetadata^7() calling server")
+        debugPrint("^6Bridge^7: ^3GetMetadata^7() calling server: "..key)
         return triggerCallback(getScript()..":server:GetMetadata", key)
     else
         if isStarted(QBExport) or isStarted(QBXExport) then
-            debugPrint("^6Debug^7: ^3GetMetadata^7() QBExport or QBXExport")
+            debugPrint("^6Bridge^7: ^3GetMetadata^7() QBExport or QBXExport", key)
             return player.PlayerData.metadata[key]
         elseif isStarted(ESXExport) then
-            debugPrint("^6Debug^7: ^3GetMetadata^7() ESXExport")
+            debugPrint("^6Bridge^7: ^3GetMetadata^7() ESXExport", key)
             return player.getMeta(key)
         elseif isStarted(OXCoreExport) then
-            debugPrint("^6Debug^7: ^3GetMetadata^7() OXCoreExport")
+            debugPrint("^6Bridge^7: ^3GetMetadata^7() OXCoreExport", key)
             return player.get(key)
         end
     end
@@ -37,7 +37,7 @@ function GetMetadata(player, key)
 end
 
 createCallback(getScript()..":server:GetMetadata", function(source, key)
-    debugPrint("^6Debug^7: ^3GetMetadata^7() Callback", source)
+    debugPrint("^6Bridge^7: ^3GetMetadata^7() Callback", source, key)
     local player = GetPlayer(source)
     local Metadata = {}
     if not player then
@@ -51,6 +51,7 @@ createCallback(getScript()..":server:GetMetadata", function(source, key)
     elseif type(key) == "string" then
         return GetMetadata(player, key)
     end
+
     jsonPrint(Metadata)
     return Metadata
 end)
@@ -58,18 +59,18 @@ end)
 -- Set Metadata
 function SetMetadata(player, key, value)
     --if player == nil then -- This would be called client side
-    --    debugPrint("^6Debug^7: ^3SetMetadata^7() calling server")
+    --    debugPrint("^6Bridge^7: ^3SetMetadata^7() calling server")
     --    triggerCallback(getScript()..":server:SetMetadata", { key, value })
     -- else
-        debugPrint("^6Debug^7: ^3SetMetadata^7() setting metadata")
+        debugPrint("^6Bridge^7: ^3SetMetadata^7() setting metadata")
         if isStarted(QBExport) or isStarted(QBXExport) then
-            debugPrint("^6Debug^7: ^3SetMetadata^7() QBExport or QBXExport")
+            debugPrint("^6Bridge^7: ^3SetMetadata^7() QBExport or QBXExport")
             player.Functions.SetMetaData(key, value)
         elseif isStarted(ESXExport) then
-            debugPrint("^6Debug^7: ^3SetMetadata^7() ESXExport")
+            debugPrint("^6Bridge^7: ^3SetMetadata^7() ESXExport")
             player.setMeta(key, value)
         elseif isStarted(OXCoreExport) then
-            debugPrint("^6Debug^7: ^3SetMetadata^7() OXCoreExport")
+            debugPrint("^6Bridge^7: ^3SetMetadata^7() OXCoreExport")
             player.set(key, value)
         end
     --end

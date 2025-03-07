@@ -1,41 +1,62 @@
+local stash
 if isServer() then
-    createCallback(getScript()..':server:GetStashItems', function(source, stashName) local stash = getStash(stashName) return stash end)
+    createCallback(getScript()..':server:GetStashItems',
+        function(source, stashName)
+            stash = getStash(stashName) return stash
+        end)
 end
 
 local stashCache ={}
 function GetStashTimeout(stashName, stop)
-    if stop then stashCache = {} return end
-    local stash = stashCache[stashName]
+    if stop then
+        stashCache = {}
+        return
+    end
+    stash = stashCache[stashName]
     if not stash then
+        debugPrint("^6Bridge^7: ^2Local Stash ^7'^3"..stashName.."^7'^2 cache ^1not ^2found^7, ^2need to grab from server^7")
         stashCache[stashName] = { items = {}, timeout = 0 }
         stash = stashCache[stashName]
+    else
+        debugPrint("^6Bridge^7: ^2Local Stash ^7'^3"..stashName.."^7'^2 cache found^7")
     end
-    if #stash.items > 0 then return true end
-    if stash.timeout <= 0 then
-        stash.items = triggerCallback(getScript()..':server:GetStashItems', stashName)
-        stash.timeout = 10000
+    if countTable(stashCache[stashName].items) > 0 then
+        debugPrint("^6Bridge^7: '^3"..stashName.." ^2Items found in cache, skipping recheck")
+        return true
+    end
+    if stashCache[stashName].timeout <= 0 then
+        stashCache[stashName].items = triggerCallback(getScript()..':server:GetStashItems', stashName)
+        stashCache[stashName].timeout = 15000
         CreateThread(function()
-            while stash.timeout > 0 do stash.timeout -= 1000 Wait(1000) end
+            while stash.timeout > 0 do
+                stashCache[stashName].timeout -= 1000
+                Wait(1000)
+            end
+            debugPrint("^6Bridge^7: ^2Local Stash ^7'^3"..stashName.."^7'^2 cache timed out^7, ^3Clearing^7")
             stashCache[stashName] = nil
         end)
     end
-
     return false
 end
 
 function checkHasItem(stashes, itemTable)
-    if not stashes then return hasItem(itemTable), nil end
+    if not stashes then
+        return hasItem(itemTable), nil
+    end
     if type(stashes) == "table" then
         local succeses = 0
-        local itemCount = 0
-        for _, item in pairs(itemTable) do itemCount += 1 end
+        local itemCount = countTable(itemTable)
+        --for _, item in pairs(itemTable) do itemCount += 1 end
         for _, name in pairs(stashes) do
+            Wait(10) -- add delay because qb doesn't appreciate multiple callbacks for stashes
             GetStashTimeout(name)
             for item, amount in pairs(itemTable) do
                 debugPrint("^6Bridge^7: ^2Checking"..(name and " ^7'^6"..name.."^7'" or "").." ^2ingredients^7 - ^6"..item.."^7")
                 if stashhasItem(stashCache[name].items, item, amount) then
                     succeses += 1
-                    if succeses == itemCount then return true, name end
+                    if succeses == itemCount then
+                        return true, name
+                    end
                 end
             end
         end
@@ -44,7 +65,6 @@ function checkHasItem(stashes, itemTable)
         GetStashTimeout(stashes)
         return stashhasItem(stashCache[stashes].items, itemTable), stashes
     end
-
     return false, nil
 end
 
@@ -75,7 +95,9 @@ RegisterNetEvent(getScript()..':server:OpenStashQB', function(data)
 end)
 
 function getStash(stashName) local stashResource = ""
-    if type(stashName) ~= "string" then return print("Stash name was not a string %s(%s)", stashName, type(stashName)) end
+    if type(stashName) ~= "string" then
+        return print("Stash name was not a string %s(%s)", stashName, type(stashName))
+    end
     local stashItems, items = {}, {}
     if isStarted(OXInv) then stashResource = OXInv
         stashItems = exports[OXInv]:Inventory(stashName).items
@@ -124,6 +146,7 @@ function getStash(stashName) local stashResource = ""
         end
         debugPrint("^6Bridge^7: ^3GetStashItems^7: ^2Stash information for ^7'^6"..stashName.."^7' ^2retrieved^7")
     end
+    jsonPrint(items)
     return items
 end
 

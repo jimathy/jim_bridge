@@ -76,7 +76,7 @@ end
 --- addItem("health_potion", 2, { quality = "high" })
 --- ```
 function addItem(item, amount, info, src)
-    if not Items[item] then print("^6Debug^7: ^1Error^7 - ^2Tried to give ^7'^3"..item.."^7'^2 but it doesn't exist") return end
+    if not Items[item] then print("^6Bridge^7: ^1Error^7 - ^2Tried to give ^7'^3"..item.."^7'^2 but it doesn't exist") return end
     if src then
         TriggerEvent(getScript()..":server:toggleItem", true, item, amount, src, info)
     else
@@ -96,7 +96,7 @@ end
 --- removeItem("health_potion", 1)
 --- ```
 function removeItem(item, amount, src, slot)
-    if not Items[item] then print("^6Debug^7: ^1Error^7 - ^2Tried to remove ^7'^3"..item.."^7'^2 but it doesn't exist") return end
+    if not Items[item] then print("^6Bridge^7: ^1Error^7 - ^2Tried to remove ^7'^3"..item.."^7'^2 but it doesn't exist") return end
     if src then
         TriggerEvent(getScript()..":server:toggleItem", false, item, amount, src, nil, slot)
     else
@@ -120,7 +120,7 @@ end
 --- TriggerServerEvent("script:server:toggleItem", true, "health_potion", 1)
 --- ```
 RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount, newsrc, info, slot)
-    if not Items[item] then print("^6Debug^7: ^1Error^7 - ^2Tried to "..(tostring(give) == "true" and "add" or "remove").." ^7'^3"..item.."^7'^2 but it doesn't exist") return end
+    if not Items[item] then print("^6Bridge^7: ^1Error^7 - ^2Tried to "..(tostring(give) == "true" and "add" or "remove").." ^7'^3"..item.."^7'^2 but it doesn't exist") return end
     local src = newsrc or source
     local addremove = (tostring(give) == "true" and "addItem" or "removeItem")
     debugPrint("^6Bridge^7: ^3toggleItem ^2triggered^7: ^6"..addremove.."^7 - '"..tostring(item).."' x"..(tostring(amount) or "1"))
