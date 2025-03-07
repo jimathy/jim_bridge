@@ -60,6 +60,7 @@ for _, v in pairs({ -- This is a specific load order
     'playerfunctions.lua',
     'metaHandlers.lua',
     'jobfunctions.lua',
+    'banking.lua',
 
     -- Interactions
     'targets.lua',
