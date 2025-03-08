@@ -1,3 +1,21 @@
+--- Creates and displays a timer HUD on the screen.
+--- Draws a title (if provided) and a series of timer bars from the supplied data.
+---
+--- @param title string|nil Optional title to display at the top of the HUD.
+--- @param data table A table of timer bar entries. Each entry should include:
+---     - stat (string): The statistic name.
+---     - value (string): The value to display.
+---     - multi (number|nil): Optional, indicates multiple checkpoints (e.g., progress levels).
+--- @param alpha number|nil Optional alpha value (transparency) for the HUD; defaults to 255.
+---
+--- @usage
+--- ```lua
+--- createTimerHud("Timer", {
+---     { stat = "Health", value = "85%" },
+---     { stat = "Armor", value = "50%", multi = 2 },
+---     { stat = "Stamina", value = "100%" },
+--- }, 255)
+--- ```
 function createTimerHud(title, data, alpha)
     loadTextureDict("timerbars")
 

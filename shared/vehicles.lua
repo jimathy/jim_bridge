@@ -1,22 +1,29 @@
--- Get Vehicle Info --
-local lastCar = nil
-local carInfo = {}
+--[[
+    Vehicle Info & Properties Module
+    ----------------------------------
+    This module provides utilities for:
+      - Retrieving vehicle information from a Vehicles table.
+      - Getting and setting vehicle properties using the active framework.
+      - Comparing vehicle property differences.
+      - Synchronizing vehicle properties across clients.
+      - Managing network control of vehicles.
+      - Finding the closest vehicle to a given position.
+]]
 
---- Searches the 'Vehicles' table for a specific vehicle's 'name', 'price', and 'class'.
+-- Cached vehicle info to avoid unnecessary re-searches.
+local lastCar, carInfo = nil, {}
+
+--- Searches the 'Vehicles' table for a specific vehicle's details.
+--- If the vehicle differs from the last searched, it retrieves its model and updates the carInfo table.
+--- The table includes the vehicle's name, price, and class information.
 ---
---- This function checks if the provided vehicle is different from the last searched vehicle.
---- If it's a new vehicle, it retrieves its model and searches the 'Vehicles' table for matching entries.
---- It populates the `carInfo` table with the vehicle's name, price, and class.
---- If the vehicle is not found in the table, it defaults to using the vehicle's display name and sets the price to 0.
+--- @param vehicle number The entity ID of the vehicle to search for.
+--- @return table|nil table A table containing the vehicle's details or nil if the vehicle is invalid.
 ---
----@param vehicle number The entity ID of the vehicle to search for.
----
----@return table|nil table containing the vehicle's `name`, `price`, and `class`, or `nil` if the vehicle is invalid.
----
----@usage
+--- @usage
 --- ```lua
 --- local info = searchCar(vehicleEntity)
---- print(info.name, info.price, info.class)
+--- print(info.name, info.price, info.class.name, info.class.index)
 --- ```
 function searchCar(vehicle)
     if lastCar ~= vehicle then -- If same car, use previous info
@@ -78,27 +85,26 @@ function searchCar(vehicle)
     end
 end
 
--- Vehicle Properties --
+-------------------------------------------------------------
+-- Vehicle Properties Functions
+-------------------------------------------------------------
 
---- Retrieves the properties of a given vehicle.
----
---- This function fetches the vehicle's properties based on the active framework (QBCore or ox).
---- It utilizes the framework's native functions or events to obtain the vehicle's mod list and other details.
+--- Retrieves the properties of a given vehicle using the active framework.
 ---
 --- @param vehicle number The entity ID of the vehicle.
----
---- @return table|nil table containing the vehicle's properties, or `nil` if the vehicle is invalid or the framework is not detected.
+--- @return table|nil table A table containing the vehicle's properties or nil if invalid.
 ---
 --- @usage
 --- ```lua
 --- local props = getVehicleProperties(vehicleEntity)
 --- if props then
----     -- Manipulate vehicle properties
+---     -- Use vehicle properties
 --- end
 --- ```
 function getVehicleProperties(vehicle)
+    if not vehicle then return nil end
+
     local properties = {}
-    if vehicle == nil then return nil end
     if isStarted(QBExport) and not isStarted(QBXExport) then
         properties = Core.Functions.GetVehicleProperties(vehicle)
         debugPrint("^6Bridge^7: ^2Getting Vehicle Properties ^7[^6"..QBExport.."^7] - [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7/^3"..properties.model.."^7] - [^3"..properties.plate.."^7]")
@@ -109,25 +115,22 @@ function getVehicleProperties(vehicle)
     return properties
 end
 
---- Sets the properties of a given vehicle.
+--- Sets the properties of a given vehicle if changes are detected.
+--- It compares the current properties with the new ones and applies the update using the active framework.
 ---
---- This function applies the provided properties to the vehicle using the active framework's functions or events.
---- It first retrieves the current properties and checks for differences before applying the new ones.
+--- @param vehicle number The entity ID of the vehicle.
+--- @param props table The new properties to apply.
 ---
----@param vehicle number The entity ID of the vehicle.
----@param props table The properties to set on the vehicle.
----
----@usage
+--- @usage
 --- ```lua
 --- setVehicleProperties(vehicleEntity, newProperties)
 --- ```
 function setVehicleProperties(vehicle, props)
-    local oldProps = getVehicleProperties(vehicle)
     if checkDifferences(vehicle, props) then
-        --if debugMode then debugDifferences(vehicle, props) end
         if not DoesEntityExist(vehicle) then
-            print(("Unable to set vehicle properties for '%s' (entity does not exist)"):format(vehicle))
+            print("Unable to set vehicle properties for '"..vehicle.."' (entity does not exist)")
         end
+
         if isStarted(QBExport) and not isStarted(QBXExport) then
             Core.Functions.SetVehicleProperties(vehicle, props)
             debugPrint("^6Bridge^7: ^2Setting Vehicle Properties ^7[^6"..QBExport.."^7] - [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7/^3"..props.model.."^7] - [^3"..props.plate.."^7]")
@@ -140,16 +143,13 @@ function setVehicleProperties(vehicle, props)
 end
 
 --- Checks for differences between the current and new vehicle properties.
+--- Compares properties using JSON encoding for deep comparison and logs differences.
 ---
---- This function compares each property of the vehicle to determine if any changes have been made.
---- It logs the differences for debugging purposes.
+--- @param vehicle number The entity ID of the vehicle.
+--- @param newProps table The new properties to compare.
+--- @return boolean `true` if differences are found; `false` otherwise.
 ---
----@param vehicle number The entity ID of the vehicle.
----@param newProps table The new properties to compare against the current ones.
----
----@return boolean `true` if differences are found, `false` otherwise.
----
----@usage
+--- @usage
 --- ```lua
 --- if checkDifferences(vehicleEntity, newProperties) then
 ---     setVehicleProperties(vehicleEntity, newProperties)
@@ -158,43 +158,41 @@ end
 function checkDifferences(vehicle, newProps)
     local oldProps = getVehicleProperties(vehicle)
     debugPrint("^6Bridge^7: ^2Finding differences in ^3Vehicle Properties^7")
-    local allow = false
+    local differencesFound = false
+
     for k in pairs(oldProps) do
         if json.encode(oldProps[k]) ~= json.encode(newProps[k]) then
-            allow = true
+            differencesFound = true
             debugPrint("^6Bridge^7: ^5Old ^7[^3"..k.."^7] - "..json.encode(oldProps[k], { indent = true }))
             debugPrint("^6Bridge^7: ^5New ^7[^3"..k.."^7] - "..json.encode(newProps[k], { indent = true }))
         end
     end
-    return allow
+
+    return differencesFound
 end
 
---- Handles setting vehicle properties received from the server.
+-------------------------------------------------------------
+-- Vehicle Properties Synchronization
+-------------------------------------------------------------
+
+--- Event handler for setting vehicle properties received from the server.
+--- Listens for the `ox:setVehicleProperties` event and applies the properties.
 ---
---- This event listens for the `ox:setVehicleProperties` event and applies the received properties to the vehicle.
----
----@event
----@param netId number The network ID of the vehicle.
----@param props table The properties to set on the vehicle.
----
----@usage
---- -- Server-side: TriggerClientEvent(getScript()..":ox:setVehicleProperties", netId, properties)
+--- @event `getScript()..ox:setVehicleProperties`
+--- @param netId number The network ID of the vehicle.
+--- @param props table The new vehicle properties.
 RegisterNetEvent(getScript()..":ox:setVehicleProperties", function(netId, props)
     local vehicle = NetworkGetEntityFromNetworkId(netId)
     local value = props
     Entity(vehicle).state[getScript()..':setVehicleProperties'] = value
 end)
 
---- Handles state bag changes for setting vehicle properties.
+--- Handles state bag changes for updating vehicle properties.
+--- When the state bag changes, the new properties are applied to the vehicle.
 ---
---- This handler listens for changes to the vehicle's state bag and applies the new properties accordingly.
----
----@param bagName string The name of the state bag.
----@param key string The key that changed.
----@param value table The new value of the state.
----
----@usage
---- -- Automatically handled when the state bag changes
+--- @param bagName string The state bag's name.
+--- @param key string The key that changed.
+--- @param value table The new state value.
 AddStateBagChangeHandler(getScript()..':setVehicleProperties', '', function(bagName, _, value)
     if not value or not GetEntityFromStateBagName then return end
     local entity = GetEntityFromStateBagName(bagName)
@@ -208,8 +206,10 @@ AddStateBagChangeHandler(getScript()..':setVehicleProperties', '', function(bagN
     end
 end)
 
---- Pushes a vehicle to other players by syncing it.
----
+-------------------------------------------------------------
+-- Vehicle Control Functions
+-------------------------------------------------------------
+
 --- This function ensures that the vehicle is controlled by the current player and is set as a mission entity.
 --- It requests network control and sets the vehicle accordingly to synchronize changes across clients.
 ---
@@ -222,6 +222,7 @@ end)
 function pushVehicle(entity)
     SetVehicleModKit(entity, 0)
     if entity ~= 0 and DoesEntityExist(entity) then
+        -- Request network control if not already controlled.
         if not NetworkHasControlOfEntity(entity) then
             debugPrint("^6Bridge^7: ^3pushVehicle^7: ^2Requesting network control of vehicle^7.")
             NetworkRequestControlOfEntity(entity)
@@ -231,11 +232,13 @@ function pushVehicle(entity)
                 timeout = timeout - 100
             end
             if NetworkHasControlOfEntity(entity) then
-                debugPrint("^6Bridge^7: ^3pushVehicle^7: ^2Network has control of entity^7.")
+                debugPrint("^6Bridge^7: ^3pushVehicle^7: ^2Network now has control of the entity^7.")
             end
         end
+
+        -- Set as mission entity if not already set.
         if not IsEntityAMissionEntity(entity) then
-            debugPrint("^6Bridge^7: ^3pushVehicle^7: ^2Setting vehicle as a ^7'^2mission^7' &2entity^7.")
+            debugPrint("^6Bridge^7: ^3pushVehicle^7: ^2Setting vehicle as a ^7'^2mission^7' ^2entity^7.")
             SetEntityAsMissionEntity(entity, true, true)
             local timeout = 2000
             while timeout > 0 and not IsEntityAMissionEntity(entity) do
@@ -249,41 +252,47 @@ function pushVehicle(entity)
     end
 end
 
+--- Finds the closest vehicle to the specified coordinates.
+--- The function uses different APIs based on whether a source is provided.
+---
+--- @param coords table|vector3 (Optional) The reference coordinates. If nil, uses the player's position.
+--- @param src boolean (Optional) If true, uses GetPlayerPed(source) and GetAllVehicles.
+--- @return number|number closestVehicle|closestDistance The closest vehicle entity and its distance.
+---
+--- @usage
+--- ```lua
+--- local closestVeh, distance = getClosestVehicle({ x = 100, y = 200, z = 30 }, true)
+--- ```
 function getClosestVehicle(coords, src)
-    if src then
-        local ped = GetPlayerPed(source)
-        local vehicles = GetAllVehicles()
-        local closestDistance, closestVehicle = -1, -1
-        if coords then coords = type(coords) == 'table' and vec3(coords.x, coords.y, coords.z) or coords end
-        if not coords then coords = GetEntityCoords(ped) end
-        for i = 1, #vehicles do
-            local vehicleCoords = GetEntityCoords(vehicles[i])
-            local distance = #(vehicleCoords - coords)
-            if closestDistance == -1 or closestDistance > distance then
-                closestVehicle = vehicles[i]
-                closestDistance = distance
-            end
-        end
-        return closestVehicle, closestDistance
-    else
-        local ped = PlayerPedId()
-        local vehicles = GetGamePool('CVehicle')
-        local closestDistance = -1
-        local closestVehicle = -1
-        if coords then
-            coords = type(coords) == 'table' and vec3(coords.x, coords.y, coords.z) or coords
-        else
-            coords = GetEntityCoords(ped)
-        end
-        for i = 1, #vehicles, 1 do
-            local vehicleCoords = GetEntityCoords(vehicles[i])
-            local distance = #(vehicleCoords - coords)
+    local ped, vehicles, closestDistance, closestVehicle
 
-            if closestDistance == -1 or closestDistance > distance then
-                closestVehicle = vehicles[i]
-                closestDistance = distance
-            end
-        end
-        return closestVehicle, closestDistance
+    if src then
+        ped = GetPlayerPed(src)
+        vehicles = GetAllVehicles()
+    else
+        ped = PlayerPedId()
+        vehicles = GetGamePool('CVehicle')
     end
+
+    local closestDistance, closestVehicle = -1, -1
+
+    if coords then
+        if type(coords) == 'table' then
+            coords = vec3(coords.x, coords.y, coords.z)
+        end
+    else
+        coords = GetEntityCoords(ped)
+    end
+
+    for i = 1, #vehicles, 1 do
+        local vehicleCoords = GetEntityCoords(vehicles[i])
+        local distance = #(vehicleCoords - coords)
+
+        if closestDistance == -1 or distance < closestDistance then
+            closestDistance = distance
+            closestVehicle = vehicles[i]
+        end
+    end
+
+    return closestVehicle, closestDistance
 end

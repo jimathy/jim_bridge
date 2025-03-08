@@ -1,40 +1,43 @@
+-------------------------------------------------------------
+-- Debug Text Display Functionality
+-------------------------------------------------------------
 
---- Displays debug information on the player's screen.
+--- Draws debug text on the screen if debugMode is enabled.
 ---
---- This function renders a semi-transparent box with multiple lines of text for debugging purposes.
---- It is controlled by the `debugMode` flag and can be positioned dynamically on the screen.
+--- Calculates a background rectangle based on the number of text lines and renders each line on-screen.
 ---
---- @param textTable table A table containing strings to display.
---- @param loc vector2|nil Optional. The screen position to display the debug box. Defaults to `vec2(0.05, 0.65)`.
+--- @param textTable table An array of strings to display.
+--- @param loc vector2 (Optional) Top-left coordinate for the text box (default: vec2(0.05, 0.65)).
 ---
 --- @usage
 --- ```lua
---- debugScaleForm({
----     "Player Position: X=123.45 Y=678.90 Z=12.34",
----     "Current Action: Running",
---- })
+---CreateThread(function()
+---     while true do
+---         debugScaleForm({
+---             "Line 1: Debug info",
+---             "Line 2: More info"
+---         })
+---         Wait(0)
+---     end
+---end)
 --- ```
 function debugScaleForm(textTable, loc)
     if debugMode then
-        -- Define the display position (top left corner)
-        local loc = loc or vec2(0.05, 0.65)
+        loc = loc or vec2(0.05, 0.65)
 
-        -- Calculate dynamic height based on the number of lines in the textTable
-        local lineHeight = 0.025  -- Height of each line of text
-        local totalHeight = #textTable * lineHeight  -- Dynamic height based on number of lines
-        local boxPadding = 0.01  -- Padding to add around the text inside the box
-        local size = vec2(0.18, totalHeight + boxPadding * 2)  -- Width remains fixed, height is dynamic
+        local lineHeight = 0.025        -- Height per line.
+        local totalHeight = #textTable * lineHeight
+        local boxPadding = 0.01         -- Padding around the text.
+        local size = vec2(0.18, totalHeight + boxPadding * 2)
 
+        -- Draw background rectangle.
         DrawRect(loc.x + size.x / 2, loc.y + size.y / 2, size.x, size.y, 0, 0, 0, 255)
 
+        -- Render each line of text.
         for i = 1, #textTable do
-            local textLine = textTable[i]
-
             SetTextScale(0.30, 0.30)
-
             BeginTextCommandDisplayText("STRING")
-            AddTextComponentSubstringKeyboardDisplay(textLine)
-
+            AddTextComponentSubstringKeyboardDisplay(textTable[i])
             EndTextCommandDisplayText(loc.x + 0.005, loc.y + (i - 1) * lineHeight + 0.01)
         end
     end

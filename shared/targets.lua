@@ -1,9 +1,31 @@
--- This is for experimental targets based on GTA in-world text prompts --
-local TextTargets = {}
+--[[
+    Experimental GTA In-World Text Prompts Targets Module
+    -------------------------------------------------------
+    This module handles the creation, removal, and management of in-world text targets
+    for interacting with entities and zones using GTA text prompts. It supports multiple
+    targeting systems: OX Target, QB Target, or a fallback using DrawText3D.
+
+    Available functionalities:
+      • createEntityTarget   - Creates a target for a specific entity.
+      • createBoxTarget      - Creates a box-shaped zone target.
+      • createCircleTarget   - Creates a circular zone target.
+      • createModelTarget    - Creates a target for specified models.
+      • removeEntityTarget   - Removes a target from an entity.
+      • removeZoneTarget     - Removes a zone target.
+
+    Fallback: If no targeting system is detected (or if disabled via Config.System.DontUseTarget),
+              the module uses DrawText3D prompts. This is experimental and may not work as expected.
+]]
+
+-------------------------------------------------------------
+-- Utility Data & Tables
+-------------------------------------------------------------
+
+-- Mapping of key codes to human-readable key names.
 local Keys = {
     [322] = "ESC", [288] = "F1", [289] = "F2", [170] = "F3", [166] = "F5",
     [167] = "F6", [168] = "F7", [169] = "F8", [56] = "F9", [57] = "F10",
-    [243] = "~", [157] = "1", [158] = "2", [160] = "3", [164] = "4",  [165] = "5",
+    [243] = "~", [157] = "1", [158] = "2", [160] = "3", [164] = "4", [165] = "5",
     [159] = "6", [161] = "7", [162] = "8", [163] = "9", [84] = "-", [83] = "=",
     [177] = "BACKSPACE", [37] = "TAB",
     [44] = "Q", [32] = "W", [38] = "E", [45] = "R", [245] = "T", [246] = "Y",
@@ -15,49 +37,63 @@ local Keys = {
     [244] = "M", [82] = ",", [81] = "."
 }
 
--- Target Creation --
--- Target Entities, this is more based on qb-target's style of target creation, and translates those into ox or qb-target code --
-local targetEntities = {}
+-- Tables for storing created targets for the fallback system and zone management.
+local TextTargets    = {}   -- For fallback DrawText3D targets.
+local targetEntities = {}   -- For entity targets.
+local boxTargets     = {}   -- For box-shaped zone targets.
+local circleTargets  = {}   -- For circular zone targets.
+
+-------------------------------------------------------------
+-- Entity Target Creation
+-------------------------------------------------------------
 
 --- Creates a target for an entity with specified options and interaction distance.
+--- Supports different targeting systems (OX Target, QB Target, or custom DrawText3D)
+--- based on the server configuration.
 ---
---- This function supports different targeting systems (OX Target, QB Target, or custom DrawText3D targets)
---- based on the server configuration. It translates qb-target style options into the appropriate format
---- for the detected targeting system.
+--- @param entity number The entity ID for which the target is created.
+--- @param opts table Array of option tables. Each option should include:
+---        - icon (string): The icon to display.
+---        - label (string): The text label for the option.
+---        - item (string|nil): (Optional) An associated item.
+---        - job (string|nil): (Optional) The job required to interact.
+---        - gang (string|nil): (Optional) The gang required to interact.
+---        - action (function|nil): (Optional) The function executed on selection.
+--- @param dist number The interaction distance for the target.
 ---
----@param entity number The entity ID to create a target for.
----@param opts table A table of option configurations for the target.
---- - **icon** (`string`): The icon to display for the option.
---- - **label** (`string`): The label text for the option.
---- - **item** (`string|nil`): (Optional) The item associated with the option.
---- - **job** (`string|nil`): (Optional) The job required to interact with the option.
---- - **gang** (`string|nil`): (Optional) The gang required to interact with the option.
---- - **action** (`function|nil`): (Optional) The function to execute when the option is selected.
----@param dist number The interaction distance for the target.
----
----@usage
+--- @usage
 --- ```lua
---- createEntityTarget(entityId, {
----     { icon = "fas fa-car", label = "Open Vehicle", action = openVehicle },
----     { icon = "fas fa-lock", label = "Lock Vehicle", action = lockVehicle }
---- }, 2.5)
+---createEntityTarget(entityId, {
+---   {
+---       action = function()
+---           openStorage()
+---       end,
+---       icon = "fas fa-box",
+---       job = "police",
+---       label = "Open Storage",
+---   },
+---}, 2.0)
 --- ```
 function createEntityTarget(entity, opts, dist)
+    -- Store the target entity for later cleanup.
     targetEntities[#targetEntities + 1] = entity
     local entityCoords = GetEntityCoords(entity)
+
+    -- Fallback: Use DrawText3D if targeting systems are disabled or unavailable.
     if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Entity^2 target with ^6DrawText ^7"..entity)
+        debugPrint("^6Bridge^7: ^2Creating new ^3Entity^2 target with DrawText for entity ^7"..entity)
         local existingTarget = nil
-        for key, target in pairs(TextTargets) do
-            if #(target.coords - entityCoords) < 0.01 then -- Adjust the threshold for coordinate matching
+        -- Check if a target already exists at similar coordinates.
+        for _, target in pairs(TextTargets) do
+            if #(target.coords - entityCoords) < 0.01 then
                 existingTarget = target
                 break
             end
         end
 
+        local keyTable = { 38, 29, 303, 45, 46, 47, 48 }  -- Predefined key codes for options.
         if existingTarget then
-            -- Combine options
-            local keyTable = { 38, 29, 303, 45, 46, 47, 48 } -- Extend key table as needed
+            -- Append new options to the existing target.
             for i = 1, #opts do
                 local key = keyTable[#existingTarget.options + i]
                 opts[i].key = key
@@ -65,9 +101,8 @@ function createEntityTarget(entity, opts, dist)
                 existingTarget.options[#existingTarget.options + 1] = opts[i]
             end
         else
-            -- Create new target
+            -- Create a new target entry.
             local tempText = {}
-            local keyTable = { 38, 29, 303, 45, 46, 47, 48 }
             for i = 1, #opts do
                 opts[i].key = keyTable[i]
                 tempText[#tempText + 1] = " ~b~[~w~"..Keys[opts[i].key].."~b~] ~w~"..opts[i].label
@@ -75,7 +110,7 @@ function createEntityTarget(entity, opts, dist)
             TextTargets[entity] = { coords = vec3(entityCoords.x, entityCoords.y, entityCoords.z), buttontext = tempText, options = opts, dist = dist }
         end
     elseif isStarted(OXTargetExport) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Entity^2 target with ^6"..OXTargetExport.." ^7"..entity)
+        debugPrint("^6Bridge^7: ^2Creating new ^3Entity ^2target with ^6"..OXTargetExport.." ^2for entity ^7"..entity)
         local options = {}
         for i = 1, #opts do
             options[i] = {
@@ -91,84 +126,95 @@ function createEntityTarget(entity, opts, dist)
         end
         exports[OXTargetExport]:addLocalEntity(entity, options)
     elseif isStarted(QBTargetExport) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Entity^2 target with ^6"..QBTargetExport.." ^7"..entity)
+        debugPrint("^6Bridge^7: ^2Creating new ^3Entity ^2target with ^6"..QBTargetExport.." ^2for entity ^7"..entity)
         local options = { options = opts, distance = dist }
         exports[QBTargetExport]:AddTargetEntity(entity, options)
     end
 end
 
-local boxTargets = {}
+-------------------------------------------------------------
+-- Box Zone Target Creation
+-------------------------------------------------------------
 
 --- Creates a box-shaped target zone with specified options and interaction distance.
----
---- This function supports different targeting systems (OX Target, QB Target, or custom DrawText3D targets)
---- based on the server configuration. It translates qb-target style options into the appropriate format
---- for the detected targeting system.
----
+--- Supports different targeting systems based on the server configuration.
 ---@param data table A table containing the box zone configuration.
---- - **name** (`string`): The name identifier for the zone.
---- - **coords** (`vector3`): The center coordinates of the box.
---- - **width** (`number`): The width of the box.
---- - **height** (`number`): The height of the box.
---- - **options** (`table`): A table with additional options:
----   - **heading** (`number`): The rotation angle of the box.
----   - **debugPoly** (`boolean`): Whether to enable debug mode for the zone.
+---     - name (`string`): The name identifier for the zone.
+---     - coords (`vector3`): The center coordinates of the box.
+---     - width (`number`): The width of the box.
+---     - height (`number`): The height of the box.
+---     - options (`table`): A table with additional options:
+---     - heading (`number`): The rotation angle of the box.
+---     - debugPoly (`boolean`): Whether to enable debug mode for the zone.
 ---
 ---@param opts table A table of option configurations for the target.
---- - **icon** (`string`): The icon to display for the option.
---- - **label** (`string`): The label text for the option.
---- - **item** (`string|nil`): (Optional) The item associated with the option.
---- - **job** (`string|nil`): (Optional) The job required to interact with the option.
---- - **gang** (`string|nil`): (Optional) The gang required to interact with the option.
---- - **onSelect** (`function|nil`): (Optional) The function to execute when the option is selected.
+---     - icon (`string`): The icon to display for the option.
+---     - label (`string`): The label text for the option.
+---     - item (`string|nil`): (Optional) The item associated with the option.
+---     - job (`string|nil`): (Optional) The job required to interact with the option.
+---     - gang (`string|nil`): (Optional) The gang required to interact with the option.
+---     - onSelect (`function|nil`): (Optional) The function to execute when the option is selected.
 ---@param dist number The interaction distance for the target.
 ---
 ---@return string|table name identifier or target object of the created zone.
 ---
 ---@usage
---- ```lua
---- createBoxTarget({
----     name = 'storageBox',
----     coords = vector3(100.0, 200.0, 30.0),
----     width = 2.0,
----     height = 2.0,
----     options = { heading = 0, debugPoly = false }
---- }, {
----     { icon = "fas fa-box", label = "Open Storage", action = openStorage }
---- }, 1.5)
---- ```
+---```lua
+---createBoxTarget(
+---   {
+---       'storageBox',
+---       vector3(100.0, 200.0, 30.0),
+---       2.0,
+---       2.0,
+---       {
+---           name = 'storageBox',
+---           heading = 100.0,
+---           debugPoly = true,
+---           minZ = 27.0
+---           maxZ = 32.0,
+---       },
+---   },
+---{
+---   {
+---       action = function()
+---           openStorage()
+---       end,
+---       icon = "fas fa-box",
+---       job = "police",
+---       label = "Open Storage",
+---   },
+---}, 2.0)
+---```
 function createBoxTarget(data, opts, dist)
     if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Box^2 target with ^6DrawText ^7"..data[1])
+        debugPrint("^6Bridge^7: ^2Creating new ^3Box^2 target with ^6DrawText ^2 for zone ^7"..data[1])
         local existingTarget = nil
-        for key, target in pairs(TextTargets) do
-            if #(target.coords - data[2]) < 0.01 then -- Adjust the threshold as needed for coordinate precision
+        for _, target in pairs(TextTargets) do
+            if #(target.coords - data[2]) < 0.01 then
                 existingTarget = target
                 break
             end
         end
-        local keyTable = { 38, 29, 303, 45, 46, 47, 48 }
 
+        local keyTable = { 38, 29, 303, 45, 46, 47, 48 }
         if existingTarget then
-            -- Combine options
             for i = 1, #opts do
                 local key = keyTable[#existingTarget.options + i]
                 opts[i].key = key
-                existingTarget.buttontext[#existingTarget.buttontext+1] = " ~b~[~w~"..Keys[key].."~b~] ~w~"..opts[i].label
-                existingTarget.options[#existingTarget.options+1] = opts[i]
+                existingTarget.buttontext[#existingTarget.buttontext + 1] = " ~b~[~w~"..Keys[key].."~b~] ~w~"..opts[i].label
+                existingTarget.options[#existingTarget.options + 1] = opts[i]
             end
         else
-            -- Create new target
             local tempText = {}
             for i = 1, #opts do
                 opts[i].key = keyTable[i]
-                tempText[#tempText+1] = " ~b~[~w~"..Keys[opts[i].key].."~b~] ~w~"..opts[i].label
+                tempText[#tempText + 1] = " ~b~[~w~"..Keys[opts[i].key].."~b~] ~w~"..opts[i].label
             end
-            TextTargets[data[1]] = { coords = data[2], buttontext = tempText, options = opts, dist = 1.5 }
+            TextTargets[data[1]] = { coords = data[2], buttontext = tempText, options = opts, dist = dist }
         end
         return data[1]
     elseif isStarted(OXTargetExport) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Box^2 target with ^6"..OXTargetExport.." ^7"..data[1])
+        debugPrint("^6Bridge^7: ^2Creating new ^3Box^2 target with ^6"..OXTargetExport.." ^2for zone ^7"..data[1])
         local options = {}
         for i = 1, #opts do
             options[i] = {
@@ -193,39 +239,38 @@ function createBoxTarget(data, opts, dist)
             debug = data[5].debugPoly,
             options = options
         })
-        boxTargets[#boxTargets+1] = target
+        boxTargets[#boxTargets + 1] = target
         return target
     elseif isStarted(QBTargetExport) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Box^2 target with ^6"..QBTargetExport.." ^7"..data[1])
+        debugPrint("^6Bridge^7: ^2Creating new ^3Box^2 target with ^6"..QBTargetExport.." ^2for zone ^7"..data[1])
         local options = { options = opts, distance = dist }
         local target = exports[QBTargetExport]:AddBoxZone(data[1], data[2], data[3], data[4], data[5], options)
-        boxTargets[#boxTargets+1] = target
+        boxTargets[#boxTargets + 1] = target
         return data[1]
     end
 end
 
-local circleTargets = {}
+-------------------------------------------------------------
+-- Circle Zone Target Creation
+-------------------------------------------------------------
 
 --- Creates a circular target zone with specified options and interaction distance.
----
---- This function supports different targeting systems (OX Target, QB Target, or custom DrawText3D targets)
---- based on the server configuration. It translates qb-target style options into the appropriate format
---- for the detected targeting system.
+--- Supports different targeting systems based on server configuration.
 ---
 ---@param data table A table containing the circle zone configuration.
---- - **name** (`string`): The name identifier for the zone.
---- - **coords** (`vector3`): The center coordinates of the circle.
---- - **radius** (`number`): The radius of the circle.
---- - **options** (`table`): A table with additional options:
----   - **debugPoly** (`boolean`): Whether to enable debug mode for the zone.
+---     - name (`string`): The name identifier for the zone.
+---     - coords (`vector3`): The center coordinates of the circle.
+---     - radius (`number`): The radius of the circle.
+---     - options (`table`): A table with additional options:
+---     - debugPoly (`boolean`): Whether to enable debug mode for the zone.
 ---
 ---@param opts table A table of option configurations for the target.
---- - **icon** (`string`): The icon to display for the option.
---- - **label** (`string`): The label text for the option.
---- - **item** (`string|nil`): (Optional) The item associated with the option.
---- - **job** (`string|nil`): (Optional) The job required to interact with the option.
---- - **gang** (`string|nil`): (Optional) The gang required to interact with the option.
---- - **onSelect** (`function|nil`): (Optional) The function to execute when the option is selected.
+---     - icon (`string`): The icon to display for the option.
+---     - label (`string`): The label text for the option.
+---     - item (`string|nil`): (Optional) The item associated with the option.
+---     - job (`string|nil`): (Optional) The job required to interact with the option.
+---     - gang (`string|nil`): (Optional) The gang required to interact with the option.
+---     - onSelect (`function|nil`): (Optional) The function to execute when the option is selected.
 ---@param dist number The interaction distance for the target.
 ---
 ---@return string|table name identifier or target object of the created zone.
@@ -243,37 +288,34 @@ local circleTargets = {}
 --- ```
 function createCircleTarget(data, opts, dist)
     if Config.System.DontUseTarget then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Circle^2 target with ^6DrawText ^7"..data[1])
+        debugPrint("^6Bridge^7: ^2Creating new ^3Circle ^2target with ^6DrawText ^2for zone ^7"..data[1])
         local existingTarget = nil
-        for key, target in pairs(TextTargets) do
-            if #(target.coords - data[2]) < 0.01 then -- Adjust the threshold for precision
+        for _, target in pairs(TextTargets) do
+            if #(target.coords - data[2]) < 0.01 then
                 existingTarget = target
                 break
             end
         end
 
+        local keyTable = { 38, 29, 303, 45, 46, 47, 48 }
         if existingTarget then
-            -- Combine options
-            local keyTable = { 38, 29, 303, 45, 46, 47, 48 } -- Extend key table as needed
             for i = 1, #opts do
                 local key = keyTable[#existingTarget.options + i]
                 opts[i].key = key
-                existingTarget.buttontext[#existingTarget.buttontext+1] = " ~b~[~w~"..Keys[key].."~b~] ~w~"..opts[i].label
-                existingTarget.options[#existingTarget.options+1] = opts[i]
+                existingTarget.buttontext[#existingTarget.buttontext + 1] = " ~b~[~w~"..Keys[key].."~b~] ~w~"..opts[i].label
+                existingTarget.options[#existingTarget.options + 1] = opts[i]
             end
         else
-            -- Create new target
             local tempText = {}
-            local keyTable = { 38, 29, 303, 45, 46, 47, 48 }
             for i = 1, #opts do
                 opts[i].key = keyTable[i]
-                tempText[#tempText+1] = " ~b~[~w~"..Keys[opts[i].key].."~b~] ~w~"..opts[i].label
+                tempText[#tempText + 1] = " ~b~[~w~"..Keys[opts[i].key].."~b~] ~w~"..opts[i].label
             end
             TextTargets[data[1]] = { coords = data[2], buttontext = tempText, options = opts, dist = dist }
         end
         return data[1]
     elseif isStarted(OXTargetExport) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Sphere^2 target with ^6"..OXTargetExport.." ^7"..data[1])
+        debugPrint("^6Bridge^7: ^2Creating new ^3Circle ^2target with ^6"..OXTargetExport.." ^2for zone ^7"..data[1])
         local options = {}
         for i = 1, #opts do
             options[i] = {
@@ -283,7 +325,7 @@ function createCircleTarget(data, opts, dist)
                 groups = opts[i].job or opts[i].gang,
                 onSelect = opts[i].onSelect or opts[i].action,
                 canInteract = function(_, distance)
-                    return distance < dist and true or false
+                    return distance < dist
                 end
             }
         end
@@ -293,45 +335,46 @@ function createCircleTarget(data, opts, dist)
             debug = data[4].debugPoly,
             options = options
         })
-        circleTargets[#circleTargets+1] = target
+        circleTargets[#circleTargets + 1] = target
         return target
     elseif isStarted(QBTargetExport) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Circle^2 target with ^6"..QBTargetExport.." ^7"..data[1])
+        debugPrint("^6Bridge^7: ^2Creating new ^3Circle ^2target with ^6"..QBTargetExport.." ^2for zone ^7"..data[1])
         local options = { options = opts, distance = dist }
         local target = exports[QBTargetExport]:AddCircleZone(data[1], data[2], data[3], data[4], options)
-        circleTargets[#circleTargets+1] = target
+        circleTargets[#circleTargets + 1] = target
         return data[1]
     end
 end
 
-local targetEntities = {}
+-------------------------------------------------------------
+-- Model Target Creation
+-------------------------------------------------------------
 
---- Creates a target for an entity with specified options and interaction distance.
+--- Creates a target for models with specified options and interaction distance.
+--- Supports different targeting systems (OX Target, QB Target) based on server configuration.
 ---
---- This function supports different targeting systems (OX Target, QB Target, or custom DrawText3D targets)
---- based on the server configuration. It translates qb-target style options into the appropriate format
---- for the detected targeting system.
+--- @param models table Array of model identifiers.
+--- @param opts table Array of option tables (same structure as in createEntityTarget).
+--- @param dist number The interaction distance for the target.
 ---
----@param entity number The entity ID to create a target for.
----@param opts table A table of option configurations for the target.
---- - **icon** (`string`): The icon to display for the option.
---- - **label** (`string`): The label text for the option.
---- - **item** (`string|nil`): (Optional) The item associated with the option.
---- - **job** (`string|nil`): (Optional) The job required to interact with the option.
---- - **gang** (`string|nil`): (Optional) The gang required to interact with the option.
---- - **action** (`function|nil`): (Optional) The function to execute when the option is selected.
----@param dist number The interaction distance for the target.
----
----@usage
+--- @usage
 --- ```lua
---- createEntityTarget(entityId, {
----     { icon = "fas fa-car", label = "Open Vehicle", action = openVehicle },
----     { icon = "fas fa-lock", label = "Lock Vehicle", action = lockVehicle }
---- }, 2.5)
---- ```
+---createModelTarget(
+---{ model1, model2 },
+---{
+---   {
+---       action = function()
+---           openStorage()
+---       end,
+---       icon = "fas fa-box",
+---       job = "police",
+---       label = "Open Storage",
+---   },
+---}, 2.0)
+---```
 function createModelTarget(models, opts, dist)
     if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
-        --
+        -- Fallback for model targets is not implemented.
     elseif isStarted(OXTargetExport) then
         debugPrint("^6Bridge^7: ^2Creating new ^3Model^2 target with ^6"..OXTargetExport)
         local options = {}
@@ -355,27 +398,31 @@ function createModelTarget(models, opts, dist)
     end
 end
 
+-------------------------------------------------------------
+-- Target Removal Functions
+-------------------------------------------------------------
 
-
--- Simple function to remove an entity target created within the script --
 --- Removes a previously created entity target.
----
---- This function removes the target associated with the specified entity based on the active targeting system.
 ---
 --- @param entity number The entity ID whose target should be removed.
 ---
 --- @usage
+--- ```lua
 --- removeEntityTarget(entityId)
+--- ```
 function removeEntityTarget(entity)
-    if isStarted(QBTargetExport) then exports[QBTargetExport]:RemoveTargetEntity(entity) end
-    if isStarted(OXTargetExport) then exports[OXTargetExport]:removeLocalEntity(entity, nil) end
-    if (Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport))) then TextTargets[entity] = nil end
+    if isStarted(QBTargetExport) then
+        exports[QBTargetExport]:RemoveTargetEntity(entity)
+    end
+    if isStarted(OXTargetExport) then
+        exports[OXTargetExport]:removeLocalEntity(entity, nil)
+    end
+    if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
+        TextTargets[entity] = nil
+    end
 end
 
--- Simple function to remove circle or box targets in the script --
 --- Removes a previously created zone target.
----
---- This function removes the target associated with the specified zone based on the active targeting system.
 ---
 --- @param target string|table The name identifier or target object of the zone to remove.
 ---
@@ -385,54 +432,60 @@ end
 --- removeZoneTarget(targetObject)
 --- ```
 function removeZoneTarget(target)
-    if isStarted(QBTargetExport) then exports[QBTargetExport]:RemoveZone(target) end
-    if isStarted(OXTargetExport) then exports[OXTargetExport]:removeZone(target, true) end
-    if (Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport))) then TextTargets[target] = nil end
+    if isStarted(QBTargetExport) then
+        exports[QBTargetExport]:RemoveZone(target)
+    end
+    if isStarted(OXTargetExport) then
+        exports[OXTargetExport]:removeZone(target, true)
+    end
+    if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
+        TextTargets[target] = nil
+    end
 end
 
--- If no target script is found, default to DrawText3D targets -- * experimental *
+-------------------------------------------------------------
+-- Fallback: DrawText3D Targets (Experimental)
+-------------------------------------------------------------
+
+-- If no targeting system is detected and this is a client script, use DrawText3D for targets.
 if (Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport))) and not isServer() then
     CreateThread(function()
         while true do
             local pedCoords = GetEntityCoords(PlayerPedId())
             local camCoords = GetGameplayCamCoord()
-            local camRotation = GetGameplayCamRot(2) -- Get camera rotation in degrees
-            local camForwardVector = RotationToDirection(camRotation) -- Convert rotation to direction vector
+            local camRotation = GetGameplayCamRot(2) -- Camera rotation (degrees)
+            local camForwardVector = RotationToDirection(camRotation) -- Convert rotation to direction
 
             local closestTarget = nil
             local closestDist = math.huge
 
-            for k, v in pairs(TextTargets) do
-                local targetCoords = v.coords
-                local dist = #(pedCoords - targetCoords)
-                local vecToTarget = targetCoords - camCoords
-
-                -- Normalize the vector to the target
+            -- Identify the closest target in front of the camera.
+            for _, target in pairs(TextTargets) do
+                local dist = #(pedCoords - target.coords)
+                local vecToTarget = target.coords - camCoords
                 local vecToTargetNormalized = normalizeVector(vecToTarget)
-
-                -- Dot product to check if facing the target
                 local dot = camForwardVector.x * vecToTargetNormalized.x + camForwardVector.y * vecToTargetNormalized.y + camForwardVector.z * vecToTargetNormalized.z
+                local isFacingTarget = dot > 0.5 -- Threshold for facing target.
 
-                local isFacingTarget = dot > 0.5 -- Adjust threshold as needed
-
-                if dist <= v.dist and isFacingTarget then
+                if dist <= target.dist and isFacingTarget then
                     if dist < closestDist then
                         closestDist = dist
-                        closestTarget = v
+                        closestTarget = target
                     end
                 end
             end
 
-            for k, v in pairs(TextTargets) do
-                local isClosest = (v == closestTarget)
-                if #(pedCoords - v.coords) <= v.dist then
-                    for i = 1, #v.options do
-                        if IsControlJustPressed(0, v.options[i].key) and isClosest then
-                            if v.options[i].onSelect then v.options[i].onSelect() end
-                            if v.options[i].action then v.options[i].action() end
+            -- Render the DrawText3D targets and listen for key presses.
+            for _, target in pairs(TextTargets) do
+                local isClosest = (target == closestTarget)
+                if #(pedCoords - target.coords) <= target.dist then
+                    for i = 1, #target.options do
+                        if IsControlJustPressed(0, target.options[i].key) and isClosest then
+                            if target.options[i].onSelect then target.options[i].onSelect() end
+                            if target.options[i].action then target.options[i].action() end
                         end
                     end
-                    DrawText3D(vec3(v.coords.x, v.coords.y, v.coords.z + 0.7), concatenateText(v.buttontext), isClosest)
+                    DrawText3D(vec3(target.coords.x, target.coords.y, target.coords.z + 0.7), concatenateText(target.buttontext), isClosest)
                 end
             end
             Wait(0)
@@ -440,18 +493,34 @@ if (Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStar
     end)
 end
 
--- If the current loaded script is stopped, automatically remove targets --
+-------------------------------------------------------------
+-- Cleanup on Resource Stop
+-------------------------------------------------------------
+
+-- When the current resource stops, remove all targets.
 onResourceStop(function()
+    -- Remove entity targets.
     for i = 1, #targetEntities do
-        if isStarted(OXTargetExport) then exports[OXTargetExport]:removeLocalEntity(targetEntities[i], nil)
-        elseif isStarted(QBTargetExport) then exports[QBTargetExport]:RemoveTargetEntity(targetEntities[i]) end
+        if isStarted(OXTargetExport) then
+            exports[OXTargetExport]:removeLocalEntity(targetEntities[i], nil)
+        elseif isStarted(QBTargetExport) then
+            exports[QBTargetExport]:RemoveTargetEntity(targetEntities[i])
+        end
     end
+    -- Remove box zone targets.
     for i = 1, #boxTargets do
-        if isStarted(OXTargetExport) then exports[OXTargetExport]:removeZone(boxTargets[i], true)
-        elseif isStarted(QBTargetExport) then exports[QBTargetExport]:RemoveZone(boxTargets[i].name) end
+        if isStarted(OXTargetExport) then
+            exports[OXTargetExport]:removeZone(boxTargets[i], true)
+        elseif isStarted(QBTargetExport) then
+            exports[QBTargetExport]:RemoveZone(boxTargets[i].name)
+        end
     end
+    -- Remove circle zone targets.
     for i = 1, #circleTargets do
-        if isStarted(OXTargetExport) then exports[OXTargetExport]:removeZone(circleTargets[i], true)
-        elseif isStarted(QBTargetExport) then exports[QBTargetExport]:RemoveZone(circleTargets[i].name) end
+        if isStarted(OXTargetExport) then
+            exports[OXTargetExport]:removeZone(circleTargets[i], true)
+        elseif isStarted(QBTargetExport) then
+            exports[QBTargetExport]:RemoveZone(circleTargets[i].name)
+        end
     end
 end, true)

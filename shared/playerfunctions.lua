@@ -1,67 +1,52 @@
---- Locks or unlocks the player's inventory.
----
---- This function freezes or unfreezes the player's position, sets the inventory busy state,
---- and toggles the ability to use the inventory and hotbar based on the `toggle` parameter.
----
---- @param toggle boolean `true` to lock the inventory, `false` to unlock.
----
---- @usage
---- ```lua
---- -- Lock the player's inventory
---- lockInv(true)
----
---- -- Unlock the player's inventory
---- lockInv(false)
---- ```
-function lockInv(toggle)
-    FreezeEntityPosition(PlayerPedId(), toggle)
-    LocalPlayer.state:set("inv_busy", toggle, true)
-    TriggerEvent('inventory:client:busy:status', toggle)
-    TriggerEvent('canUseInventoryAndHotbar:toggle', not toggle)
-end
+--[[
+    Player Utility & Server Event Handlers Module
+    ------------------------------------------------
+    This module provides utility functions for:
+      • Locking/unlocking the player's inventory.
+      • Instantly turning or gradually turning the player to face a target.
+      • Handling player needs (thirst and hunger) via server events.
+      • Charging/funding players (money removal/addition).
+      • Processing item consumption and applying effects.
+      • Checking player job/gang roles and retrieving player information.
+      • Getting active players near a coordinate.
+]]
 
---- Instantly turns an entity to face a specific location or another entity.
+-------------------------------------------------------------
+-- Player Movement
+-------------------------------------------------------------
+
+--- Instantly turns an entity to face a target (entity or coordinates) without animation.
 ---
---- This function calculates the heading from the first entity to the second entity or coordinates
---- and sets the entity's heading immediately without any animation.
----
---- @param ent number|nil The Ped entity to turn. Defaults to the player's Ped (`PlayerPedId()`).
---- @param ent2 number|vector3|nil The target entity or coordinates to face. If a vector, it uses the coordinates.
+--- @param ent number|nil The Ped to turn (defaults to player's Ped if nil).
+--- @param ent2 number|vector3|nil The target entity or coordinates to face.
 ---
 --- @usage
 --- ```lua
---- -- Make the player instantly face a specific location
 --- instantLookEnt(nil, vector3(200.0, 300.0, 40.0))
----
---- -- Make one entity face another entity
 --- instantLookEnt(ped1, ped2)
 --- ```
 function instantLookEnt(ent, ent2)
-    local ent = ent or PlayerPedId()
-    local p1 = GetEntityCoords(ent, true)
-    local p2 = type(ent2):find("vector") and ent2 or GetEntityCoords(ent2, true)
+    local ped = ent or PlayerPedId()
+    local p1 = GetEntityCoords(ped, true)
+    local p2 = type(ent2) == "vector3" and ent2 or GetEntityCoords(ent2, true)
 
     local dx = p2.x - p1.x
     local dy = p2.y - p1.y
-
     local heading = GetHeadingFromVector_2d(dx, dy)
+
     debugPrint("^6Bridge^7: ^1Forced ^2Turning Player to^7: '^6"..formatCoord(p2).."^7'")
-    SetEntityHeading(ent, heading)
+    SetEntityHeading(ped, heading)
 end
 
---- Makes the player Ped look towards a specific entity or coordinates with animation.
+--- Makes the player look towards a specific target with an animated turn.
 ---
---- This function checks if the player is already facing the target. If not, it triggers a turning animation
---- to face the specified entity or coordinates.
+--- If the player is not already facing the target (entity or coordinates), a turning animation is triggered.
 ---
---- @param entity number|vector3|vector4|nil The target entity or coordinates to look at.
+--- @param entity number|vector3|vector4|nil The target to look at.
 ---
 --- @usage
 --- ```lua
---- -- Make the player look at a specific location
 --- lookEnt(vector3(200.0, 300.0, 40.0))
----
---- -- Make the player look at another entity
 --- lookEnt(pedEntity)
 --- ```
 function lookEnt(entity)
@@ -86,15 +71,12 @@ function lookEnt(entity)
     end
 end
 
---- Server event handler for handling urinal usage.
----
---- This event decreases the player's thirst based on a random amount and updates their thirst level.
----
---- @usage
---- ```lua
---- -- Triggered when a player uses a urinal
---- TriggerServerEvent(getScript()..":server:Urinal")
---- ```
+-------------------------------------------------------------
+-- Server Event Handlers for Needs
+-------------------------------------------------------------
+
+--- Server event handler for urinal usage.
+--- Decreases player's thirst by a random amount.
 RegisterNetEvent(getScript()..":server:Urinal", function()
     local src = source
     local Player = getPlayer(src)
@@ -103,43 +85,27 @@ RegisterNetEvent(getScript()..":server:Urinal", function()
     setThirst(src, getPlayer(src).thirst - thirst)
 end)
 
---- Server event handler for setting player needs.
----
---- This event updates the player's thirst or hunger based on the provided type and amount.
+--- Server event handler for setting player needs (thirst or hunger).
 ---
 --- @event
---- @param type string The type of need to set ("thirst" or "hunger").
---- @param amount number The amount to set the need to.
----
---- @return void
----
---- @usage
---- ```lua
---- -- Set the player's thirst level
---- TriggerServerEvent(getScript()..":server:setNeed", "thirst", 50)
----
---- -- Set the player's hunger level
---- TriggerServerEvent(getScript()..":server:setNeed", "hunger", 75)
---- ```
-RegisterNetEvent(getScript()..":server:setNeed", function(type, amount)
+--- @param type string "thirst" or "hunger".
+--- @param amount number New value to set.
+RegisterNetEvent(getScript()..":server:setNeed", function(needType, amount)
     local src = source
-    if type == "thirst" then
+    if needType == "thirst" then
         setThirst(src, amount)
-    elseif type == "hunger" then
+    elseif needType == "hunger" then
         setHunger(src, amount)
     end
 end)
 
 --- Sets the player's thirst level.
 ---
---- This function updates the player's thirst based on the active inventory system.
----
---- @param src number The server ID of the player.
---- @param thirst number The new thirst level to set.
+--- @param src number The player's server ID.
+--- @param thirst number The new thirst level.
 ---
 --- @usage
 --- ```lua
---- -- Set a player's thirst to 80
 --- setThirst(playerId, 80)
 --- ```
 function setThirst(src, thirst)
@@ -154,14 +120,11 @@ end
 
 --- Sets the player's hunger level.
 ---
---- This function updates the player's hunger based on the active inventory system.
----
---- @param src number The server ID of the player.
---- @param hunger number The new hunger level to set.
+--- @param src number The player's server ID.
+--- @param hunger number The new hunger level.
 ---
 --- @usage
 --- ```lua
---- -- Set a player's hunger to 60
 --- setHunger(playerId, 60)
 --- ```
 function setHunger(src, hunger)
@@ -174,105 +137,103 @@ function setHunger(src, hunger)
     end
 end
 
---- Server event handler for charging a player.
+-------------------------------------------------------------
+-- Economy Event Handlers
+-------------------------------------------------------------
+
+--- Charges a player by removing money from their account.
 ---
---- This event removes money from a player based on the specified type ("cash" or "bank").
----
---- @event
---- @param cost number The amount of money to charge.
---- @param type string The type of money to charge ("cash" or "bank").
---- @param newsrc number|nil Optional. The server ID of the player. If `nil`, uses the event source.
+--- @param cost number The amount to charge.
+--- @param type string "cash" or "bank".
+--- @param newsrc number|nil Optional player ID; defaults to event source.
 ---
 --- @usage
 --- ```lua
---- -- Charge a player $100 in cash
 --- chargePlayer(100, "cash", playerId)
----
---- -- Charge the source $250 from the bank
---- chargePlayer(250, "bank", src,)
 --- ```
-function chargePlayer(cost, type, newsrc)
+function chargePlayer(cost, moneyType, newsrc)
     local src = newsrc or source
     local fundResource = ""
-    if type == "cash" then
+
+    if moneyType == "cash" then
         if isStarted(OXInv) then fundResource = OXInv
             exports[OXInv]:RemoveItem(src, "money", cost)
         elseif isStarted(QBExport) or isStarted(QBXExport) then fundResource = QBExport
             Core.Functions.GetPlayer(src).Functions.RemoveMoney("cash", cost)
         elseif isStarted(ESXExport) then fundResource = ESXExport
-            local Player = ESX.GetPlayerFromId(src)
-            Player.removeMoney(cost, "")
+            ESX.GetPlayerFromId(src).removeMoney(cost, "")
         end
-    end
-    if type == "bank" then
+    elseif moneyType == "bank" then
         if isStarted(QBExport) or isStarted(QBXExport) then fundResource = QBExport
             Core.Functions.GetPlayer(src).Functions.RemoveMoney("bank", cost)
         elseif isStarted(ESXExport) then fundResource = ESXExport
-            local Player = ESX.GetPlayerFromId(src)
-            Player.removeMoney(cost, "")
+            ESX.GetPlayerFromId(src).removeMoney(cost, "")
         end
     end
-    if fundResource == "" then print("error - check exports.lua")
+
+    if fundResource == "" then
+        print("Cannot charge player - check starter.lua")
     else
-        debugPrint("^6Bridge^7: ^2Charging ^2Player^7: '^6"..cost.."^7'", type, fundResource)
+        debugPrint("^6Bridge^7: ^2Charging ^2Player^7: '^6"..cost.."^7'", moneyType, fundResource)
     end
 end
 RegisterNetEvent(getScript()..":server:ChargePlayer", chargePlayer)
 
---- Server event handler for funding a player.
+--- Funds a player by adding money to their account.
 ---
---- This event adds money to a player based on the specified type ("cash" or "bank").
----
---- @event
---- @param fund number The amount of money to add.
---- @param type string The type of money to add ("cash" or "bank").
---- @param newsrc number|nil Optional. The server ID of the player. If `nil`, uses the event source.
+--- @param fund number The amount to add.
+--- @param type string "cash" or "bank".
+--- @param newsrc number|nil Optional player ID; defaults to event source.
 ---
 --- @usage
 --- ```lua
---- -- Add $150 to a player's cash
---- fundPlayer(playerId, 150, "cash")
----
---- -- Add $300 to the event source's bank account
---- fundPlayer(playerId, 300, "bank")
+--- fundPlayer(150, "cash", playerId)
 --- ```
-function fundPlayer(fund, type, newsrc)
+function fundPlayer(fund, moneyType, newsrc)
     local src = newsrc or source
     local fundResource = ""
-    if type == "cash" then
-        if isStarted(OXInv) then fundResource = OXInv
+
+    if moneyType == "cash" then
+        if isStarted(OXInv) then
+            fundResource = OXInv
             exports[OXInv]:AddItem(src, "money", fund)
-        elseif isStarted(QBExport) or isStarted(QBXExport) then fundResource = QBExport
+        elseif isStarted(QBExport) or isStarted(QBXExport) then
+            fundResource = QBExport
             Core.Functions.GetPlayer(src).Functions.AddMoney("cash", fund)
-        elseif isStarted(ESXExport) then fundResource = ESXExport
-            local Player = ESX.GetPlayerFromId(src)
-            Player.addMoney(fund, "")
+        elseif isStarted(ESXExport) then
+            fundResource = ESXExport
+            PlayESX.GetPlayerFromId(src).addMoney(fund, "")
         end
-    end
-    if type == "bank" then
-        if isStarted(QBExport) or isStarted(QBXExport) then fundResource = QBExport
+    elseif moneyType == "bank" then
+        if isStarted(QBExport) or isStarted(QBXExport) then
+            fundResource = QBExport
             Core.Functions.GetPlayer(src).Functions.AddMoney("bank", fund)
-        elseif isStarted(ESXExport) then fundResource = ESXExport
-            local Player = ESX.GetPlayerFromId(src)
-            Player.addMoney(fund, "")
+        elseif isStarted(ESXExport) then
+            fundResource = ESXExport
+            ESX.GetPlayerFromId(src).addMoney(fund, "")
         end
     end
-    if fundResource == "" then print("error - check exports.lua")
+
+    if fundResource == "" then
+        print("Cannot fund player - check starter.lua")
     else
-        debugPrint("^6Bridge^7: ^2Funding ^2Player^7: '^2"..fund.."^7'", type, fundResource)
+        debugPrint("^6Bridge^7: ^2Funding Player: '^2"..fund.."^7'", moneyType, fundResource)
     end
 end
-
 RegisterNetEvent(getScript()..":server:FundPlayer", fundPlayer)
+
+-------------------------------------------------------------
+-- Item Consumption & Effects
+-------------------------------------------------------------
 
 --- Handles successful consumption of an item.
 ---
---- This function plays a consumption animation, removes the item from the inventory,
---- updates the player's hunger and thirst based on the item consumed,
---- handles alcohol effects, and checks for random rewards.
+--- Plays a consumption animation, removes the item, updates player needs, handles alcohol effects,
+--- and checks for random rewards.
 ---
---- @param itemName string The name of the item consumed.
---- @param type string The type/category of the item (e.g., "alcohol").
+--- @param itemName string The name of the consumed item.
+--- @param type string The category of the item (e.g., "alcohol").
+--- @param data table Additional data (e.g., hunger and thirst values).
 ---
 --- @usage
 --- ```lua
@@ -283,10 +244,12 @@ RegisterNetEvent(getScript()..":server:FundPlayer", fundPlayer)
 --- ConsumeSuccess("beer", "alcohol")
 --- ```
 function ConsumeSuccess(itemName, type, data)
-    local hunger = data and data.hunger or Items[itemName].hunger or nil
-    local thirst = data and data.thirst or Items[itemName].thirst or nil
+    local hunger = data and data.hunger or Items[itemName].hunger
+    local thirst = data and data.thirst or Items[itemName].thirst
+
     ExecuteCommand("e c")
     removeItem(itemName, 1)
+
     if isStarted(ESXExport) then
         if hunger then
             TriggerServerEvent(getScript()..":server:setNeed", "hunger", hunger * 10000)
@@ -302,7 +265,9 @@ function ConsumeSuccess(itemName, type, data)
             TriggerServerEvent(getScript()..":server:setNeed", "thirst", Core.Functions.GetPlayerData().metadata["thirst"] + thirst)
         end
     end
-    if type == "alcohol" then alcoholCount += 1
+
+    if type == "alcohol" then
+        alcoholCount = (alcoholCount or 0) + 1
         if alcoholCount > 1 and alcoholCount < 4 then
             TriggerEvent("evidence:client:SetStatus", "alcohol", 200)
         elseif alcoholCount >= 4 then
@@ -310,19 +275,20 @@ function ConsumeSuccess(itemName, type, data)
             AlienEffect()
         end
     end
-    getRandomReward(itemName) -- check if a reward item should be given
+
+    getRandomReward(itemName)
 end
 
---- Checks if a player has a specific job and grade.
+-------------------------------------------------------------
+-- Player Job & Information Utilities
+-------------------------------------------------------------
+
+--- Checks if a player has a specific job or gang (and optionally meets a minimum grade).
 ---
---- This function verifies whether the player has the specified job and, if a grade is provided,
---- whether the player's grade meets the required level. It supports multiple inventory systems.
----
---- @param job string The name of the job or gang to check.
---- @param source number|nil Optional. The server ID of the player to check. If `nil`, checks the current player.
---- @param grade number|nil Optional. The minimum grade level required.
----
---- @return boolean, boolean Returns `true` and `duty status` if the player has the job (and grade if specified), otherwise `false`.
+--- @param job string The job or gang name to check.
+--- @param source number|nil Optional player source; if nil, checks current player.
+--- @param grade number|nil Optional minimum grade level.
+--- @return boolean, boolean boolean Returns true and duty status if the check passes; false otherwise.
 ---
 --- @usage
 --- ```lua
@@ -338,7 +304,8 @@ end
 ---     -- Allow gang leader actions
 --- end
 --- ```
-function hasJob(job, source, grade) local hasJob, duty = false, true
+function hasJob(job, source, grade)
+    local hasJobFlag, duty = false, true
     if source then
         local src = tonumber(source)
         if not src then print(tostring(source).." is not a valid player source") end
@@ -348,113 +315,116 @@ function hasJob(job, source, grade) local hasJob, duty = false, true
                 info = ESX.GetPlayerData(src).job
                 Wait(100)
             end
-            if info.name == job then hasJob = true end
+            if info.name == job then hasJobFlag = true end
 
         elseif isStarted(OXCoreExport) then
             local chunk = assert(load(LoadResourceFile('ox_core', ('imports/%s.lua'):format('server')), ('@@ox_core/%s'):format(file)))
             chunk()
-            local player = Ox.GetPlayer(tonumber(src))
+            local player = Ox.GetPlayer(src)
             for k, v in pairs(player.getGroups()) do
-                if k == job then hasJob = true end
+                if k == job then hasJobFlag = true end
             end
 
         elseif isStarted(QBXExport) then
             local jobinfo = exports[QBXExport]:GetPlayer(src).PlayerData.job
-            if jobinfo.name == job then hasJob = true
+            if jobinfo.name == job then
+                hasJobFlag = true
                 duty = exports[QBXExport]:GetPlayer(src).PlayerData.job.onduty
-                if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
+                if grade and not (grade <= jobinfo.grade.level) then hasJobFlag = false end
             end
             local ganginfo = exports[QBXExport]:GetPlayer(src).PlayerData.gang
-            if ganginfo.name == job then hasJob = true
-                if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
+            if ganginfo.name == job then
+                hasJobFlag = true
+                if grade and not (grade <= ganginfo.grade.level) then hasJobFlag = false end
             end
 
         elseif isStarted(QBExport) and not isStarted(QBXExport) then
-            if Core.Functions.GetPlayer then -- support older qb-core functions
+            if Core.Functions.GetPlayer then
                 local player = Core.Functions.GetPlayer(src)
                 if not player then print("Player not found for src: "..src) end
                 local jobinfo = player.PlayerData.job
-                if jobinfo.name == job then hasJob = true
-                    duty = Core.Functions.GetPlayer(src).PlayerData.job.onduty
-                    if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
+                if jobinfo.name == job then
+                    hasJobFlag = true
+                    duty = player.PlayerData.job.onduty
+                    if grade and not (grade <= jobinfo.grade.level) then hasJobFlag = false end
                 end
-                local ganginfo = Core.Functions.GetPlayer(src).PlayerData.gang
-                if ganginfo.name == job then hasJob = true
-                    if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
+                local ganginfo = player.PlayerData.gang
+                if ganginfo.name == job then
+                    hasJobFlag = true
+                    if grade and not (grade <= ganginfo.grade.level) then hasJobFlag = false end
                 end
-            else -- support newer qb-core exports
+            else
                 local jobinfo = exports[QBExport]:GetPlayer(src).PlayerData.job
-                if jobinfo.name == job then hasJob = true
+                if jobinfo.name == job then
+                    hasJobFlag = true
                     duty = exports[QBExport]:GetPlayer(src).PlayerData.job.onduty
-                    if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
+                    if grade and not (grade <= jobinfo.grade.level) then hasJobFlag = false end
                 end
                 local ganginfo = exports[QBExport]:GetPlayer(src).PlayerData.gang
-                if ganginfo.name == job then hasJob = true
-                    if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
+                if ganginfo.name == job then
+                    hasJobFlag = true
+                    if grade and not (grade <= ganginfo.grade.level) then hasJobFlag = false end
                 end
             end
         else
-            print("^4ERROR^7: ^2No Core detected for hasJob ^7- ^2Check ^3exports^1.^2lua^7")
+            print("^4ERROR^7: ^2No Core detected for hasJob ^7- ^2Check ^3starter^1.^2lua^7")
         end
     else
-        if isStarted(ESXExport) then
-            while not ESX do Wait(10) end
+        -- Client-side check.
+        if isStarted(ESXExport) and ESX ~= nil then
             local info = ESX.GetPlayerData().job
             while not info do
                 info = ESX.GetPlayerData().job
                 Wait(100)
             end
-            if info.name == job then hasJob = true end
+            if info.name == job then hasJobFlag = true end
 
         elseif isStarted(OXCoreExport) then
             for k, v in pairs(exports[OXCoreExport]:GetPlayerData().groups) do
-                if k == job then hasJob = true end break
+                if k == job then hasJobFlag = true break end
             end
 
         elseif isStarted(QBXExport) then
-            local jobinfo = QBX.PlayerData.job
-            if jobinfo.name == job then hasJob = true
-                duty = QBX.PlayerData.job.onduty
-                if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
+            local info = exports[QBXExport]:GetPlayerData()
+            if info.job.name == job then
+                hasJobFlag = true
+                duty = info.job.onduty
+                if grade and not (grade <= info.job.grade.level) then hasJobFlag = false end
             end
-            local ganginfo = QBX.PlayerData.gang
-            if ganginfo.name == job then hasJob = true
-                if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
+            if info.gang.name == job then
+                hasJobFlag = true
+                if grade and not (grade <= info.gang.grade.level) then hasJobFlag = false end
             end
 
         elseif isStarted(QBExport) and not isStarted(QBXExport) then
             local info = nil
-            Core.Functions.GetPlayerData(function(PlayerData)
-                info = PlayerData
-            end)
+            Core.Functions.GetPlayerData(function(PlayerData) info = PlayerData end)
             local jobinfo = info.job
-            if jobinfo.name == job then hasJob = true
+            if jobinfo.name == job then
+                hasJobFlag = true
                 duty = jobinfo.onduty
-                if grade and not (grade <= jobinfo.grade.level) then hasJob = false end
+                if grade and not (grade <= jobinfo.grade.level) then hasJobFlag = false end
             end
             local ganginfo = info.gang
             if ganginfo.name == job then
-                hasJob = true
-                if grade and not (grade <= ganginfo.grade.level) then hasJob = false end
+                hasJobFlag = true
+                if grade and not (grade <= ganginfo.grade.level) then hasJobFlag = false end
             end
-
         else
-            print("^4ERROR^7: ^2No Core detected for hasJob() ^7- ^2Check ^3exports^1.^2lua^7")
+            print("^4ERROR^7: ^2No Core detected for hasJob() ^7- ^2Check ^3starter^1.^2lua^7")
         end
     end
-    return hasJob, duty
+    return hasJobFlag, duty
 end
 
---- Retrieves basic information about a player.
+--- Retrieves basic player information (name, cash, bank, job, etc.) based on the active inventory system.
 ---
---- This function gathers the player's name, cash balance, and bank balance
---- based on the active inventory system. It can be called server-side or client-side.
+--- Can be called server-side (passing a player source) or client-side (for current player).
 ---
----@param source number|nil Optional. The server ID of the player. If `nil`, retrieves info for the current player.
+--- @param source number|nil Optional player server ID.
+--- @return table A table containing player details.
 ---
----@return table table A table containing the player's `name`, `cash`, and `bank` balances.
----
----@usage
+--- @usage
 --- ```lua
 --- -- Get information for a specific player
 --- local playerInfo = getPlayer(playerId)
@@ -467,7 +437,8 @@ end
 function getPlayer(source)
     local Player = {}
     debugPrint("^6Bridge^7: ^2Getting ^3Player^2 info^7")
-    if source then -- If called from server
+
+    if source then
         local src = tonumber(source)
         if isStarted(ESXExport) then
             local info = ESX.GetPlayerFromId(src)
@@ -494,13 +465,12 @@ function getPlayer(source)
             local import = LoadResourceFile('ox_core', file)
             local chunk = assert(load(import, ('@@ox_core/%s'):format(file)))
             chunk()
-            local player = Ox.GetPlayer(tonumber(src))
+            local player = Ox.GetPlayer(src)
             Player = {
                 name = ('%s %s'):format(player.firstName, player.lastName),
                 cash = exports[OXInv]:Search(src, 'count', "money"),
                 bank = 0,
             }
-
         elseif isStarted(QBXExport) then
             local info = exports[QBXExport]:GetPlayer(src)
             Player = {
@@ -518,9 +488,8 @@ function getPlayer(source)
                 account = info.PlayerData.charinfo.account,
                 citizenId = info.PlayerData.citizenid,
             }
-
         elseif isStarted(QBExport) and not isStarted(QBXExport) then
-            if Core.Functions.GetPlayer ~= nil then -- support older qb-core functions
+            if Core.Functions.GetPlayer then
                 local info = Core.Functions.GetPlayer(src).PlayerData
                 Player = {
                     firstname = info.charinfo.firstname,
@@ -537,9 +506,8 @@ function getPlayer(source)
                     account = info.charinfo.account,
                     citizenId = info.citizenid,
                 }
-
             else
-                local info = exports[QBExport]:GetPlayer(src).PlayerData -- this was added to new core then removed?
+                local info = exports[QBExport]:GetPlayer(src).PlayerData
                 Player = {
                     firstname = info.charinfo.firstname,
                     lastname = info.charinfo.lastname,
@@ -556,16 +524,15 @@ function getPlayer(source)
                     citizenId = info.citizenid,
                 }
             end
-
         else
-            print("^4ERROR^7: ^2No Core detected for getPlayer() ^7- ^2Check ^3exports^1.^2lua^7")
+            print("^4ERROR^7: ^2No Core detected for getPlayer() - Check exports.lua")
         end
     else
+        -- Client-side: Get current player info.
         if isStarted(ESXExport) and ESX ~= nil then
             local info = ESX.GetPlayerData()
-            --jsonPrint(info)
             local cash, bank = 0, 0
-            for k, v in pairs(ESX.GetPlayerData().accounts) do
+            for k, v in pairs(info.accounts) do
                 if v.name == "money" then cash = v.money end
                 if v.name == "bank" then bank = v.money end
             end
@@ -629,12 +596,22 @@ function getPlayer(source)
                 citizenId = info.citizenid,
             }
         else
-            print("^4ERROR^7: ^2No Core detected for hasJob ^7- ^2Check ^3exports^1.^2lua^7")
+            print("^4ERROR^7: ^2No Core detected for hasJob ^7- ^2Check ^3starter^1.^2lua^7")
         end
     end
     return Player
 end
 
+--- Retrieves all active players within a given radius from the specified coordinates.
+---
+--- @param coords vector3 The reference coordinates.
+--- @param radius number The radius within which to find players.
+--- @return table table An array of player IDs.
+---
+--- @usage
+--- ```lua
+--- local nearbyPlayers = GetPlayersFromCoords(vector3(100, 200, 30), 20)
+--- ```
 function GetPlayersFromCoords(coords, radius)
     local players = {}
     for _, playerId in ipairs(GetActivePlayers()) do
@@ -642,7 +619,7 @@ function GetPlayersFromCoords(coords, radius)
         if ped and DoesEntityExist(ped) then
             local playerCoords = GetEntityCoords(ped)
             if #(coords - playerCoords) <= radius then
-                players[#players+1] = playerId
+                players[#players + 1] = playerId
             end
         end
     end

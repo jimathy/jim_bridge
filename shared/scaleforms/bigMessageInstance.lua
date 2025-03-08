@@ -1,6 +1,17 @@
-BigMessage = {}
+--[[
+    BigMessage Module
+    -----------------
+    This module provides a flexible way to display large, attention-grabbing messages
+    on screen using a Scaleform movie ("MP_BIG_MESSAGE_FREEMODE"). It supports multiple
+    message types (mission passed, colored shard, old-style, simple shard, rank-up, weapon purchased,
+    and large multiplayer messages), including customizable transitions and durations.
+]]
+
+local BigMessage = {}
 BigMessage.__index = BigMessage
 
+--- Creates a new BigMessage instance.
+--- @return table table A new BigMessage object.
 function BigMessage:new()
     local self = setmetatable({}, BigMessage)
     self.scaleform = nil
@@ -15,6 +26,7 @@ function BigMessage:new()
     return self
 end
 
+--- Loads the Scaleform movie if it has not been loaded yet.
 function BigMessage:Load()
     if self.scaleform then return end
     self.scaleform = RequestScaleformMovie("MP_BIG_MESSAGE_FREEMODE")
@@ -23,7 +35,8 @@ function BigMessage:Load()
     end
 end
 
--- Dispose of the scaleform
+--- Disposes of the Scaleform movie.
+--- If manualDispose is true, executes a transition before disposing.
 function BigMessage:Dispose()
     if not self.scaleform then return end
 
@@ -34,8 +47,8 @@ function BigMessage:Dispose()
         ScaleformMovieMethodAddParamBool(self.transitionPreventAutoExpansion)
         EndScaleformMovieMethod()
 
+        -- Wait a fraction of the transition duration (in milliseconds)
         Wait((self.transitionDuration * 0.5) * 1000)
-
         self.manualDispose = false
     end
 
@@ -46,8 +59,10 @@ function BigMessage:Dispose()
     self.isDisplaying = false
 end
 
+--- Updates the display by drawing the Scaleform movie fullscreen.
 function BigMessage:Update()
     if not self.scaleform then return end
+
     DrawScaleformMovieFullscreen(self.scaleform, 255, 255, 255, 255, 0)
 
     if self.manualDispose then return end
@@ -60,6 +75,7 @@ function BigMessage:Update()
             ScaleformMovieMethodAddParamBool(self.transitionPreventAutoExpansion)
             EndScaleformMovieMethod()
             self.transitionExecuted = true
+            -- Extend duration slightly for smooth transition
             self.duration = self.duration + ((self.transitionDuration * 0.5) * 1000)
         else
             self:Dispose()
@@ -67,14 +83,20 @@ function BigMessage:Update()
     end
 end
 
+--- Sets the transition properties for disposing the message.
+--- @param transition string The transition function name (default: "TRANSITION_OUT").
+--- @param duration number The duration for the transition (default: 0.4).
+--- @param preventAutoExpansion boolean Whether to prevent auto-expansion (default: true).
 function BigMessage:SetTransition(transition, duration, preventAutoExpansion)
     self.transition = transition or "TRANSITION_OUT"
     self.transitionDuration = duration or 0.4
     self.transitionPreventAutoExpansion = preventAutoExpansion or true
 end
 
+--- Starts a thread to continuously update the HUD until the message is done.
 function BigMessage:StartUpdate()
     if self.isDisplaying then return end
+
     self.isDisplaying = true
     CreateThread(function()
         while self.isDisplaying do
@@ -85,10 +107,13 @@ function BigMessage:StartUpdate()
 end
 
 --- Displays a mission passed message.
----
---- @param msg string The main message to display.
---- @param duration number|nil The duration in milliseconds the message should be displayed. Defaults to 5000.
---- @param manualDispose boolean|nil Whether to manually dispose of the scaleform after the message. Defaults to false.
+--- @param msg string The message to display.
+--- @param duration number|nil The duration (in milliseconds) to display the message (default: 5000).
+--- @param manualDispose boolean|nil Whether to manually dispose the Scaleform after display (default: false).
+--- @usage
+--- ```lua
+--- BigMessage:ShowMissionPassedMessage("MISSION PASSED", 5000)
+--- ```
 function BigMessage:ShowMissionPassedMessage(msg, duration, manualDispose)
     duration = duration or 5000
     self:Load()
@@ -109,13 +134,12 @@ function BigMessage:ShowMissionPassedMessage(msg, duration, manualDispose)
 end
 
 --- Displays a colored shard message.
----
---- @param msg string The main message to display.
+--- @param msg string The main message.
 --- @param desc string The description text.
---- @param textColor number The color index for the text.
---- @param bgColor number The color index for the background.
---- @param duration number|nil The duration in milliseconds the message should be displayed. Defaults to 5000.
---- @param manualDispose boolean|nil Whether to manually dispose of the scaleform after the message. Defaults to false.
+--- @param textColor number The text color index.
+--- @param bgColor number The background color index.
+--- @param duration number|nil Duration in milliseconds (default: 5000).
+--- @param manualDispose boolean|nil Whether to manually dispose the Scaleform (default: false).
 function BigMessage:ShowColoredShard(msg, desc, textColor, bgColor, duration, manualDispose)
     duration = duration or 5000
     self:Load()
@@ -134,12 +158,9 @@ function BigMessage:ShowColoredShard(msg, desc, textColor, bgColor, duration, ma
 end
 
 --- Displays an old-style mission passed message.
----
---- @param msg string The main message to display.
---- @param duration number|nil The duration in milliseconds the message should be displayed. Defaults to 5000.
---- @param manualDispose boolean|nil Whether to manually dispose of the scaleform after the message. Defaults to false.
----
---- @return void
+--- @param msg string The message.
+--- @param duration number|nil Duration in milliseconds (default: 5000).
+--- @param manualDispose boolean|nil Whether to manually dispose (default: false).
 function BigMessage:ShowOldMessage(msg, duration, manualDispose)
     duration = duration or 5000
     self:Load()
@@ -155,13 +176,10 @@ function BigMessage:ShowOldMessage(msg, duration, manualDispose)
 end
 
 --- Displays a simple shard message.
----
---- @param msg string The main message to display.
+--- @param msg string The main message.
 --- @param subtitle string The subtitle text.
---- @param duration number|nil The duration in milliseconds the message should be displayed. Defaults to 5000.
---- @param manualDispose boolean|nil Whether to manually dispose of the scaleform after the message. Defaults to false.
----
---- @return void
+--- @param duration number|nil Duration in milliseconds (default: 5000).
+--- @param manualDispose boolean|nil Whether to manually dispose (default: false).
 function BigMessage:ShowSimpleShard(msg, subtitle, duration, manualDispose)
     duration = duration or 5000
     self:Load()
@@ -178,12 +196,11 @@ function BigMessage:ShowSimpleShard(msg, subtitle, duration, manualDispose)
 end
 
 --- Displays a rank-up message.
----
---- @param msg string The main message to display.
+--- @param msg string The main message.
 --- @param subtitle string The subtitle text.
 --- @param rank number The rank level achieved.
---- @param duration number|nil The duration in milliseconds the message should be displayed. Defaults to 5000.
---- @param manualDispose boolean|nil Whether to manually dispose of the scaleform after the message. Defaults to false.
+--- @param duration number|nil Duration in milliseconds (default: 5000).
+--- @param manualDispose boolean|nil Whether to manually dispose (default: false).
 function BigMessage:ShowRankupMessage(msg, subtitle, rank, duration, manualDispose)
     duration = duration or 5000
     self:Load()
@@ -203,12 +220,11 @@ function BigMessage:ShowRankupMessage(msg, subtitle, rank, duration, manualDispo
 end
 
 --- Displays a weapon purchased message.
----
---- @param bigMessage string The main message to display.
+--- @param bigMessage string The main message.
 --- @param weaponName string The name of the weapon purchased.
---- @param weaponHash number The hash identifier of the weapon.
---- @param duration number|nil The duration in milliseconds the message should be displayed. Defaults to 5000.
---- @param manualDispose boolean|nil Whether to manually dispose of the scaleform after the message. Defaults to false.
+--- @param weaponHash number The weapon hash.
+--- @param duration number|nil Duration in milliseconds (default: 5000).
+--- @param manualDispose boolean|nil Whether to manually dispose (default: false).
 function BigMessage:ShowWeaponPurchasedMessage(bigMessage, weaponName, weaponHash, duration, manualDispose)
     duration = duration or 5000
     self:Load()
@@ -228,10 +244,9 @@ function BigMessage:ShowWeaponPurchasedMessage(bigMessage, weaponName, weaponHas
 end
 
 --- Displays a large multiplayer message.
----
---- @param msg string The main message to display.
---- @param duration number|nil The duration in milliseconds the message should be displayed. Defaults to 5000.
---- @param manualDispose boolean|nil Whether to manually dispose of the scaleform after the message. Defaults to false.
+--- @param msg string The main message.
+--- @param duration number|nil Duration in milliseconds (default: 5000).
+--- @param manualDispose boolean|nil Whether to manually dispose (default: false).
 function BigMessage:ShowMpMessageLarge(msg, duration, manualDispose)
     duration = duration or 5000
     self:Load()
@@ -254,11 +269,10 @@ function BigMessage:ShowMpMessageLarge(msg, duration, manualDispose)
 end
 
 --- Displays a "Wasted" multiplayer message.
----
---- @param msg string The main message to display.
+--- @param msg string The main message.
 --- @param subtitle string The subtitle text.
---- @param duration number|nil The duration in milliseconds the message should be displayed. Defaults to 5000.
---- @param manualDispose boolean|nil Whether to manually dispose of the scaleform after the message. Defaults to false.
+--- @param duration number|nil Duration in milliseconds (default: 5000).
+--- @param manualDispose boolean|nil Whether to manually dispose (default: false).
 function BigMessage:ShowMpWastedMessage(msg, subtitle, duration, manualDispose)
     duration = duration or 5000
     self:Load()
@@ -273,5 +287,20 @@ function BigMessage:ShowMpWastedMessage(msg, subtitle, duration, manualDispose)
     self.duration = duration
     self:StartUpdate()
 end
+
+--- Starts the update loop for displaying the message.
+function BigMessage:StartUpdate()
+    if self.isDisplaying then return end
+    self.isDisplaying = true
+    CreateThread(function()
+        while self.isDisplaying do
+            Wait(0)
+            self:Update()
+        end
+    end)
+end
+
+-- Create an instance of BigMessage and return it.
+BigMessage = BigMessage:new()
 
 return BigMessage

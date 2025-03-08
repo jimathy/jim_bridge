@@ -1,81 +1,101 @@
---- Executes a function when the player character is loaded into the game.
----
---- This function sets up event listeners for player loading based on the game framework detected (e.g., QB, ESX, OX).
----
---- If `onStart` is `true`, it will also attempt to execute the function on resource start after ensuring the player is logged in. (Helpful for debugging)
+--[[
+    Player & Resource Event Utility Functions
+    -------------------------------------------
+    This module provides functions to:
+      • Execute code when the player character is loaded or unloaded.
+      • Execute code on resource start and stop.
+      • Wait for the player to be logged in before proceeding.
+]]
+
+-------------------------------------------------------------
+-- Player Loaded and Unloaded Events
+-------------------------------------------------------------
+
+--- Executes a function when the player character is loaded.
+--- If onStart is true, the function will also run on resource start (after ensuring the player is logged in).
 ---
 --- @param func function The function to execute when the player is loaded.
---- @param onStart boolean (optional) If `true`, the function will also execute on resource start. Default is `false`.
----
+--- @param onStart boolean (optional) If true, also execute on resource start. Default is false.
 --- @usage
 --- ```lua
 --- onPlayerLoaded(function()
----     -- Your code here
+---     print("Player logged in")
+---     -- Your initialization code here.
 --- end, true)
 --- ```
 function onPlayerLoaded(func, onStart)
-    local onPlayerName = ""
+    local onPlayerFramework = ""
     local loaded = false
+
     if onStart then
         onResourceStart(function()
-            if not LocalPlayer.state.isLoggedIn then
-                Wait(3000)
-                if not LocalPlayer.state.isLoggedIn then -- If the player is not logged in after waiting, skip execution
-                    return
-                end
-            end
-            loaded = true -- Mark as already loaded
-            debugPrint("^6Bridge^7: ^2Loading ^3onResourceStart^7() ^2through ^3onPlayerLoaded^7()")
+            if not waitForLogin() then return end
+
+            loaded = true
+            debugPrint("^6Bridge^7: ^3onResourceStart^7()^2 executed through ^3onPlayerLoaded^7()")
             Wait(2000)
             func()
         end, true)
     end
+
     if not loaded then
         local tempFunc = function()
-            debugPrint("^6Bridge^7: ^2Executing ^3onPlayerLoaded^7()")
+            debugPrint("^6Bridge^7: ^2Executing onPlayerLoaded")
             func()
         end
-        if isStarted(QBExport) or isStarted(QBXExport) then onPlayerName = QBExport
+
+        if isStarted(QBExport) or isStarted(QBXExport) then
+            onPlayerFramework = QBExport
             AddEventHandler('QBCore:Client:OnPlayerLoaded', tempFunc)
-        elseif isStarted(ESXExport) then onPlayerName = ESXExport
+        elseif isStarted(ESXExport) then
+            onPlayerFramework = ESXExport
             AddEventHandler('esx:playerLoaded', tempFunc)
-        elseif isStarted(OXCoreExport) then onPlayerName = OXCoreExport
+        elseif isStarted(OXCoreExport) then
+            onPlayerFramework = OXCoreExport
             AddEventHandler('ox:playerLoaded', tempFunc)
         end
-        if onPlayerName ~= "" then
-            debugPrint("^6Bridge^7: ^2Registering ^3onPlayerLoaded^2 with ^7"..onPlayerName)
+
+        if onPlayerFramework ~= "" then
+            debugPrint("^6Bridge^7: ^2Registering ^3onPlayerLoaded^7()^2 with ^3" .. onPlayerFramework.."^7")
         else
-            print("^4ERROR^7: ^2No Core detected for onPlayerLoaded ^7- ^2Check ^3exports^1.^2lua^7")
+            print("^4ERROR^7: No supported core detected for onPlayerLoaded - Check exports.lua")
         end
     end
 end
 
---trying to add unload functions for when players switch ped
+--- Executes a function when the player character is unloaded.
+--- @param func function The function to execute when the player unloads.
+--- @usage
+--- ```lua
+--- onPlayerUnload(function()
+---     print("Player has logged out of their character")
+---     -- Your cleanup code here.
+--- end)
+--- ```
 function onPlayerUnload(func)
-    AddEventHandler('QBCore:Client:OnPlayerUnload', function()
-        func()
-    end)
-    AddEventHandler('ox:playerLogout', function()
-        func()
-    end)
+    AddEventHandler('QBCore:Client:OnPlayerUnload', function() func() end)
+    AddEventHandler('ox:playerLogout', function() func() end)
+
+    --AddEventHandler('esx:playerLogout', function() func() end)
+    -- ^ Only server side for now, need a way to send it to client if not already available
 end
 
+-------------------------------------------------------------
+-- Resource Start and Stop Events
+-------------------------------------------------------------
 
 --- Executes a function when the resource starts.
----
---- This function wraps the `onResourceStart` event, allowing you to execute code when the resource starts.
----
---- @param func function The function to execute on resource start.
---- @param thisScript boolean (optional) If `true`, only runs the function when this resource starts. Default is `true`.
----
+--- @param func function The function to execute.
+--- @param thisScript boolean (optional) If true, only runs when this resource starts (default true).
 --- @usage
 --- ```lua
 --- onResourceStart(function()
----     -- Your code here
+---     print("Script ensured")
+---     -- Initialization code on resource start.
 --- end, true)
 --- ```
 function onResourceStart(func, thisScript)
-    debugPrint("^6Bridge^7: ^2Registering ^3onResourceStart^2")
+    debugPrint("^6Bridge^7: Registering ^3onResourceStart^7()")
     AddEventHandler('onResourceStart', function(resourceName)
         if getScript() == resourceName and (thisScript or true) then
             func()
@@ -84,20 +104,16 @@ function onResourceStart(func, thisScript)
 end
 
 --- Executes a function when the resource stops.
----
---- This function wraps the `onResourceStop` event, allowing you to execute code when the resource stops.
----
---- @param func function The function to execute on resource stop.
---- @param thisScript boolean (optional) If `true`, only runs the function when this resource stops. Default is `true`.
----
+--- @param func function The function to execute.
+--- @param thisScript boolean (optional) If true, only runs when this resource stops (default true).
 --- @usage
 --- ```lua
 --- onResourceStop(function()
----     -- Cleanup code here
+---     -- Cleanup code here.
 --- end, true)
 --- ```
 function onResourceStop(func, thisScript)
-    debugPrint("^6Bridge^7: ^2Registering ^3onResourceStop^2")
+    debugPrint("^6Bridge^7: ^2Registering ^3onResourceStop^7()")
     AddEventHandler('onResourceStop', function(resourceName)
         if getScript() == resourceName and (thisScript or true) then
             func()
@@ -105,17 +121,41 @@ function onResourceStop(func, thisScript)
     end)
 end
 
---- Waits until the player is logged in before continuing execution.
----
---- This function blocks execution until `LocalPlayer.state.isLoggedIn` is `true`.
----
----@usage
---- ```lua
+-------------------------------------------------------------
+-- Wait for Login
+-------------------------------------------------------------
+
+--- Blocks execution until the player is logged in.
+--- @usage
 --- waitForLogin()
---- ```
 function waitForLogin()
-    while not LocalPlayer.state.isLoggedIn do
-        debugPrint("Waiting")
-        Wait(100)
+    local timeout = 10000  -- 10 seconds in milliseconds
+    local startTime = GetGameTimer()
+    local loggedIn = false
+
+    if isStarted(ESXExport) then
+        debugPrint("^6Bridge^7: ^3ESX waitForLogin^7() ^2running^7")
+        while (GetGameTimer() - startTime) < timeout do
+            local playerData = ESX.GetPlayerData()
+            if playerData and playerData.job then
+                loggedIn = true
+                break
+            end
+            Wait(100)
+        end
+    else
+        -- For other frameworks, use LocalPlayer.state.isLoggedIn.
+        while not LocalPlayer.state.isLoggedIn and (GetGameTimer() - startTime) < timeout do
+            Wait(100)
+        end
+        loggedIn = LocalPlayer.state.isLoggedIn
+    end
+
+    if not loggedIn then
+        print("^4Error^7: ^2Timeout reached while waiting for player login^7.")
+        return false
+    else
+        debugPrint("^6Bridge^7: ^2Player Login Detected^7.")
+        return true
     end
 end

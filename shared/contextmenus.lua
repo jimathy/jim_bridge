@@ -1,25 +1,37 @@
+--[[
+    Menu Opening Module
+    ---------------------
+    This module provides a unified function to open menus using the configured menu system.
+    Supported systems include:
+      • jim-nui (kinda)
+      • ox (or ox_context)
+      • qb (using QBMenuExport)
+      • gta (using WarMenu)
+      • esx (using ESX.UI.Menu)
+]]
+
 --- Opens a menu using the configured menu system.
 ---
 --- This function translates code and creates menus in several different menu scripts, depending on the configured menu system specified in `Config.System.Menu`.
 ---
 ---@param Menu table A table containing the menu options to display.
 --- Each menu item can include:
---- - **header** (`string`): The text to display for the menu item.
---- - **txt** (`string`, optional): Additional text or description.
---- - **icon** (`string`, optional): Icon to display with the menu item.
---- - **onSelect** (`function`, optional): Function to execute when the menu item is selected.
---- - **arrow** (`boolean`, optional): Whether to display an arrow next to the item (for certain menus).
---- - **params** (`table`, optional): Additional parameters, such as events and arguments.
---- - **isMenuHeader** (`boolean`, optional): Marks the item as a header.
---- - **disabled** (`boolean`, optional): Disables the menu item if `true`.
+---     - header (`string`): The text to display for the menu item.
+---     - txt (`string`, optional): Additional text or description.
+---     - icon (`string`, optional): Icon to display with the menu item.
+---     - onSelect (`function`, optional): Function to execute when the menu item is selected.
+---     - arrow (`boolean`, optional): Whether to display an arrow next to the item (for certain menus).
+---     - params (`table`, optional): Additional parameters, such as events and arguments.
+---     - isMenuHeader (`boolean`, optional): Marks the item as a header.
+---     - disabled (`boolean`, optional): Disables the menu item if `true`.
 ---
 ---@param data table A table containing configuration data for the menu.
---- - **header** (`string`): The header/title of the menu.
---- - **headertxt** (`string`, optional): Additional header text.
---- - **onBack** (`function`, optional): Function to call when the "Return" option is selected.
---- - **onExit** (`function`, optional): Function to call when the menu is exited.
---- - **onSelected** (`function`, optional): Function to call when a menu item is selected (for certain menu systems).
---- - **canClose** (`boolean`, optional): Whether the menu can be closed by the user.
+---     - header (`string`): The header/title of the menu.
+---     - headertxt (`string`, optional): Additional header text.
+---     - onBack (`function`, optional): Function to call when the "Return" option is selected.
+---     - onExit (`function`, optional): Function to call when the menu is exited.
+---     - onSelected (`function`, optional): Function to call when a menu item is selected (for certain menu systems).
+---     - canClose (`boolean`, optional): Whether the menu can be closed by the user.
 ---
 ---@usage
 --- ```lua
@@ -36,6 +48,7 @@
 --- ```
 function openMenu(Menu, data)
     if Config.System.Menu == "jim" then
+        -- Insert "Return" option if onBack is defined.
         if data.onBack then
             table.insert(Menu, 1, {
                 icon = "fas fa-circle-arrow-left",
@@ -65,6 +78,7 @@ function openMenu(Menu, data)
             if data.onSelected and Menu[k].arrow then
                 Menu[k].icon = "fas fa-angle-right"
             end
+            -- If no title, use header or txt as title/label.
             if not Menu[k].title then
                 if Menu[k].header ~= nil and Menu[k].header ~= "" then
                     Menu[k].title = Menu[k].header
@@ -75,6 +89,7 @@ function openMenu(Menu, data)
                     Menu[k].label = Menu[k].txt
                 end
             end
+            -- Copy parameters from 'params' if available.
             if Menu[k].params then
                 Menu[k].event = Menu[k].params.event
                 Menu[k].args = Menu[k].params.args or {}
@@ -143,17 +158,10 @@ function openMenu(Menu, data)
         end
         for k in pairs(Menu) do
             if not Menu[k].params or not Menu[k].params.event then
-                if Menu[k].onSelect then
-                    Menu[k].params = {
-                        isAction = true,
-                        event = Menu[k].onSelect,
-                    }
-                else
-                    Menu[k].params = {
-                        isAction = true,
-                        event = function() end,
-                    }
-                end
+                Menu[k].params = {
+                    isAction = true,
+                    event = Menu[k].onSelect or function() end,
+                }
             end
             if not Menu[k].header then Menu[k].header = " " end
             if Menu[k].arrow then Menu[k].icon = "fas fa-angle-right" end
@@ -162,15 +170,12 @@ function openMenu(Menu, data)
         exports[QBMenuExport]:openMenu(Menu)
 
     elseif Config.System.Menu == "gta" then
-        WarMenu.CreateMenu(tostring(Menu),
-            data.header,
-            data.headertxt or " ",
-            {
-                titleColor = { 222, 255, 255 },
-                maxOptionCountOnScreen = 15,
-                width = 0.25,
-                x = 0.7,
-            })
+        WarMenu.CreateMenu(tostring(Menu), data.header, data.headertxt or " ", {
+            titleColor = { 222, 255, 255 },
+            maxOptionCountOnScreen = 15,
+            width = 0.25,
+            x = 0.7,
+        })
         if WarMenu.IsAnyMenuOpened() then return end
         WarMenu.OpenMenu(tostring(Menu))
         CreateThread(function()
@@ -239,7 +244,6 @@ function openMenu(Menu, data)
                 onSelect = data.onBack,
             })
         end
-
         ESX.UI.Menu.Open("default", getScript(), "Example_Menu", {
             title = data.header,
             align = 'top-right',
@@ -260,15 +264,11 @@ function openMenu(Menu, data)
     end
 end
 
---- A line break constant used for formatting menu headers.
+--- A line break constant used for menu header formatting.
 br = (Config.System.Menu == "ox" or Config.System.Menu == "gta") and "\n" or "<br>"
 
---- Checks if the menu system is classified as 'ox' or 'gta'.
----
---- This function is used to decide how to make line breaks in menu headers.
----
---- @return boolean Returns `true` if the menu system is 'ox' or 'gta'; otherwise, `false`.
----
+--- Checks if the current menu system is 'ox' or 'gta' for formatting purposes.
+--- @return boolean boolean True if using ox or gta menus, otherwise false.
 --- @usage
 --- ```lua
 --- if isOx() then
@@ -280,7 +280,7 @@ function isOx() return (Config.System.Menu == "ox" or Config.System.Menu == "gta
 
 --- Checks if any WarMenu menu is currently open.
 ---
---- @return boolean Returns `true` if a WarMenu menu is open; otherwise, `false`.
+--- @return boolean boolean Returns `true` if a WarMenu menu is open; otherwise, `false`.
 ---
 --- @usage
 --- ```lua

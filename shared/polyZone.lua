@@ -1,45 +1,61 @@
--- This automatically detects what polyzone script it should use to create a polyzone --
--- if ox_lib is detected, it will automatically use that instead of PolyZone --
--- createPoly({ name = 'name', debug = true, points = { vec2(), vec2() }, onEnter = function() end, onExit = function() end, })
----
+--[[
+    PolyZone Management Module
+    ----------------------------
+    This module automatically detects the available polyzone library (ox_lib or PolyZone)
+    and creates polygonal and circular zones accordingly. It also provides a function to remove
+    previously created zones.
+
+    Functions:
+      • createPoly(data)       - Creates a polygonal zone.
+      • createCirclePoly(data) - Creates a circular zone.
+      • removePolyZone(Location) - Removes a created zone.
+]]
+
+-------------------------------------------------------------
+-- Polygonal Zone Creation
+-------------------------------------------------------------
+
 --- Creates a polygonal zone using the detected polyzone library (ox_lib or PolyZone).
 ---
---- This function automatically detects whether `ox_lib` or `PolyZone` is active and creates a polygonal zone accordingly.
---- It supports setting up entry and exit callbacks for the zone.
+--- Automatically checks which polyzone script is active. When using ox_lib, it converts the provided
+--- 2D points to 3D (setting a constant z value) and sets a thickness value. For PolyZone, it creates the zone
+--- and attaches onEnter and onExit callbacks.
 ---
----@param data table A table containing the zone configuration.
---- - **name** (`string`): The name of the zone.
---- - **debug** (`boolean`): Whether to enable debug mode for the zone.
---- - **points** (`table`): A list of `vec2` points defining the polygon.
---- - **onEnter** (`function`): Callback function to execute when a player enters the zone.
---- - **onExit** (`function`): Callback function to execute when a player exits the zone.
+--- @param data table Zone configuration table with the following keys:
+---     - name (string): The zone's identifier.
+---     - debug (boolean): Whether debug mode is enabled.
+---     - points (table): A list of vec2 points defining the polygon.
+---     - onEnter (function): Callback when a player enters the zone.
+---     - onExit (function): Callback when a player exits the zone.
 ---
----@return table|nil table Returns the created zone object or `nil` if creation failed.
+--- @return table|nil table Returns the created zone object or nil if creation failed.
 ---
 ---@usage
---- ```lua
---- createPoly({
----     name = 'testZone',
----     debug = true,
----     points = { vec2(100.0, 100.0), vec2(200.0, 100.0), vec2(200.0, 200.0), vec2(100.0, 200.0) },
----     onEnter = function() print("Entered Test Zone") end,
----     onExit = function() print("Exited Test Zone") end,
---- })
---- ```
+---```lua
+---createPoly({
+---    name = 'testZone',
+---    debug = true,
+---    points = { vec2(100.0, 100.0), vec2(200.0, 100.0), vec2(200.0, 200.0), vec2(100.0, 200.0) },
+---    onEnter = function() print("Entered Test Zone") end,
+---    onExit = function() print("Exited Test Zone") end,
+---})
+---```
 function createPoly(data)
     local Location = nil
-    if isStarted(OXLibExport) then -- if it finds ox_lib, use it instead of PolyZone
+    if isStarted(OXLibExport) then
         debugPrint("^6Bridge^7: ^2Creating new poly with ^7'^4"..OXLibExport.."^7': "..data.name)
+        -- Convert 2D points to 3D with a fixed Z coordinate (e.g., 12.0)
         for i = 1, #data.points do
             data.points[i] = vec3(data.points[i].x, data.points[i].y, 12.0)
         end
-        data.thickness = 1000
+        data.thickness = 1000  -- Set a default thickness value
         Location = lib.zones.poly(data)
     elseif isStarted("PolyZone") then
         debugPrint("^6Bridge^7: ^2Creating new poly with ^7'^4PolyZone^7': "..data.name)
         Location = PolyZone:Create(data.points, { name = data.name, debugPoly = data.debug })
         Location:onPlayerInOut(function(isPointInside)
             if isPointInside then data.onEnter() else data.onExit() end
+
         end)
     else
         print("^4ERROR^7: ^2No PolyZone creation script detected ^7- ^2Check ^3exports^1.^2lua^7")
@@ -47,21 +63,25 @@ function createPoly(data)
     return Location
 end
 
+-------------------------------------------------------------
+-- Circular Zone Creation
+-------------------------------------------------------------
+
 --- Creates a circular zone using the detected polyzone library (ox_lib or PolyZone).
 ---
---- This function automatically detects whether `ox_lib` or `PolyZone` is active and creates a circular zone accordingly.
---- It supports setting up entry and exit callbacks for the zone.
+--- When using ox_lib, it creates a sphere zone. For PolyZone, it creates a CircleZone and attaches
+--- onEnter and onExit callbacks.
 ---
----@param data table A table containing the circular zone configuration.
---- - **name** (`string`): The name of the circular zone.
---- - **coords** (`vector3`): The center coordinates of the circle.
---- - **radius** (`number`): The radius of the circle.
---- - **onEnter** (`function`): Callback function to execute when a player enters the zone.
---- - **onExit** (`function`): Callback function to execute when a player exits the zone.
+--- @param data table Zone configuration with the following keys:
+---     - name (string): The zone's identifier.
+---     - coords (vector3): The center of the circle.
+---     - radius (number): The radius of the circle.
+---     - onEnter (function): Callback when a player enters the zone.
+---     - onExit (function): Callback when a player exits the zone.
 ---
----@return table|nil table Returns the created circular zone object or `nil` if creation failed.
+--- @return table|nil table Returns the created circular zone object or nil if creation failed.
 ---
----@usage
+--- @usage
 --- ```lua
 --- createCirclePoly({
 ---     name = 'circleZone',
@@ -73,7 +93,7 @@ end
 --- ```
 function createCirclePoly(data)
     local Location = nil
-    if isStarted(OXLibExport) then -- if it finds ox_lib, use it instead of PolyZone
+    if isStarted(OXLibExport) then
         debugPrint("^6Bridge^7: ^2Creating new ^3Cricle^2 poly with ^7"..OXLibExport.." "..data.name)
         Location = lib.zones.sphere(data)
     elseif isStarted("PolyZone") then
@@ -87,26 +107,30 @@ function createCirclePoly(data)
             end
         end)
     else
-        print("^4ERROR^7: ^2No PolyZone creation script detected ^7- ^2Check ^3exports^1.^2lua^7")
+        print("^4ERROR^7: ^2No PolyZone creation script detected ^7- ^2Check ^3starter^1.^2lua^7")
     end
     debugPrint("^6Bridge^7: ^2Zone Stats - Coords: "..formatCoord(data.coords).." Radius: "..data.radius)
     return Location
 end
 
+-------------------------------------------------------------
+-- PolyZone Removal Function
+-------------------------------------------------------------
+
 --- Removes a previously created polyzone.
 ---
---- This function detects the active polyzone library (`ox_lib` or `PolyZone`) and removes the specified zone accordingly.
+--- Detects the active polyzone library and calls the appropriate removal method.
 ---
 --- @param Location table The zone object to be removed.
 ---
 --- @usage
 --- ```lua
 --- local zone = createPoly({...})
---- -- Later in the code
+---
 --- removePolyZone(zone)
 --- ```
 function removePolyZone(Location)
-    if isStarted(OXLibExport) then -- if it finds ox_lib, use it instead of PolyZone
+    if isStarted(OXLibExport) then
         debugPrint("^6Bridge^7: ^2Removing ^2poly with ^7"..OXLibExport)
         Location:remove()
     elseif isStarted("PolyZone") then

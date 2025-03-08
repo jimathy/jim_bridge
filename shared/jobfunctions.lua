@@ -1,17 +1,32 @@
--- Global variable to track duty status
+--[[
+    Duty & Interaction Utilities Module
+    --------------------------------------
+    This module provides functions related to:
+      • Determining boss roles from Jobs and Gangs tables.
+      • Checking a player's job and duty status.
+      • Toggling duty state.
+      • Simulating player interactions such as hand washing, using toilets/urinals,
+        and teleporting via doors.
+]]
+
+-------------------------------------------------------------
+-- Global Duty Status
+-------------------------------------------------------------
 onDuty = false
 
---- Scans the 'Jobs' and 'Gangs' tables to identify roles classified as Bosses.
+-------------------------------------------------------------
+-- Boss Role Detection
+-------------------------------------------------------------
+
+--- Scans the 'Jobs' and 'Gangs' tables to identify roles classified as bosses.
 ---
---- This function iterates through the specified role's grades within the `Jobs` or `Gangs` tables.
---- It identifies which grades are marked as bosses (`isboss`) or have bank authorization (`bankAuth`).
---- The function returns a table where each role maps to the lowest grade number that qualifies as a boss.
+--- Iterates through the specified role's grades in the Jobs or Gangs table and returns
+--- a table mapping the role to the lowest grade number that qualifies as a boss (isboss or bankAuth).
 ---
----@param role string The name of the job or gang role to check for boss grades.
+--- @param role string The job or gang role to check.
+--- @return table table A table with the role mapped to its boss grade number.
 ---
----@return table table A table containing roles mapped to their respective boss grade numbers.
----
----@usage
+--- @usage
 --- ```lua
 --- local bosses = makeBossRoles("police")
 --- if bosses["police"] then
@@ -31,25 +46,28 @@ function makeBossRoles(role)
     return boss
 end
 
---- Checks if the player has a specific job and is on duty.
+-------------------------------------------------------------
+-- Job & Duty Checks
+-------------------------------------------------------------
+
+--- Checks if the player has a specific job (or gang) and is on duty.
 ---
---- This function verifies whether the player possesses the specified job and, if applicable,
---- whether they are currently on duty. It provides a notification if the player fails these checks.
+--- Verifies whether the player possesses the specified role. If the role is defined in the Jobs table,
+--- it also checks that the player is clocked in (onDuty). If the check fails, a notification is sent.
 ---
----@param job string The name of the job or gang to check.
+--- @param job string The job or gang to check.
+--- @return boolean Returns true if the player meets the criteria; false otherwise.
 ---
----@return boolean Returns `true` if the player has the job (and is on duty if required), otherwise `false`.
----
----@usage
+--- @usage
 --- ```lua
 --- if jobCheck("mechanic") then
----     -- Allow access to mechanic-related features
+---     -- Allow mechanic features.
 --- else
----     -- Deny access or notify the player
+---     -- Deny access.
 --- end
 --- ```
 function jobCheck(job)
-    canDo = true
+    local canDo = true
     if Jobs[job] then
         if not hasJob(job) or not onDuty then
             triggerNotify(nil, Loc[Config.Lan].error["not_clockedin"])
@@ -66,14 +84,12 @@ end
 
 --- Toggles the player's duty status.
 ---
---- This function switches the player's duty state between on-duty and off-duty.
---- It integrates with QBcore's duty system if available; otherwise, it manually toggles the `onDuty` variable
---- and sends a notification to the player about their new duty status.
+--- Switches the player's duty state between on-duty and off-duty. If using QBcore,
+--- it triggers the appropriate server event. Otherwise, it manually toggles the onDuty variable and notifies the player.
 ---
----@usage
+--- @usage
 --- ```lua
---- toggleDuty()
---- -- Player will receive a notification indicating their new duty status
+--- toggleDuty()  -- Player receives a notification of their new duty status.
 --- ```
 function toggleDuty()
     if isStarted(QBExport) or isStarted(QBXExport) then
@@ -88,22 +104,24 @@ function toggleDuty()
     end
 end
 
+-------------------------------------------------------------
+-- Interaction Functions
+-------------------------------------------------------------
+
 --- Initiates the hand-washing action for the player.
 ---
---- This function triggers an animation and a progress bar to simulate the player washing their hands.
---- Upon completion, it sends a success notification. If the action is canceled, it notifies the player of the cancellation.
+--- Triggers an animation and a progress bar to simulate hand washing at the specified coordinates.
+--- On success, it notifies the player; if cancelled, it sends an error notification.
 ---
----@param data table A table containing the coordinates where the hand-washing action takes place.
---- - **coords** (`vector3`): The position where the hand-washing animation and camera are focused.
+--- @param data table A table containing:
+---     - coords (vector3): The location where the hand-washing action occurs.
 ---
----@return void
----
----@usage
+--- @usage
 --- ```lua
 --- washHands({ coords = vector3(200.0, 300.0, 40.0) })
---- -- Player will perform the hand-washing animation at the specified location
 --- ```
-function washHands(data) local ped = PlayerPedId()
+function washHands(data)
+    local ped = PlayerPedId()
     lookEnt(data.coords)
     local cam = createTempCam(ped, data.coords)
     if progressBar({
@@ -118,22 +136,21 @@ function washHands(data) local ped = PlayerPedId()
     }) then
         triggerNotify(nil, Loc[Config.Lan].success["washed_hands"], "success")
     else
-        triggerNotify(nil, Loc[Config.Lan].error["cancel"], 'error')
+        triggerNotify(nil, Loc[Config.Lan].error["cancel"], "error")
     end
     ClearPedTasks(ped)
 end
 
 --- Handles the player's interaction with a toilet or urinal.
 ---
---- This function manages the animations and progress bars associated with using a toilet or urinal.
---- Depending on whether the interaction is with a urinal (`data.urinal`), it plays the appropriate animation
---- and triggers server events upon successful completion. If the action is canceled, it notifies the player.
+--- Manages animations and progress bars for using a urinal or a toilet. If the action is successful,
+--- it triggers the appropriate server event (urinal usage) or notifies the player if cancelled.
 ---
----@param data table A table containing data about the toilet interaction.
---- - **urinal** (`boolean`): Indicates whether the interaction is with a urinal (`true`) or a toilet (`false`).
---- - **sitcoords** (`vector4`): The coordinates and heading for the seating animation when using a toilet.
+--- @param data table A table containing:
+---     - urinal (boolean): `true if using a urinal; false for a toilet.`
+---     - sitcoords (vector4): `Coordinates and heading for seating when using a toilet.`
 ---
----@usage
+--- @usage
 --- ```lua
 --- useToilet({ urinal = true })
 --- -- Player uses a urinal with corresponding animations and notifications
@@ -154,7 +171,7 @@ function useToilet(data)
             TriggerServerEvent(getScript().."server:Urinal")
         else
             lockInv(false)
-            triggerNotify(nil, Loc[Config.Lan].error["cancelled"], 'error')
+            triggerNotify(nil, Loc[Config.Lan].error["cancelled"], "error")
         end
     else
         TaskStartScenarioAtPosition(PlayerPedId(), "PROP_HUMAN_SEAT_CHAIR_MP_PLAYER", data.sitcoords.x, data.sitcoords.y, data.sitcoords.z, data.sitcoords[4], 0, 1, true)
@@ -167,24 +184,22 @@ function useToilet(data)
             ClearPedTasks(PlayerPedId())
         else
             lockInv(false)
-            triggerNotify(nil, Loc[Config.Lan].error["cancelled"], 'error')
+            triggerNotify(nil, Loc[Config.Lan].error["cancelled"], "error")
         end
     end
 end
 
 --- Teleports the player to specified coordinates with a fade effect.
 ---
---- This function fades the screen out, moves the player to the target coordinates (`data.telecoords`),
---- sets the player's heading, and then fades the screen back in. It's commonly used for door interactions
---- or teleportation points within the game.
+--- Fades the screen out, moves the player to the target coordinates, sets the player's heading,
+--- then fades the screen back in. Commonly used for door interactions or teleportation points.
 ---
----@param data table A table containing teleportation data.
---- - **telecoords** (`vector4`): The target coordinates and heading for the teleportation.
+--- @param data table A table containing:
+---   - telecoords (vector4): The target coordinates and heading.
 ---
----@usage
+--- @usage
 --- ```lua
 --- useDoor({ telecoords = vector4(215.76, -810.12, 29.73, 90.0) })
---- -- Player is teleported to the specified coordinates with a fade effect
 --- ```
 function useDoor(data)
     DoScreenFadeOut(500)

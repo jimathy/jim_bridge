@@ -1,25 +1,28 @@
--- INPUT --
--- Multiscript input script function to create simple input text boxes --
+--[[
+    Input Dialog Module
+    ---------------------
+    This module provides a function to create a simple input dialog compatible with
+    multiple menu systems (OX, QB, GTA/WarMenu, and ESX). It supports various input
+    types such as radio buttons, numbers, text, and select dropdowns.
 
---- Creates a simple input dialog compatible with multiple menu systems.
+]]
+
+--- Creates a simple input dialog using the configured menu system.
 ---
---- This function generates input dialogs for different frameworks (OX, QB, GTA) based on the configuration.
---- It supports various input types such as radio buttons, numbers, text, and select dropdowns.
+--- @param title string The title or header of the input dialog.
+--- @param opts table A table of input option definitions. Each option should include:
+---     - type (string): The input type ("radio", "number", "text", "select").
+---     - label (string, optional): A label for the input (used in radio/select for OX).
+---     - text (string, optional): The text prompt for the input.
+---     - name (string): The identifier for the input.
+---     - isRequired (boolean, optional): Whether input is mandatory.
+---     - default (any, optional): The default value.
+---     - options (table, optional): A table of choices for "radio" and "select" types.
+---     - min (number, optional): Minimum value (for "number" and "select").
+---     - max (number, optional): Maximum value.
+---     - txt (string, optional): Additional description.
 ---
----@param title string The title/header of the input dialog.
----@param opts table A table containing input options. Each option should have a `type` and other relevant fields based on the type.
----   - **type** (`string`): The type of input. Supported types: "radio", "number", "text", "select".
----   - **label** (`string`, optional): The label for the input (used for "radio" and "select" types in OX).
----   - **text** (`string`, optional): The text prompt for the input.
----   - **name** (`string`): The identifier name for the input.
----   - **isRequired** (`boolean`, optional): Whether the input is required.
----   - **default** (`any`, optional): The default value for the input.
----   - **options** (`table`, optional): A table of options for "radio" and "select" types.
----   - **min** (`number`, optional): The minimum value (used for "select" type).
----   - **max** (`number`, optional): The maximum value (used for "number" and "select" types).
----   - **txt** (`string`, optional): Additional text or description for the input.
----
----@return table|nil table Returns the user's input as a table if the dialog is submitted, otherwise returns `nil`.
+--- @return table|nil table Returns the user's input as a table if submitted, otherwise nil.
 ---
 ---@usage
 --- ```lua

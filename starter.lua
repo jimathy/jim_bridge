@@ -39,6 +39,7 @@ for _, v in pairs({ -- This is a specific load order
     'duifunctions.lua',
 
     -- Native Scaleforms
+    'scaleforms/scaleform_basic.lua',
     'scaleforms/bigMessageInstance.lua',
     'scaleforms/countDownHandler.lua',
     'scaleforms/debugScaleform.lua',
@@ -56,11 +57,13 @@ for _, v in pairs({ -- This is a specific load order
 
     'wrapperfunctions.lua',
     'polyZone.lua',
+    'inventories.lua',
     'itemcontrol.lua',
     'playerfunctions.lua',
     'metaHandlers.lua',
     'jobfunctions.lua',
-    'banking.lua',
+    'societybank.lua',
+    'phones.lua',
 
     -- Interactions
     'targets.lua',
@@ -78,7 +81,9 @@ for _, v in pairs({ -- This is a specific load order
     'scaleEntity.lua',
     'vehicles.lua',
     'effects.lua',
-    'versioncheck.lua'
+
+    -- Do version check last
+    '_versioncheck.lua'
 }) do
     if debugMode then
         --print("^5Loading^7: 'jim_bridge/shared/"..v.."' ^2into ^7'"..GetCurrentResourceName().."' ...")

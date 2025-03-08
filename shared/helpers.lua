@@ -1,15 +1,19 @@
---- Utility Functions for Resource Management and Debugging
----
---- This script provides a set of utility functions for managing resources, debugging, and handling various common tasks within the game environment.
---- It includes functions for checking resource states, generating unique keys, formatting numbers and coordinates, handling JSON data, and more.
+--[[
+    Utility Functions for Resource Management and Debugging
+    ----------------------------------------------------------
+    This script provides a set of utility functions for managing resources,
+    debugging, and handling common tasks in the game environment.
+    It includes functions to check resource states, generate unique keys,
+    format numbers and coordinates, handle JSON data, perform raycasts, and more.
+]]
 
---[[ Resource and Environment Checks ]]--
+-------------------------------------------------------------
+-- Resource and Environment Checks
+-------------------------------------------------------------
 
 --- Checks if a specific resource is started.
----
----@param script string The name of the resource to check.
----@return boolean `true` if the resource state contains "start", otherwise `false`.
----
+--- @param script string The name of the resource.
+--- @return boolean boolean True if the resource state contains "start", false otherwise.
 ---@usage
 --- ```lua
 --- if isStarted("myResource") then
@@ -22,12 +26,8 @@ end
 
 local scriptName = nil
 
---- Retrieves the current resource name.
----
---- Caches the resource name after the first call for efficiency.
----
---- @return string scriptName The name of the current resource.
----
+--- Retrieves the current resource name, caching it for efficiency.
+--- @return string string The current resource name.
 --- @usage
 --- ```lua
 --- local currentScript = getScript()
@@ -38,12 +38,8 @@ function getScript()
     return scriptName
 end
 
---- Determines if the current execution context is the server.
----
---- Very helpful for shared files complaining about client functions running on server or vice versa
----
---- @return boolean Returns `true` if running on the server, otherwise `false`.
----
+--- Determines if the current context is the server.
+--- @return boolean boolean True if running on the server, false otherwise.
 ---@usage
 --- ```lua
 --- if isServer() then
@@ -56,14 +52,13 @@ function isServer()
     return IsDuplicityVersion()
 end
 
---[[ Debugging Functions ]]--
+-------------------------------------------------------------
+-- Debugging and JSON Utilities
+-------------------------------------------------------------
 
---- Prints debug messages if debugging mode is enabled.
----
---- Concatenates all arguments and prints them along with debug information.
----
---- @param ... any Multiple arguments to be concatenated and printed.
----
+--- Prints debug messages if debugMode is enabled.
+--- Concatenates all arguments and prints them with debug info.
+--- @param ... any One or more values to print.
 --- @usage
 --- ```lua
 --- debugPrint("Player has joined:", playerName)
@@ -71,15 +66,13 @@ end
 function debugPrint(...)
     if debugMode then
         local args = {...}
-        local output = table.concat(args, " ")  -- Concatenate all arguments with a space
+        local output = table.concat(args, " ")
         print(output, getDebugInfo(debug.getinfo(2, "nSl")))
     end
 end
 
 --- Prints event-related debug messages if event debugging is enabled.
----
---- @param ... any Multiple arguments to be printed.
----
+--- @param ... any One or more values to print.
 --- @usage
 --- ```lua
 --- eventPrint("Event triggered:", eventName)
@@ -90,24 +83,22 @@ function eventPrint(...)
     end
 end
 
--- Function to recursively colorize the JSON data
+--- Returns the keys of a table in sorted order.
+--- @param tbl table The table to sort keys for.
+--- @return table table A sorted array of keys.
 function getSortedKeys(tbl)
     local keys = {}
     for k in pairs(tbl) do keys[#keys + 1] = k end
     table.sort(keys, function(a, b)
         local numA, numB = tonumber(a), tonumber(b)
-        if numA and numB then return numA < numB
-        else return tostring(a) < tostring(b) end
+        if numA and numB then return numA < numB else return tostring(a) < tostring(b) end
     end)
     return keys
 end
 
 --- Recursively colorizes a table for debug printing.
----
 --- @param tbl table The table to colorize.
---- @return table colourizedTable The colorized table.
----
---- @usage
+--- @return table table A new table with colorized keys and values.
 --- ```lua
 --- local colorizedData = colorizeTable(myTable)
 --- jsonPrint(colorizedData)
@@ -116,18 +107,19 @@ function colorizeTable(tbl)
     local newData, sortedKeys = {}, getSortedKeys(tbl)
     for _, k in ipairs(sortedKeys) do
         local v = tbl[k]
-        newData["^6"..tostring(k).."^7"] = ((type(v) == "table") and colorizeTable(v)) or (type(v):find("vector") and formatCoord(v)) or "^2"..tostring(v).."^7"
+        newData["^6"..tostring(k).."^7"] =
+            (type(v) == "table" and colorizeTable(v))
+            or (tostring(type(v)):find("vector") and formatCoord(v))
+            or "^2"..tostring(v).."^7"
     end
     return newData
 end
 
 --- Encodes a table into an ordered JSON string with indentation.
----
 --- @param data table The table to encode.
---- @param indent string The string used for indentation (e.g., "  ").
---- @param level number The current indentation level.
+--- @param indent string The indentation string (e.g., "  ").
+--- @param level number The current level of indentation.
 --- @return string The formatted JSON string.
----
 --- @usage
 --- ```lua
 --- local jsonString = encodeOrderedJSON(myTable, "  ", 0)
@@ -143,10 +135,8 @@ function encodeOrderedJSON(data, indent, level)
     return table.concat(jsonParts)
 end
 
---- Prints a table as a colorized and ordered JSON string if debugging mode is enabled.
----
+--- Prints a table as a colorized and ordered JSON string if debugMode is enabled.
 --- @param data table The table to print.
----
 --- @usage
 --- ```lua
 --- jsonPrint(myTable)
@@ -158,9 +148,7 @@ function jsonPrint(data)
 end
 
 --- Retrieves the current time formatted for debug prints.
----
 --- @return string string The formatted time string, e.g., "^7(14:23:45)".
----
 --- @usage
 --- ```lua
 --- local currentTime = GetPrintTime()
@@ -177,9 +165,7 @@ function GetPrintTime()
 end
 
 --- Generates a unique 3-character alphanumeric key.
----
---- @return string GeneratedString A randomly generated 3-character string.
----
+--- @return string string The generated key.
 --- @usage
 --- ```lua
 --- local uniqueKey = keyGen()
@@ -187,20 +173,28 @@ end
 --- ```
 function keyGen()
     local charset = {
-        "q","w","e","r","t","y","u","i","o","p","a","s","d","f","g","h","j","k","l","z","x","c","v","b","n","m",
-        "Q","W","E","R","T","Y","U","I","O","P","A","S","D","F","G","H","J","K","L","Z","X","C","V","B","N","M",
+        "q","w","e","r","t","y","u","i","o","p",
+        "a","s","d","f","g","h","j","k","l",
+        "z","x","c","v","b","n","m",
+        "Q","W","E","R","T","Y","U","I","O","P",
+        "A","S","D","F","G","H","J","K","L",
+        "Z","X","C","V","B","N","M",
         "1","2","3","4","5","6","7","8","9","0"
     }
     local GeneratedID = ""
-	for i = 1, 3 do GeneratedID = GeneratedID..charset[math.random(1, #charset)] end
+    for i = 1, 3 do
+        GeneratedID = GeneratedID..charset[math.random(1, #charset)]
+    end
     return GeneratedID
 end
 
+-------------------------------------------------------------
+-- Formatting and Vector Math Functions
+-------------------------------------------------------------
+
 --- Formats a number with commas as thousand separators.
----
 --- @param amount number The number to format.
---- @return string commaValue The formatted number string with commas.
----
+--- @return string string The formatted number.
 --- @usage
 --- ```lua
 --- local formattedNumber = cv(1000000)  -- "1,000,000"
@@ -208,15 +202,17 @@ end
 --- ``
 function cv(amount)
     local formatted = tostring(amount or "0")
-    while true do formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2') if (k==0) then break end Wait(0) end
+    while true do
+        formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
+        if k == 0 then break end
+        Wait(0)
+    end
     return formatted
 end
 
 --- Formats a coordinate vector for debug printing.
----
---- @param coord table A vector3 or vector4 table with `x`, `y`, `z`, and optional `w` components.
---- @return string The formatted coordinate string with color codes.
----
+--- @param coord table A vector3 or vector4 with x, y, z (and optional w).
+--- @return string string The formatted coordinate string.
 --- @usage
 --- ```lua
 --- local formattedCoord = formatCoord(vector3(100.0, 200.0, 300.0))
@@ -233,47 +229,42 @@ function formatCoord(coord)
     return "^5"..vecType.."^7("..components[1]..components[2]..components[3]..components[4].."^7)"
 end
 
---- Calculates the center point of a list of zones (coordinates).
----
---- @param table table A table of vector3 coordinates.
+--- Calculates the center point of a list of coordinates.
+--- @param tbl table An array of vector3 coordinates.
 --- @return vector3 vector3 The center coordinate.
----
 --- @usage
 --- ```lua
 --- local center = getCenterOfZones({vector3(100, 200, 300), vector3(110, 210, 310)})
 --- print("Center of Zones:", center)
 --- ```
-function getCenterOfZones(table)
+function getCenterOfZones(tbl)
     local totalX, totalY, totalZ = 0, 0, 0
-
-    for _, coord in ipairs(table) do
+    for _, coord in ipairs(tbl) do
         totalX = totalX + coord.x
         totalY = totalY + coord.y
         totalZ = totalZ + coord.z
     end
-
-    local count = #table
+    local count = #tbl
     return vector3(totalX / count, totalY / count, totalZ / count)
 end
 
 --- Counts the number of keys in a table.
----
---- @param table table The table to count keys in.
---- @return number number The number of keys in the table.
----
+--- @param tbl table The table to count.
+--- @return number number The key count.
 --- @usage
 --- ```lua
 --- local count = countTable(myTable)
 --- print("Number of keys:", count)
 --- ```
-function countTable(table) local i = 0 for keys in pairs(table) do i += 1 end return i end
+function countTable(tbl)
+    local i = 0
+    for _ in pairs(tbl) do i = i + 1 end
+    return i
+end
 
-
---- Returns an iterator that iterates over a table's keys in sorted order.
----
+--- Returns an iterator over a table's keys in sorted order.
 --- @param t table The table to iterate over.
---- @return function function An iterator function.
----
+--- @return function An iterator function for sorted keys.
 --- @usage
 --- ```lua
 --- for k, v in pairsByKeys(myTable) do
@@ -281,7 +272,6 @@ function countTable(table) local i = 0 for keys in pairs(table) do i += 1 end re
 --- end
 --- ```
 function pairsByKeys(t)
-    local t = t
     if not t then
         print("^1Error^7: ^3Nil ^2table recieved for ^3pairsByKeys^7(), ^2setting to ^7{} ^2to prevent break^7")
         t = {}
@@ -289,24 +279,20 @@ function pairsByKeys(t)
     local a = {} for n in pairs(t) do a[#a+1] = n end table.sort(a) local i = 0 local iter = function() i += 1 if a[i] == nil then return nil else return a[i], t[a[i]] end end return iter
 end
 
---- Creates a new table with consecutive numerical indices sorted by the `id` field.
----
---- @param originalTable table The original table with entries containing an `id` field.
---- @return table The new table with sorted entries and consecutive `id` values.
----
+--- Creates a new table with consecutive numerical indices sorted by the 'id' field.
+--- @param originalTable table The table containing entries with an 'id' field.
+--- @return table table A sorted table with consecutive indices.
 --- @usage
+--- ```lua
 --- local sortedTable = createConsecutiveTable(originalTable)
 --- for i, entry in ipairs(sortedTable) do
 ---     print(i, entry)
 --- end
+--- ```
 function createConsecutiveTable(originalTable)
     local sortedEntries = {}
-    for _, entry in pairs(originalTable) do
-        table.insert(sortedEntries, entry)
-    end
-    table.sort(sortedEntries, function(a, b)
-        return a.id < b.id
-    end)
+    for _, entry in pairs(originalTable) do table.insert(sortedEntries, entry) end
+    table.sort(sortedEntries, function(a, b) return a.id < b.id end)
     local newTable = {}
     for newIndex, entry in ipairs(sortedEntries) do
         entry.id = newIndex
@@ -315,112 +301,9 @@ function createConsecutiveTable(originalTable)
     return newTable
 end
 
---[[ Drawing Functions ]]--
-
---- Draws 3D text at specified coordinates.
----
---- @param coord table A vector3 table with `x`, `y`, and `z` coordinates.
---- @param text string The text to display.
---- @param highlight boolean (optional) Whether to highlight certain parts of the text.
----
---- @usage
---- ```lua
---- CreateThread(function()
----     while true do
----         DrawText3D(vector3(100, 200, 300), "Hello World", true)
----         Wait(0)
----     end
---- end)
---- ```
-function DrawText3D(coord, text, highlight)
-    SetTextScale(0.30, 0.30)
-    SetTextFont(0)
-    SetTextProportional(1)
-    SetTextColour(255, 255, 255, 215)
-    SetTextEntry("STRING")
-    SetTextCentre(true)
-    local totalLength = string.len(text)
-    local textMaxLength = textMaxLength or 99 -- max 99
-    local text = totalLength > textMaxLength and text:sub(1, totalLength - (totalLength - textMaxLength)) or text
-    AddTextComponentString(highlight and text:gsub("%~w~", "~y~") or text)
-    SetDrawOrigin(coord.x, coord.y, coord.z, 0)
-    DrawText(0.0, 0.0)
-    local count, length = GetLineCountAndMaxLength(text)
-
-    local padding = 0.005
-    local heightFactor = (count / 43) + padding
-    local weightFactor = (length / 150) + padding
-
-    local height = (heightFactor / 2) - padding / 1
-    local width = (weightFactor / 2) - padding / 1
-
-    DrawRect(0.0, height, width, heightFactor, 0, 0, 0, 150)
-    ClearDrawOrigin()
-end
-
--- readd missing function for drawtext
-function GetLineCountAndMaxLength(text)
-    local lineCount = 0
-    local maxLength = 0
-    for line in text:gmatch("[^\n]+") do
-        lineCount = lineCount + 1
-        local lineLength = string.len(line)
-        if lineLength > maxLength then
-            maxLength = lineLength
-        end
-    end
-    -- If there are no newline characters (or text is empty), treat it as a single line.
-    if lineCount == 0 then
-        lineCount = 1
-    end
-    return lineCount, maxLength
-end
-
---- Displays a help message on the screen.
----
---- @param text string The text to display as a help message.
----
---- @usage
---- DisplayHelpMsg("Press E to interact")
-function DisplayHelpMsg(text)
-    BeginTextCommandDisplayHelp("STRING")
-    AddTextComponentScaleform(text)
-    EndTextCommandDisplayHelp(0, true, false, -1)
-end
-
---- Displays a "Saving/Loading" spinner with a custom message.
----
---- @param text string The message to display alongside the spinner.
----
---- @usage
---- ```lua
---- displaySpinner("Saving data...")
---- ```
-function displaySpinner(text)
-    BeginTextCommandBusyspinnerOn('STRING')
-    AddTextComponentSubstringPlayerName(text)
-    EndTextCommandBusyspinnerOn(4)
-end
-
---- Stops the "Saving/Loading" spinner.
----
---- This function is client-side only.
----
---- @usage
---- ```lua
---- stopSpinner()
---- ```
-function stopSpinner()
-    if not isServer() then
-        BusyspinnerOff()
-    end
-end
-
 --- Concatenates a table of strings into a single string separated by newlines.
----
---- @param tbl table A table containing string elements.
---- @return string string The concatenated string with newline separators.
----
+--- @param tbl table The table containing strings.
+--- @return string string The concatenated string.
 --- @usage
 --- ```lua
 --- local combinedText = concatenateText({"Line 1", "Line 2", "Line 3"})
@@ -429,74 +312,69 @@ end
 function concatenateText(tbl)
     local result = ""
     for i = 1, #tbl do
-        result = result..tbl[i]
-        if i < #tbl then
-            result = result.."\n"  -- Add newline only if it's not the last element
-        end
+        result = result..tbl[i]..(i < #tbl and "\n" or "")
     end
     return result
 end
 
---- Converts rotation to a direction vector.
----
---- @param rot vector3 A vector3 containing rotation values
---- @return vector3 vector3 A vector3 representing the direction.
----
+--- Converts a rotation (degrees) to a direction vector.
+--- @param rot vector3 A vector3 with rotation values.
+--- @return vector3 vector3  The forward direction vector.
 --- @usage
 --- ```lua
 --- local direction = RotationToDirection({ z = 90 })
 --- print(direction)
 --- ```
 function RotationToDirection(rot)
-    local adjust = (math.pi / 180)
-    return vec3(-math.sin(adjust * rot.z) * math.abs(math.cos(adjust * rot.x)), math.cos(adjust * rot.z) * math.abs(math.cos(adjust * rot.x)), math.sin(adjust * rot.x))
+    local adjust = math.pi / 180
+    return vec3(
+        -math.sin(adjust * rot.z) * math.abs(math.cos(adjust * rot.x)),
+         math.cos(adjust * rot.z) * math.abs(math.cos(adjust * rot.x)),
+         math.sin(adjust * rot.x)
+    )
 end
 
---- Creates a simple text-based progress bar.
----
---- @param percentage number The completion percentage (0-100).
---- @return string string A string representing the progress bar, e.g., "█████░░░░░".
----
+--- Creates a basic progress bar string.
+--- @param percentage number Completion percentage (0-100).
+--- @return string string The progress bar (e.g., "█████░░░░░").
 --- @usage
 --- ```lua
 --- local bar = basicBar(50)  -- "█████░░░░░"
 --- print(bar)
 --- ```
 function basicBar(percentage)
-    local percentage = math.ceil(percentage)
-    local totalBlocks = 10
-    local filledBlocks = math.floor((percentage / 100) * totalBlocks)
-    local emptyBlocks = totalBlocks - filledBlocks
-
-    local bar = string.rep("█", filledBlocks)..string.rep("░", emptyBlocks)
-    return bar
+    local perc = math.ceil(percentage)
+    local total = 10
+    local filled = math.floor((perc / 100) * total)
+    local empty = total - filled
+    return string.rep("█", filled)..string.rep("░", empty)
 end
 
 --- Normalizes a 3D vector.
----
---- @param vec vector3 A vector3 table with `x`, `y`, and `z` components.
---- @return vector3 vector3 The normalized vector3.
----
+--- @param vec vector3 A vector3 table.
+--- @return vector3 vector3 A normalized vector.
 --- @usage
 --- ```lua
 --- local normalizedVec = normalizeVector(vector3(1, 2, 3))
 --- print(normalizedVec)
 --- ```
 function normalizeVector(vec)
-    local length = math.sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z)
-    if length ~= 0 then
-        return vec3(vec.x / length, vec.y / length, vec.z / length)
+    local len = math.sqrt(vec.x^2 + vec.y^2 + vec.z^2)
+    if len ~= 0 then
+        return vec3(vec.x / len, vec.y / len, vec.z / len)
     else
         return vec3(0, 0, 0)
     end
 end
 
---- Draws a line between two coordinates for debugging purposes.
----
---- @param startCoords vector3 A vector3 table representing the start point.
---- @param endCoords vector3 A vector3 table representing the end point.
---- @param col vector4 A table with `x`, `y`, `z`, `w` representing the color and opacity.
----
+-------------------------------------------------------------
+-- Drawing and Raycasting Functions
+-------------------------------------------------------------
+
+--- Draws a line between two coordinates (for debugging).
+--- @param startCoords vector3 The starting coordinate.
+--- @param endCoords vector3 The ending coordinate.
+--- @param col vector4 A vector4 specifying color and opacity.
 --- @usage
 --- ```lua
 --- drawLine(vector3(100, 200, 300), vector3(150, 250, 350), vector4(255, 0, 0, 255))
@@ -504,21 +382,19 @@ end
 function drawLine(startCoords, endCoords, col)
     if debugMode then
         CreateThread(function()
-            local showCount = 1000
-            while showCount >= 0 do
+            local count = 1000
+            while count >= 0 do
                 DrawLine(startCoords.x, startCoords.y, startCoords.z, endCoords.x, endCoords.y, endCoords.z, col.x, col.y, col.z, col.w)
-                showCount -= 10
+                count -= 10
                 Wait(0)
             end
         end)
     end
 end
 
---- Draws a sphere at specified coordinates for debugging purposes.
----
---- @param coords vector3 A vector3 table representing the center of the sphere.
---- @param col vector4 A table with `x`, `y`, `z`, `w` representing the color and opacity.
----
+--- Draws a sphere at the specified coordinates (for debugging).
+--- @param coords vector3 The center of the sphere.
+--- @param col vector4 A vector4 specifying color and opacity.
 --- @usage
 --- ```lua
 --- drawSphere(vector3(100, 200, 300), vector4(0, 255, 0, 255))
@@ -526,24 +402,22 @@ end
 function drawSphere(coords, col)
     if debugMode then
         CreateThread(function()
-            local showCount = 1000
-            while showCount >= 0 do
+            local count = 1000
+            while count >= 0 do
                 DrawSphere(coords.x, coords.y, coords.z, 0.5, col.x, col.y, col.z, col.w)
-                showCount -= 1
+                count -= 1
                 Wait(10)
             end
         end)
     end
 end
 
---- Performs a raycast between two coordinates and returns the result.
----
---- @param startCoords table A vector3 table representing the start point.
---- @param endCoords table A vector3 table representing the end point.
---- @param entity number|nil The entity to ignore during the raycast.
---- @param flags number|nil Raycast flags to customize the raycast behavior. Defaults to `4294967295`.
---- @return multiple multiple Returns multiple values from `GetShapeTestResultIncludingMaterial`.
----
+--- Performs a raycast between two coordinates and returns the results.
+--- @param startCoords vector3 The starting coordinate.
+--- @param endCoords vector3 The ending coordinate.
+--- @param entity number|nil An entity to ignore.
+--- @param flags number|nil Optional raycast flags (default: 4294967295).
+--- @return multiple Multiple values returned by GetShapeTestResultIncludingMaterial.
 --- @usage
 --- ```lua
 --- local hit, hitPos, material = PerformRaycast(startVec, endVec, playerPed, 1)
@@ -553,47 +427,41 @@ end
 --- end
 --- ```
 function PerformRaycast(startCoords, endCoords, entity, flags)
-    drawLine(startCoords, endCoords, vec4(0, 0, 255, 255))
-    local val1, val2, val3, val4, val5, val6 = GetShapeTestResult(StartExpensiveSynchronousShapeTestLosProbe(startCoords.x, startCoords.y, startCoords.z, endCoords.x, endCoords.y, endCoords.z, flags or 4294967295, entity, 0))
-    if val2 then
-        --drawSphere(val3, vec4(255, 0, 255, 0.5))
-    end
+    drawLine(startCoords, endCoords, vec4(0,0,255,255))
+    local val1, val2, val3, val4, val5, val6 = GetShapeTestResult(
+        StartExpensiveSynchronousShapeTestLosProbe(
+            startCoords.x, startCoords.y, startCoords.z,
+            endCoords.x, endCoords.y, endCoords.z,
+            flags or 4294967295, entity, 0
+        )
+    )
     return val1, val2, val3, val4, val5, val6
 end
 
---- Adjusts the Z-coordinate of a position to align with the ground.
----
---- @param coords vector4 A vector3 or vector4 table with `x`, `y`, `z`, and optional `w` components.
---- @return vector3|vector4 vector  adjusted coordinate with the Z value set to the ground level.
----
+--- Adjusts the Z-coordinate of a position to the ground level.
+--- @param coords vector4 A vector3 or vector4 with x, y, z (and optional w).
+--- @return vector3|vector4 vector The coordinates adjusted for ground level.
 --- @usage
 --- ```lua
 --- local groundCoords = adjustForGround(playerCoords)
 --- print("Ground Position:", groundCoords)
 --- ```
 function adjustForGround(coords)
-    local coords = coords
     local foundGround, zPos = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z + 1.0)
-
     if foundGround then
         if coords.w then
-            coords = vec4(coords.x, coords.y, zPos, coords.w)
+            return vec4(coords.x, coords.y, zPos, coords.w)
         else
-            coords = vec3(coords.x, coords.y, zPos)
+            return vec3(coords.x, coords.y, zPos)
         end
-        --debugPrint("^6Bridge^7: Adjusting for ground pos ", coords.z, zPos)
-
-        return coords
     else
         return coords
     end
 end
 
---- Ensures that a network vehicle exists by verifying its network ID.
----
---- @param vehNetID number The network ID of the vehicle.
---- @return number number The vehicle entity if it exists, otherwise `0`.
----
+--- Ensures a network vehicle exists from its network ID.
+--- @param vehNetID number The network ID.
+--- @return number number The vehicle entity, or 0 if not found.
 --- @usage
 --- ```lua
 --- local vehicle = ensureNetToVeh(netID)
@@ -619,16 +487,16 @@ function ensureNetToVeh(vehNetID)
     return vehicle
 end
 
---- Ensures that a network entity exists by verifying its network ID.
----
---- @param entNetID number The network ID of the entity.
---- @return number The entity if it exists, otherwise `0`.
----
+--- Ensures a network entity exists from its network ID.
+--- @param entNetID number The network ID.
+--- @return number number The entity, or 0 if not found.
 --- @usage
+--- ```lua
 --- local entity = ensureNetToEnt(netID)
 --- if entity ~= 0 then
 ---     print("Entity exists:", entity)
 --- end
+--- ```
 function ensureNetToEnt(entNetID)
     debugPrint("^6Bridge^7: ^3ensureNetToEnt^7: ^2Requesting NetworkDoesNetworkIdExist^7(^6"..entNetID.."^7)")
     local timeout = 100
@@ -647,7 +515,9 @@ function ensureNetToEnt(entNetID)
     return entity
 end
 
---[[ Material Definitions ]]--
+-------------------------------------------------------------
+-- Material and Prop Functions
+-------------------------------------------------------------
 
 --- A table mapping material names to their corresponding hash values.
 ---
@@ -869,22 +739,17 @@ local materials = {
     temp_30 = 13626292
 }
 
---- Retrieves the ground material at a specified position.
----
---- This function performs a raycast downwards from the given coordinates to determine the material type of the ground.
----
---- @param coords vector3 The coordinates from which to perform the raycast.
---- @return number|nil number The material hash if found; otherwise, `nil`.
---- @return string string The name of the material.
----
+--- Retrieves the ground material at a given position.
+--- @param coords vector3 The coordinate to test.
+--- @return number|nil number The material hash if hit, nil otherwise.
+--- @return string string The material name.
 --- @usage
 --- ```lua
---- local materialHash, materialName = GetGroundMaterialAtPosition(vector3(100, 200, 300))
---- print("Ground material:", materialName)
+--- local matHash, matName = GetGroundMaterialAtPosition(vector3(100,200,300))
+--- print("Material:", matName)
 --- ```
 function GetGroundMaterialAtPosition(coords)
     local endX, endY, endZ = coords.x, coords.y, coords.z - 1.0
-
     local rayHandle = StartShapeTestCapsule(coords.x, coords.y, coords.z, endX, endY, endZ, 1.0, 1, playerPed, 7)
     local _, hit, _, _, materialHash, _ = GetShapeTestResultIncludingMaterial(rayHandle)
     local materialName = "Unknown"
@@ -894,14 +759,10 @@ function GetGroundMaterialAtPosition(coords)
             break
         end
     end
-    if hit then return materialHash, materialName
-    else return nil, materialName end
+    if hit then return materialHash, materialName else return nil, materialName end
 end
 
---- Retrieves the dimensions of a prop/model.
----
---- This function loads the specified model and returns its width, depth, and height based on its bounding box.
----
+--- Retrieves the dimensions (width, depth, height) of a prop/model.
 --- @param model string The name or hash of the model.
 --- @return number number The width of the prop.
 --- @return number number The depth of the prop.

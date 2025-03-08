@@ -1,17 +1,46 @@
+--[[
+    Stash Management Module
+    -------------------------
+    This module handles stash-related operations including:
+      • Retrieving stash items (from server or local cache).
+      • Checking for required items in stashes.
+      • Opening stashes using different inventory systems.
+      • Removing items from stashes.
+      • Checking if a stash has specific items.
+]]
+
+-- Global variable to hold the current stash (used in callbacks).
 local stash
+
+-- If running on the server, create a callback to retrieve stash items.
 if isServer() then
-    createCallback(getScript()..':server:GetStashItems',
-        function(source, stashName)
-            stash = getStash(stashName) return stash
-        end)
+    createCallback(getScript()..':server:GetStashItems', function(source, stashName)
+        stash = getStash(stashName)
+        return stash
+    end)
 end
 
-local stashCache ={}
+-- Local cache for stashes.
+local stashCache = {}
+
+--- Retrieves (or updates) a local stash cache entry with a timeout.
+--- When the cache is empty or expired, it triggers a server callback to update the items.
+---
+--- @param stashName string The name of the stash.
+--- @param stop boolean (Optional) If true, clears the entire stash cache.
+--- @return boolean True if items exist in cache (and recheck is skipped), false otherwise.
+---
+--- @usage
+--- ```lua
+--- local cached = GetStashTimeout("playerStash")
+--- ```
 function GetStashTimeout(stashName, stop)
     if stop then
         stashCache = {}
         return
     end
+
+    -- Retrieve cache for this stash, or initialize if not present.
     stash = stashCache[stashName]
     if not stash then
         debugPrint("^6Bridge^7: ^2Local Stash ^7'^3"..stashName.."^7'^2 cache ^1not ^2found^7, ^2need to grab from server^7")
@@ -19,16 +48,21 @@ function GetStashTimeout(stashName, stop)
         stash = stashCache[stashName]
     else
         debugPrint("^6Bridge^7: ^2Local Stash ^7'^3"..stashName.."^7'^2 cache found^7")
+        ("^6Bridge^7: ^2Local Stash '^3"..stashName.."^7' cache found")
     end
+
+    -- If there are already items in cache, skip recheck.
     if countTable(stashCache[stashName].items) > 0 then
         debugPrint("^6Bridge^7: '^3"..stashName.." ^2Items found in cache, skipping recheck")
         return true
     end
+
+    -- If timeout has expired, update the stash items from the server.
     if stashCache[stashName].timeout <= 0 then
         stashCache[stashName].items = triggerCallback(getScript()..':server:GetStashItems', stashName)
-        stashCache[stashName].timeout = 15000
+        stashCache[stashName].timeout = 15000  -- Timeout in milliseconds.
         CreateThread(function()
-            while stash.timeout > 0 do
+            while stashCache[stashName] and stashCache[stashName].timeout > 0 do
                 stashCache[stashName].timeout -= 1000
                 Wait(1000)
             end
@@ -39,46 +73,93 @@ function GetStashTimeout(stashName, stop)
     return false
 end
 
+--- Checks if the specified stashes have the required items.
+---
+--- If multiple stashes are provided (as a table), it iterates over each until all required items are found.
+---
+--- @param stashes string|table Either a single stash name or a table of stash names.
+--- @param itemTable table A table where keys are item names and values are the required amounts.
+--- @return boolean, string|nil `boolean, string` true and the stash name if found, otherwise false and nil.
+---
+--- @usage
+--- ```lua
+--- local found, stashName = checkHasItem({"playerStash", "storageStash"}, { iron = 2, wood = 5 })
+--- ```
 function checkHasItem(stashes, itemTable)
     if not stashes then
         return hasItem(itemTable), nil
     end
+
     if type(stashes) == "table" then
-        local succeses = 0
+        local successes = 0
         local itemCount = countTable(itemTable)
-        --for _, item in pairs(itemTable) do itemCount += 1 end
+        -- Iterate over each provided stash name.
         for _, name in pairs(stashes) do
-            Wait(10) -- add delay because qb doesn't appreciate multiple callbacks for stashes
+            Wait(10)  -- Delay to avoid multiple callbacks issues.
             GetStashTimeout(name)
             for item, amount in pairs(itemTable) do
-                debugPrint("^6Bridge^7: ^2Checking"..(name and " ^7'^6"..name.."^7'" or "").." ^2ingredients^7 - ^6"..item.."^7")
+                debugPrint("^6Bridge^7: ^2Checking "..(name and " '^3"..name.."^7'" or "").." ingredients - ^6"..item.."^7")
                 if stashhasItem(stashCache[name].items, item, amount) then
-                    succeses += 1
-                    if succeses == itemCount then
+                    successes = successes + 1
+                    if successes == itemCount then
                         return true, name
                     end
                 end
             end
         end
     else
-        debugPrint("^6Bridge^7: ^2Checking"..(stashes and " ^7'^6"..stashes.."^7'" or "").." ^2ingredients^7 - ^6"..k.."^7")
+        debugPrint("^6Bridge^7: ^2Checking "..(stashes and " '^3"..stashes.."^7'" or "").." ingredients")
         GetStashTimeout(stashes)
         return stashhasItem(stashCache[stashes].items, itemTable), stashes
     end
+
     return false, nil
 end
 
+-------------------------------------------------------------
+-- Stash Opening Functions
+-------------------------------------------------------------
 
--- Stash Items
+--- Opens a stash using the active inventory system.
+---
+--- Checks for job or gang restrictions before opening the stash.
+---
+--- @param data table A table containing stash data:
+---        - stash (string): The stash identifier.
+---        - label (string): Display label.
+---        - maxWeight (number|nil): Maximum weight (default 600000).
+---        - slots (number|nil): Number of slots (default 40).
+---        - stashOptions (table|nil): Additional options for the stash.
+---        - job/gang (string|nil): Restriction for access.
+---        - coords (vector3): Coordinates to "look" at.
+---
+--- @usage
+--- ```lua
+--- openStash({ stash = "playerStash", label = "Player Stash", coords = vector3(100, 200, 30) })
+--- ```
 function openStash(data)
-	if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
+    if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
+
     if isStarted(OXInv) then
         exports[OXInv]:openInventory('stash', data.stash)
+
+    elseif isStarted(CoreInv) then
+        TriggerServerEvent('core_inventory:server:openInventory', data.stash, 'stash')
+
     elseif isStarted(CodeMInv) then
-        exports[CodeMInv]:OpenStash(data.stash, StashWeight, 100)
+        TriggerServerEvent('codem-inventory:server:openstash', data.stash, data.slots, data.maxWeight, data.label)
+
+    elseif isStarted(OrigenInv) then
+        exports[OrigenInv]:openInventory('stash', data.stash, { label = data.label })
+
     elseif isStarted(QBInv) then
         if QBInvNew then
-            TriggerServerEvent(getScript()..':server:OpenStashQB', { stashName = data.stash, label = data.label, maxweight = data.maxWeight or 600000, slots = data.slots or 40 })
+            TriggerServerEvent(getScript()..':server:OpenStashQB', {
+                stashName = data.stash,
+                label = data.label,
+                maxweight = data.maxWeight or 600000,
+                slots = data.slots or 40
+            })
         else
             TriggerEvent("inventory:client:SetCurrentStash", data.stash)
             TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, data.stashOptions)
@@ -86,18 +167,38 @@ function openStash(data)
     else
         TriggerEvent("inventory:client:SetCurrentStash", data.stash)
         TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, data.stashOptions)
-	end
+    end
+
     lookEnt(data.coords)
 end
 
+-- Register an event for opening QB stashes.
 RegisterNetEvent(getScript()..':server:OpenStashQB', function(data)
     exports[QBInv]:OpenInventory(source, data.stashName, data)
 end)
 
-function getStash(stashName) local stashResource = ""
+-------------------------------------------------------------
+-- Stash Retrieval Function
+-------------------------------------------------------------
+
+--- Retrieves stash items from the active inventory system.
+---
+--- This function converts the raw stash items into a standardized table using the global Items lookup.
+---
+--- @param stashName string The identifier for the stash.
+--- @return stashTable table A table of items from the stash.
+---
+--- @usage
+--- ```lua
+--- local items = getStash("playerStash")
+--- ```
+function getStash(stashName)
+    local stashResource = ""
     if type(stashName) ~= "string" then
-        return print("Stash name was not a string %s(%s)", stashName, type(stashName))
+        print("^6Bridge^7: ^2Stash name was not a string ^3"..stashName.."^7(^3"..type(stashName).."^7)")
+        return {}
     end
+
     local stashItems, items = {}, {}
     if isStarted(OXInv) then stashResource = OXInv
         stashItems = exports[OXInv]:Inventory(stashName).items
@@ -109,14 +210,15 @@ function getStash(stashName) local stashResource = ""
         stashItems = exports[CoreInv]:getInventory(stashName)
 
     elseif isStarted(CodeMInv) then stashResource = CodeMInv
-        stashItems = exports[CodeMInv]:GetInventoryItems('Stash', stashName)
+        stashItems = exports[CodeMInv]:GetStashItems(stashName)
 
     elseif isStarted(OrigenInv) then stashResource = OrigenInv
-        stashItems = exports[OrigenInv]:GetStashItems(stashName)
+        stashItems = exports[OrigenInv]:getInventory(stashName)
 
     elseif isStarted(PSInv) then stashResource = PSInv
         local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
 		if result then stashItems = json.decode(result) end
+
     elseif isStarted(QBInv) then stashResource = QBInv
         local result = MySQL.scalar.await("SELECT items FROM "..(QBInvNew and "inventories" or "stashitem").." WHERE identifier = ?", { stashName })
         if result then stashItems = json.decode(result) end
@@ -127,8 +229,8 @@ function getStash(stashName) local stashResource = ""
         for _, item in pairs(stashItems) do
             local itemInfo = Items[item.name:lower()]
             if itemInfo then
-                local indexNum = #items+1 -- Added to help recreate missing slot numbers
-                items[(item.slot and item.slot) or indexNum] = {
+                local indexNum = #items + 1  -- Fallback index if slot is missing.
+                items[(item.slot or indexNum)] = {
                     name = itemInfo.name or nil,
                     amount = tonumber(item.amount) or tonumber(item.count),
                     info = item.info or "",
@@ -144,16 +246,30 @@ function getStash(stashName) local stashResource = ""
                 }
             end
         end
-        debugPrint("^6Bridge^7: ^3GetStashItems^7: ^2Stash information for ^7'^6"..stashName.."^7' ^2retrieved^7")
+        debugPrint("^6Bridge^7: ^3GetStashItems^7: ^2Stash information for '^6"..stashName.."^7' retrieved")
     end
     jsonPrint(items)
     return items
 end
 
-function stashRemoveItem(stashItems, stashName, items) local amount = amount and amount or 1
-    -- print("stashItems: "..json.encode(stashItems, { indent = true}))
-    -- print("stashName: "..json.encode(stashName, { indent = true}))
-    -- print("items: "..json.encode(items, { indent = true}))
+-------------------------------------------------------------
+-- Stash Item Removal Function
+-------------------------------------------------------------
+
+--- Removes items from a stash using the active inventory system.
+---
+--- Iterates over the provided items and adjusts the stash contents accordingly.
+---
+--- @param stashItems table The current stash items.
+--- @param stashName string|table The stash identifier (or table of identifiers).
+--- @param items table A table of items to remove (keys are item names, values are amounts).
+---
+--- @usage
+--- ```lua
+--- stashRemoveItem(currentItems, "playerStash", { iron = 2, wood = 5 })
+--- ```
+function stashRemoveItem(stashItems, stashName, items)
+
     if isStarted(OXInv) then
         for k, v in pairs(items) do
             debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..OXInv, k, v)
@@ -171,19 +287,19 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
         end
 
     elseif isStarted(QSInv) then
-            for k, v in pairs(items) do
-                for l in pairs(stashItems) do
-                    if stashItems[l].name == k then
-                        if (stashItems[l].amount - v) <= 0 then
-                            debugPrint("^6Bridge^7: ^2None of this item left in stash ^3Stash^7", k, v)
-                            stashItems[l] = nil
-                        else
-                            debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QBInv, k, v)
-                            exports[QSInv]:RemoveItemIntoStash(stashName, k, v, l)
-                        end
+        for k, v in pairs(items) do
+            for l in pairs(stashItems) do
+                if stashItems[l].name == k then
+                    if (stashItems[l].amount - v) <= 0 then
+                        debugPrint("^6Bridge^7: ^2None of this item left in stash ^3Stash^7", k, v)
+                        stashItems[l] = nil
+                    else
+                        debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QBInv, k, v)
+                        exports[QSInv]:RemoveItemIntoStash(stashName, k, v, l)
                     end
                 end
             end
+        end
 
     elseif isStarted(CoreInv) then
         for k, v in pairs(items) do
@@ -205,8 +321,8 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
                 end
             end
         end
-        debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName.."^7'")
-
+        exports[CodeMInv]:UpdateStash(stashName, stashItems)
+        debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3CodeM^2 stash ^7'^6"..stashName.."^7'")
     elseif isStarted(OrigenInv) then
         for k, v in pairs(items) do
             exports[OrigenInv]:RemoveFromStash(stashName, k, v)
@@ -228,7 +344,11 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
             end
         end
         debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName.."^7'")
-        MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', { ['stash'] = stashName, ['items'] = json.encode(stashItems) })
+        MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+            ['stash'] = stashName,
+            ['items'] = json.encode(stashItems)
+        })
+
     elseif isStarted(QBInv) then
         if QBInvNew then
             for k, v in pairs(items) do
@@ -236,36 +356,56 @@ function stashRemoveItem(stashItems, stashName, items) local amount = amount and
                 debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QBInv, k, v)
             end
             debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName[1].."^7'")
-            MySQL.Async.insert('INSERT INTO inventories (identifier, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', { ['stash'] = stashName[1], ['items'] = json.encode(stashItems) })
+            MySQL.Async.insert('INSERT INTO inventories (identifier, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+                ['stash'] = stashName[1],
+                ['items'] = json.encode(stashItems)
+            })
         else
             for k, v in pairs(items) do
                 for l in pairs(stashItems) do
                     if stashItems[l].name == k then
                         if (stashItems[l].amount - v) <= 0 then
-                            if Config.System.Debug then
-                                print("^6Bridge^7: ^2None of this item left in stash ^3Stash^7", k, v)
-                            end
+                            debugPrint("^6Bridge^7: ^2None of this item left in stash ^3Stash^7", k, v)
                             stashItems[l] = nil
                         else
-                            if Config.System.Debug then
-                                print("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QBInv, k, v)
-                            end
+                            debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with "..QBInv, k, v)
                             stashItems[l].amount -= v
                         end
                     end
                 end
             end
-            debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName.."^7'")
-            MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', { ['stash'] = stashName, ['items'] = json.encode(stashItems) })
+            debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash '^6"..stashName.."^7'")
+            MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+                ['stash'] = stashName,
+                ['items'] = json.encode(stashItems)
+            })
         end
+
     else
-        print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
+        print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3starter^1.^2lua^7")
     end
 end
 RegisterNetEvent(getScript()..":server:stashRemoveItem", stashRemoveItem)
 
+-------------------------------------------------------------
+-- Stash Item Availability Check
+-------------------------------------------------------------
+
+--- Checks whether a stash has the required amount of specific items.
+---
+--- It iterates through the provided items and tallies available quantities.
+---
+--- @param stashItems table The items available in the stash.
+--- @param items string|table The item name or table of required items (key: item, value: amount).
+--- @param amount number (Optional) The required amount (if a single item is provided).
+--- @return boolean, table (`boolean, string`) Returns true (and a table with counts) if all items are available; false otherwise.
+---
+--- @usage
+--- ```lua
+--- local hasAll, details = stashhasItem(currentStashItems, { iron = 2, wood = 5 })
+--- ```
 function stashhasItem(stashItems, items, amount)
-    local invs = {OXInv, QSInv, CoreInv, CodeMInv, OrigenInv, QBInv, PSInv}
+    local invs = { OXInv, QSInv, CoreInv, CodeMInv, OrigenInv, QBInv, PSInv }
     local foundInv = ""
     for _, inv in ipairs(invs) do
         if isStarted(inv) then
@@ -274,9 +414,11 @@ function stashhasItem(stashItems, items, amount)
         end
     end
 
+    -- Ensure items is a table.
     if type(items) ~= "table" then items = { [items] = amount and amount or 1, } end
+
     local hasTable = {}
-    for item, amount in pairs(items) do
+    for item, requiredAmount in pairs(items) do
         local count = 0
         for _, itemData in pairs(stashItems) do
             if itemData and (itemData.name == item) then
@@ -284,11 +426,13 @@ function stashhasItem(stashItems, items, amount)
             end
         end
 
-        local debugMsg = string.format("^6Bridge^7: ^3stashHasItem^7[^6%s^7]: %s '%s' ^3%d^7/^3%d^7", foundInv, (count >= amount and "^5FOUND^7" or "^1NOT FOUND^7"), item, count, amount)
+        local debugMsg = string.format("^6Bridge^7: ^3stashHasItem^7[^6%s^7]: %s '%s' ^3%d^7/^3%d^7", foundInv, (count >= requiredAmount and "^5FOUND^7" or "^1NOT FOUND^7"), item, count, requiredAmount)
         debugPrint(debugMsg)
 
-        hasTable[item] = { hasItem = (count >= amount), count = count }
+        hasTable[item] = { hasItem = (count >= requiredAmount), count = count }
     end
+
     for k, v in pairs(hasTable) do if v.hasItem == false then return false, hasTable end end
+
     return true, hasTable
 end

@@ -1,12 +1,28 @@
--- Function to register items as usable for ESX, QBX, and QBcore --
+--[[
+    Usable Items & Inventory Utilities Module
+    -------------------------------------------
+    This module provides functions for:
+      • Registering items as usable across different inventory systems (ESX, QBcore, QBX).
+      • Retrieving an item's image as a NUI link.
+      • Adding and removing items from a player's inventory.
+      • Toggling items in inventory (with server event for exploit protection).
+      • Checking for item duplication exploits.
+      • Handling tool durability mechanics.
+      • Checking item availability and retrieving inventory.
+      • Granting random rewards from a reward pool.
+      • Checking if a player can carry specific items based on weight.
+]]
+
+-------------------------------------------------------------
+-- Registering Usable Items
+-------------------------------------------------------------
+
+--- Registers an item as usable for ESX, QBcore, or QBX.
 ---
---- This function registers an item as usable across different inventory systems such as ESX, QBcore, and QBX.
---- It checks which inventory system is active and registers the usable item accordingly.
+--- @param item string The name of the item.
+--- @param funct function The function to execute when the item is used.
 ---
----@param item string The name of the item to be registered as usable.
----@param funct function The function to execute when the item is used.
----
----@usage
+--- @usage
 --- ```lua
 --- createUseableItem("health_potion", function(source)
 ---     -- Code to consume the health potion
@@ -23,23 +39,24 @@ function createUseableItem(item, funct)
     elseif isStarted(QBXExport) then
         debugPrint("^6Bridge^7: ^2Registering item as ^3Usable^2 with ^7qbx_core", item)
         exports[QBXExport]:CreateUseableItem(item, funct)
+    else
+        print("^4ERROR^7: No supported framework detected for registering usable item: ^3"..item.."^7")
     end
 end
 
--- Simple function to grab the item's image from inventories and retrieve it as a nui:// link --
+-------------------------------------------------------------
+-- Item Image Retrieval
+-------------------------------------------------------------
+
+--- Retrieves the NUI link for an item's image from the active inventory system.
 ---
---- This function retrieves the image URL of an item from various inventory systems and formats it as a `nui://` link.
---- It supports multiple inventory systems such as OXInv, QSInv, CoreInv, OrigenInv, QBInv, and CodeMInv.
+--- @param item string The item name.
+--- @return string string A `nui://` link to the item's image, or an empty string if not found.
 ---
----@param item string The name of the item whose image is to be retrieved.
----@return string link The `nui://` link to the item's image. Returns an empty string if the inventory system is not detected or the item doesn't exist.
----
----@usage
+--- @usage
 --- ```lua
 --- local imageLink = invImg("health_potion")
---- if imageLink ~= "" then
----     print(imageLink)
---- end
+--- if imageLink ~= "" then print(imageLink) end
 --- ```
 function invImg(item)
     local imgLink = ""
@@ -50,33 +67,39 @@ function invImg(item)
             imgLink = "nui://"..QSInv.."/html/images/"..(Items[item].image or "")
         elseif isStarted(CoreInv) then
             imgLink = "nui://"..CoreInv.."/html/img/"..(Items[item].image or "")
+        elseif isStarted(CodeMInv) then
+            imgLink = "nui://"..CodeMInv.."/html/itemimages/"..(Items[item].image or "")
         elseif isStarted(OrigenInv) then
             imgLink = "nui://"..OrigenInv.."/html/img/"..(Items[item].image or "")
         elseif isStarted(QBInv) then
             imgLink = "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
-        elseif isStarted(CodeMInv) then
-            imgLink = "nui://"..CodeMInv.."/html/itemimages/"..(Items[item].image or "")
         else
-            print("^4ERROR^7: ^2No Inventory detected for invImg ^7- ^2Check ^3exports^1.^2lua^7")
+            print("^4ERROR^7: ^2No Inventory detected for invImg - Check exports.lua")
         end
     end
     return imgLink
 end
 
+-------------------------------------------------------------
+-- Adding and Removing Items
+-------------------------------------------------------------
+
 --- Adds an item to a player's inventory.
 ---
---- This function triggers a server event to add a specified amount of an item to the player's inventory.
+--- Triggers a server event (or local event) to add the specified item.
 ---
----@param item string The name of the item to add.
----@param amount number The quantity of the item to add.
----@param info table|nil Additional information or metadata for the item.
+--- @param item string The item name.
+--- @param amount number The quantity to add.
+--- @param info table|nil Additional metadata for the item.
+--- @param src number|nil Optional player source; if nil, defaults to the caller.
 ---
----@usage
+--- @usage
 --- ```lua
 --- addItem("health_potion", 2, { quality = "high" })
 --- ```
 function addItem(item, amount, info, src)
     if not Items[item] then print("^6Bridge^7: ^1Error^7 - ^2Tried to give ^7'^3"..item.."^7'^2 but it doesn't exist") return end
+
     if src then
         TriggerEvent(getScript()..":server:toggleItem", true, item, amount, src, info)
     else
@@ -86,17 +109,23 @@ end
 
 --- Removes an item from a player's inventory.
 ---
---- This function triggers a server event to remove a specified amount of an item from the player's inventory.
+--- Triggers a server event (or local event) to remove the specified item.
 ---
----@param item string The name of the item to remove.
----@param amount number The quantity of the item to remove.
+--- @param item string The item name.
+--- @param amount number The quantity to remove.
+--- @param src number|nil Optional player source.
+--- @param slot number|nil Optional inventory slot.
 ---
----@usage
+--- @usage
 --- ```lua
 --- removeItem("health_potion", 1)
 --- ```
 function removeItem(item, amount, src, slot)
-    if not Items[item] then print("^6Bridge^7: ^1Error^7 - ^2Tried to remove ^7'^3"..item.."^7'^2 but it doesn't exist") return end
+    if not Items[item] then
+        print("^6Bridge^7: ^1Error^7 - ^2Tried to remove ^7'^3"..item.."^7'^2 but it doesn't exist")
+        return
+    end
+
     if src then
         TriggerEvent(getScript()..":server:toggleItem", false, item, amount, src, nil, slot)
     else
@@ -104,161 +133,188 @@ function removeItem(item, amount, src, slot)
     end
 end
 
---- Server event handler to toggle items in a player's inventory.
+-------------------------------------------------------------
+-- Toggle Items (Server Event)
+-------------------------------------------------------------
+
+--- Server event handler to toggle (add or remove) an item from a player's inventory.
 ---
---- This event handles adding or removing items based on the parameters received.
---- It supports multiple inventory systems and includes exploit protection to prevent duplication.
+--- This function validates the item, then calls the appropriate export functions based on the active inventory system.
+--- It also includes exploit protection via the dupeWarn function.
 ---
----@param give boolean Indicates whether to add (`true`) or remove (`false`) the item.
----@param item string The name of the item to toggle.
----@param amount number The quantity of the item to toggle.
----@param newsrc number|nil The source ID of the player. If `nil`, it defaults to the event source.
----@param info table|nil Additional information or metadata for the item.
+--- @param give boolean True to add the item, false to remove.
+--- @param item string The item name.
+--- @param amount number The quantity.
+--- @param newsrc number|nil The player source; defaults to event source.
+--- @param info table|nil Additional metadata.
+--- @param slot number|nil Optional inventory slot.
 ---
----@usage
+--- @usage
 --- ```lua
---- TriggerServerEvent("script:server:toggleItem", true, "health_potion", 1)
+--- TriggerServerEvent(getScript()..":server:toggleItem", true, "health_potion", 1)
 --- ```
 RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount, newsrc, info, slot)
-    if not Items[item] then print("^6Bridge^7: ^1Error^7 - ^2Tried to "..(tostring(give) == "true" and "add" or "remove").." ^7'^3"..item.."^7'^2 but it doesn't exist") return end
+    if not Items[item] then
+        print("^6Bridge^7: ^1Error^7 - ^2Tried to "..(tostring(give) == "true" and "add" or "remove").." '^3"..item.."^7' but it doesn't exist")
+        return
+    end
+
     local src = newsrc or source
-    local addremove = (tostring(give) == "true" and "addItem" or "removeItem")
-    debugPrint("^6Bridge^7: ^3toggleItem ^2triggered^7: ^6"..addremove.."^7 - '"..tostring(item).."' x"..(tostring(amount) or "1"))
-    local remamount = (amount and amount or 1)
+    local action = (tostring(give) == "true" and "addItem" or "removeItem")
+    local remamount = amount or 1
     if item == nil then return end
+
+    -- Grab the current inventory (you can expand usage of 'inv' if needed)
+    local invName = ""
     if give == 0 or give == false then
-        if hasItem(item, amount and amount or 1, src) then -- Check if the player has the item
-            if isStarted(OXInv) then
-                local success = exports[OXInv]:RemoveItem(src, item, (amount and amount or 1), nil)
-                debugPrint("^6Bridge^7: ^3"..addremove.."^7[^6"..OXInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
-            elseif isStarted(QSInv) then
-                local success = exports[QSInv]:RemoveItem(src, item, amount)
-                debugPrint("^6Bridge^7: ^3"..addremove.."^7[^6"..QSInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
+        if not hasItem(item, amount or 1, src) then
+            dupeWarn(src, item, amount)
 
-            elseif isStarted(CoreInv) then
-                if isStarted(QBExport) then
-                    Core.Functions.GetPlayer(src).Functions.RemoveItem(item, amount, nil)
-                elseif isStarted(ESXExport) then
-                    ESX.GetPlayerFromId(src).removeInventoryItem(item, count)
-                end
-                debugPrint("^6Bridge^7: ^3"..addremove.."^7[^6"..CoreInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
+        else
+            if isStarted(OXInv) then invName = OXInv
+                exports[OXInv]:RemoveItem(src, item, remamount, nil)
 
-            elseif isStarted(OrigenInv) then
-                local success = exports[OrigenInv]:RemoveItem(src, item, amount)
-                debugPrint("^6Bridge^7: ^3"..addremove.."^7[^6"..OrigenInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
+            elseif isStarted(QSInv) then invName = QSInv
+                exports[QSInv]:RemoveItem(src, item, remamount)
 
-            elseif isStarted(CodeMInv) then
-                local success = exports[CodeMInv]:RemoveItem(src, item, amount)
-                debugPrint("^6Bridge^7: ^3"..addremove.."^7[^6"..CodeMInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
+            elseif isStarted(CoreInv) then invName = CoreInv
+                exports[CoreInv]:removeItem(src, item, remamount)
 
-            elseif isStarted(QBInv) then
+            elseif isStarted(OrigenInv) then invName = OrigenInv
+                exports[OrigenInv]:removeItem(src, item, remamount)
+
+            elseif isStarted(CodeMInv) then invName = CodeMInv
+                exports[CodeMInv]:RemoveItem(src, item, remamount)
+
+            elseif isStarted(QBInv) then invName = QBInv
                 while remamount > 0 do
                     if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1, slot) then
                         remamount -= 1
                     else
-                        print("^1Error removing "..data.item.." Amount left to remove: "..remamount.."^7")
+                        print("^1Error removing "..item.." Amount left: "..remamount)
                         break
                     end
                 end
                 if Config.Crafting.showItemBox then
-                    TriggerClientEvent((isStarted(QBInv) and QBInvNew and "qb-" or "")..'inventory:client:ItemBox', src, Items[item], "remove", (amount and amount or 1))
+                    TriggerClientEvent((isStarted(QBInv) and QBInvNew and "qb-" or "").."inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
                 end
-                debugPrint("^6Bridge^7: ^3"..addremove.."^7[^6"..QBInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
-            elseif isStarted(PSInv) then
+            elseif isStarted(PSInv) then invName = PSInv
                 while remamount > 0 do
-                    if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1) then
+                    if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1, slot) then
                         remamount -= 1
                     else
-                        print("^1Error removing "..data.item.." Amount left to remove: "..remamount.."^7")
+                        print("^1Error removing "..item.." Amount left: "..remamount)
                         break
                     end
                 end
                 if Config.Crafting.showItemBox then
-                    TriggerClientEvent('inventory:client:ItemBox', src, Items[item], "remove", (amount and amount or 1))
+                    TriggerClientEvent("inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
                 end
-                debugPrint("^6Bridge^7: ^3"..addremove.."^7[^6"..PSInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
-            else
-                print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
             end
-        else
-            dupeWarn(src, item, amount) -- Trigger exploit protection
+            -----
+            -- Fallback for if no inventory found:
+            -----
+            if invName == "" then
+                if isStarted(QBExport) or isStarted(QBXExport) then -- if qbcore or qbxcore, just use core functions
+                    invName = isStarted(QBXExport) and QBXExport or isStarted(QBExport) and QBExport
+                    Core.Functions.GetPlayer(src).Functions.RemoveItem(item, remamount, slot)
+
+                elseif ESX and isStarted(ESXExport) then  -- if esx then use core functions
+                    invName = ESX
+                    ESX.GetPlayerFromId(src).removeInventoryItem(item, remamount)
+
+                end
+            end
+            -- Final check for if inventory was found
+            if invName == "" then
+                print("^4ERROR^7: No Inventory detected - Check starter.lua")
+            else
+                debugPrint("^6Bridge^7: ^3"..action.."^7["..invName.."] Player("..src..") "..Items[item].label.."("..item..") x"..(amount or 1))
+            end
         end
     else
-        local amount = amount and amount or 1
-        if isStarted(OXInv) then
-            local success = exports[OXInv]:AddItem(src, item, amount or 1, info)
-            if not Items[item] or not Items[item].label then
-                print("^1Error^7: "..addremove.." ["..OXInv.."] Player("..src..") "..Items[item]?.label.."("..item..") x"..(amount or 1))
+        local amountToAdd = amount or 1
+        if isStarted(OXInv) then invName = OXInv
+            exports[OXInv]:AddItem(src, item, amountToAdd, info, slot)
+
+        elseif isStarted(QSInv) then invName = QSInv
+            exports[QSInv]:AddItem(src, item, amountToAdd, slot, info)
+
+        elseif isStarted(CoreInv) then invName = CoreInv
+            exports[CoreInv]:addItem(src, item, amountToAdd, info)
+
+        elseif isStarted(CodeMInv) then invName = CodeMInv
+            exports[CodeMInv]:AddItem(src, item, amountToAdd, slot, info)
+
+        elseif isStarted(OrigenInv) then invName = OrigenInv
+            exports[OrigenInv]:addItem(src, item, amountToAdd, info, slot)
+
+        elseif isStarted(QBInv) then invName = QBInv
+            if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
+                TriggerClientEvent((isStarted(QBInv) and QBInvNew and "qb-" or "").."inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
             end
-            debugPrint("^6Bridge^7: ^3"..addremove.."^7[^6"..OXInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
 
-        elseif isStarted(QSInv) then
-            local success = exports[QSInv]:AddItem(src, item, amount)
-            debugPrint("^6Bridge^7: ^3"..addremove.."^7[^6"..QSInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
-
-        elseif isStarted(CoreInv) then
-            if isStarted(QBExport) or isStarted(QBXExport) then
-                Core.Functions.GetPlayer(src).Functions.AddItem(item, amount, nil, nil)
-            elseif isStarted(ESXExport) then
-                ESX.GetPlayerFromId(src).addInventoryItem(item, amount)
-            end
-            debugPrint("^6Bridge^7: ^3"..addremove.."^7[^6"..CoreInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
-
-        elseif isStarted(CodeMInv) then
-            local success = exports[CodeMInv]:AddItem(src, item, amount)
-            debugPrint("^6Bridge^7: ^3"..addremove.."^7[^6"..CodeMInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
-        elseif isStarted(OrigenInv) then
-            local success = exports[OrigenInv]:AddItem(src, item, amount)
-            debugPrint("^6Bridge^7: ^3"..addremove.."^7[^6"..OrigenInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
-
-        elseif isStarted(QBInv) then
-            if Core.Functions.GetPlayer(src).Functions.AddItem(item, amount or 1, nil, info) then
-                TriggerClientEvent((isStarted(QBInv) and QBInvNew and "qb-" or "")..'inventory:client:ItemBox', src, Items[item], "add", amount and amount or 1)
-            end
-            debugPrint("^6Bridge^7: ^3"..addremove.."^7[^6"..QBInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
-
-        elseif isStarted(PSInv) then
-            if Core.Functions.GetPlayer(src).Functions.AddItem(item, amount or 1, nil, info) then
+        elseif isStarted(PSInv) then invName = PSInv
+            if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
                 if Config.Crafting.showItemBox then
-                    TriggerClientEvent("inventory:client:ItemBox", src, Items[item], "add", amount and amount or 1)
+                    TriggerClientEvent("inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
                 end
             end
-            debugPrint("^6Bridge^7: ^3"..addremove.."^7[^6"..PSInv.."^7] ^2Player^7("..src..") ^6"..Items[item].label.."^7("..item..") x^5"..(amount and amount or "1").."^7")
+        end
+
+        if invName == "" then
+            if isStarted(QBExport) or isStarted(QBXExport) then -- if qbcore or qbxcore, just use core functions
+                invName = isStarted(QBXExport) and QBXExport or isStarted(QBExport) and QBExport
+                Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info)
+
+            elseif ESX and isStarted(ESXExport) then  -- if esx then use core functions
+                invName = ESX
+                ESX.GetPlayerFromId(src).addInventoryItem(item, amountToAdd)
+            end
+        end
+
+        -- Final check for if inventory was found
+        if invName == "" then
+            print("^4ERROR^7: No Inventory detected - Check starter.lua")
         else
-            print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
+            debugPrint("^6Bridge^7: ^3"..action.."^7["..invName.."] Player("..src..") "..Items[item].label.."("..item..") x"..(amount or 1))
         end
     end
 end)
 
---- Protects against item duplication exploits by warning and potentially kicking the player.
+-------------------------------------------------------------
+-- Exploit Protection
+-------------------------------------------------------------
+
+--- Warns and kicks a player if they try to remove an item they don't have.
 ---
---- This function is called when an attempt is made to remove an item that the player does not possess.
---- It logs the incident and kicks the player if `debugMode` is not enabled.
----
---- @param src number The source ID of the player attempting the exploit.
---- @param item string The name of the item being exploited.
+--- @param src number The player's source ID.
+--- @param item string The item name.
 ---
 --- @usage
 --- ```lua
 --- dupeWarn(playerId, "health_potion")
 --- ```
-function dupeWarn(src, item)
+function dupeWarn(src, item, amount)
     local name = getPlayer(src).name
-    print("^5DupeWarn^7: "..name.." (^1"..tostring(src).."^7) ^2Tried to remove item ^7'^3"..item.."^7'^2 but it wasn't there^7")
+    print("^5DupeWarn^7: "..name.." (^1"..tostring(src).."^7) ^2Tried to remove item '^3"..item.."^7' but it wasn't there")
     if not debugMode then
         DropPlayer(src, name.."("..tostring(src)..") Kicked for suspected duplicating items: "..item)
     end
     print("^5DupeWarn^7: "..name.."(^1"..tostring(src).."^7) ^2Dropped from server - exploit protection detected an item not being found in players inventory^7")
 end
 
---- Breaks a tool by reducing its durability or removing it if durability reaches zero.
+-------------------------------------------------------------
+-- Tool Durability & Metadata
+-------------------------------------------------------------
+
+--- Reduces the durability of a tool by a specified damage amount.
 ---
---- This function handles the durability mechanics for tools. If a tool's durability drops to zero or below,
---- it removes the tool from the player's inventory and plays a breaking sound.
+--- If durability reaches zero or below, the tool is removed and a break sound is played.
 ---
---- @param data table A table containing data about the tool being used.
---- - **item** (`string`): The name of the tool item.
---- - **damage** (`number`): The amount of durability damage to apply.
+--- @param data table Contains:
+---   - item (string): The tool's name.
+---   - damage (number): The damage % to apply.
 ---
 --- @usage
 --- ```lua
@@ -277,19 +333,20 @@ function breakTool(data) -- WIP
     end
 end
 
---- Retrieves the durability and slot of an item in a player's inventory.
+--- Retrieves the durability and slot number of an item in a player's inventory.
 ---
---- This function searches the player's inventory for the specified item and returns its durability and slot number.
+--- Searches through the player's inventory for the specified item.
 ---
---- @param item string The name of the item to check.
---- @return number|nil The durability of the item. Returns `nil` if not found.
---- @return number|nil The slot number of the item. Returns `nil` if not found.
+--- @param item string The item name.
+--- @return number|nil number The durability, or nil if not found.
+--- @return number|nil number The slot number, or nil if not found.
 ---
 --- @usage
 --- ```lua
 --- local durability, slot = getDurability("drill")
 --- if durability then
 ---     print("Durability:", durability)
+---     print("Slot:", slot)
 --- end
 --- ```
 function getDurability(item)
@@ -297,7 +354,7 @@ function getDurability(item)
     local durability = nil
     if isStarted(QBInv) or isStarted(PSInv) then
         local itemcheck = Core.Functions.GetPlayerData().items
-        for k, v in pairs(itemcheck) do
+        for _, v in pairs(itemcheck) do
             if v.name == item then
                 if v.slot <= lowestSlot then
                     lowestSlot = v.slot
@@ -309,47 +366,86 @@ function getDurability(item)
 
     if isStarted(OXInv) then
         local itemcheck = exports[OXInv]:Search('slots', item)
-        for k, v in pairs(itemcheck) do
+        for _, v in pairs(itemcheck) do
             if v.slot <= lowestSlot then
                 debugPrint(v.slot, itemcheck[k].metadata.durability)
                 lowestSlot = v.slot
-                durability = itemcheck[k].metadata.durability
+                durability = v.metadata.durability
             end
         end
     end
 
     if isStarted(QSInv) then
         local itemcheck = exports[QSInv]:getUserInventory()
-        for k, v in pairs(itemcheck) do
+        for _, v in pairs(itemcheck) do
             if v.name == item and v.slot <= lowestSlot then
                 lowestSlot = v.slot
-                durability = itemcheck[k].metadata.durability
+                durability = v.metadata.durability
+            end
+        end
+    end
+
+    if isStarted(CoreInv) then
+        local itemcheck = exports[CoreInv]:getInventory()
+        for _, v in pairs(itemcheck) do
+            if v.name == item and v.slot <= lowestSlot then
+                lowestSlot = v.slot
+                durability = v.metadata.durability
+            end
+        end
+    end
+
+    if isStarted(CodeMInv) then
+        local itemcheck = exports[CodeMInv]:GetClientPlayerInventory()
+        for _, v in pairs(itemcheck) do
+            if v.name == item and v.slot <= lowestSlot then
+                lowestSlot = v.slot
+                durability = v.metadata.durability
             end
         end
     end
 
     if isStarted(OrigenInv) then
         local itemcheck = exports[OrigenInv]:getPlayerInventory()
-        for k, v in pairs(itemcheck) do
+        for _, v in pairs(itemcheck) do
             if v.name == item and v.slot <= lowestSlot then
                 lowestSlot = v.slot
-                durability = itemcheck[k].metadata.durability
+                durability = v.metadata.durability
             end
         end
     end
+
+    -- For ESX default inventory (es_extended)
+    if ESX and isStarted(ESXExport) then
+        local xPlayer = ESX.GetPlayerData() or {}
+        if xPlayer.inventory then
+            for _, v in ipairs(xPlayer.inventory) do
+                if v.name == item then
+                    -- Optionally use a slot field if available; otherwise, use the index
+                    if v.slot and v.slot <= lowestSlot then
+                        lowestSlot = v.slot
+                    end
+                    if v.metadata and v.metadata.durability then
+                        durability = v.metadata.durability
+                    end
+                end
+            end
+        end
+    end
+
     return durability, lowestSlot
 end
 
---- Server event handler to set metadata for an item in a player's inventory.
+--- Server event handler to set metadata for an item.
 ---
---- This event updates the metadata (e.g., durability) of an item in the player's inventory.
+--- Updates item metadata (e.g. durability) for the player's inventory based on slot.
 ---
----@param data table A table containing metadata information.
---- - **item** (`string`): The name of the item.
---- - **slot** (`number`): The slot number of the item in the inventory.
---- - **metadata** (`table`): The metadata to set for the item.
+--- @param data table Contains:
+---   - item (string): The item name.
+---   - slot (number): The inventory slot.
+---   - metadata (table): The metadata to set.
 ---
----@usage
+--- @usage
 --- ```lua
 --- TriggerServerEvent("script:server:setMetaData", { item = "drill", slot = 5, metadata = { durability = 80 } })
 --- ```
@@ -361,171 +457,61 @@ RegisterNetEvent(getScript()..":server:setMetaData", function(data)
         Player.PlayerData.items[data.slot].info = data.metadata
         Player.PlayerData.items[data.slot].description = "HP : "..data.metadata.durability
         Player.Functions.SetInventory(Player.PlayerData.items)
-    end
 
-    if isStarted(OXInv) then
-        exports[OXInv]:SetMetadata(source, data.slot, data.metadata)
-    end
+    elseif isStarted(OXInv) then
+        exports[OXInv]:SetDurability(src, data.slot, data.metadata.durability)
 
-    if isStarted(QSInv) then
-        exports[QSInv]:SetItemMetadata(source, data.slot, data.metadata)
-    end
+    elseif isStarted(QSInv) then
+        exports[QSInv]:SetItemMetadata(src, data.slot, data.metadata)
 
-    if isStarted(OrigenInv) then
-        local item = exports[OrigenInv]:GetItemBySlot(source, data.slot)
-        if item then
-            exports[OrigenInv]:SetItemData(source, item.name, "durability", data.metadata.durability)
-        end
+    elseif isStarted(CoreInv) then
+        exports[CoreInv]:setMetadata(src, data.slot, data.metadata)
+
+    elseif isStarted(CodeMInv) then
+        exports[CodeMInv]:SetItemMetadata(src, data.slot, data.metadata)
+
+    elseif isStarted(OrigenInv) then
+        exports[OrigenInv]:setMetadata(src, data.slot, data.metadata)
     end
 end)
 
---- Checks if a player has the specified items in their inventory.
+-------------------------------------------------------------
+-- Random Reward
+-------------------------------------------------------------
+
+--- Grants a random reward from a predefined reward pool if the player is eligible.
 ---
---- This function verifies whether a player possesses the required quantity of specified items.
---- It supports multiple inventory systems and provides detailed feedback on item availability.
+--- Checks if the item qualifies for a reward, removes the item, then calculates a random reward based on rarity.
 ---
----@param items string|table A single item name or a table of item names with their required amounts.
----@param amount number The quantity required for each item. Defaults to `1` if not specified.
----@param src number|nil The source ID of the player. If `nil`, it defaults to the caller.
----@return boolean Returns `true` if the player has all the required items in the specified amounts.
----@return table|nil Returns a table detailing which items are present or missing if not all items are found.
----
----@usage
---- ```lua
---- local hasAll, details = hasItem({"health_potion", "mana_potion"}, 2, playerId)
---- if hasAll then
----     -- Proceed with action
---- else
----     -- Inform the player about missing items
---- end
---- ```
-function hasItem(items, amount, src)
-    local amount = amount and amount or 1
-    local grabInv, foundInv = getPlayerInv(src)
-    if type(items) ~= "table" then items = { [items] = amount and amount or 1, } end
-
-    if grabInv then
-        local hasTable = {}
-        for item, amt in pairs(items) do
-            if not Items[item] then print("^4ERROR^7: ^2Script can't find ingredient item in Shared Items - ^1"..item.."^7") end
-            local count = 0
-            for _, itemData in pairs(grabInv) do
-                if itemData and (itemData.name == item) then count += (itemData.count or itemData.amount or 1) end
-            end
-            foundInv = foundInv:gsub("%-", "^7-^6"):gsub("%_", "^7_^6")
-            local foundMessage = "^6Bridge^7: ^3hasItem^7[^6"..foundInv.."^7]: "..tostring(item).." ^3"..count.."^7/^3"..amt
-            if count >= amt then foundMessage = foundMessage.." ^5FOUND^7" else foundMessage = foundMessage .." ^1NOT FOUND^7" end
-            debugPrint(foundMessage)
-            hasTable[item] = { hasItem = count >= amt, count = count }
-        end
-        for k, v in pairs(hasTable) do if not v.hasItem then return false, hasTable end end
-        return true, hasTable
-    end
-end
-
---- Retrieves a player's inventory from the active inventory system.
----
---- This function fetches the player's inventory based on the active inventory system.
---- It supports multiple systems including OXInv, QSInv, OrigenInv, CoreInv, CodeMInv, QBInv, and PSInv.
----
----@param src number|nil The source ID of the player. If `nil`, it fetches the current player's inventory.
----@return table|nil The inventory items of the player.
----@return string|nil The name of the inventory system being used.
----
----@usage
---- ```lua
---- local inventory, system = getPlayerInv(playerId)
---- if inventory then
----     -- Process inventory
---- end
---- ```
-function getPlayerInv(src)
-    local grabInv = nil
-    local foundInv = ""
-
-    if isStarted(OXInv) then
-        foundInv = OXInv
-        if src then grabInv = exports[OXInv]:GetInventoryItems(src)
-        else grabInv = exports[OXInv]:GetPlayerItems() end
-
-    elseif isStarted(QSInv) then
-        foundInv = QSInv
-        if src then grabInv = exports[QSInv]:GetInventory(src)
-        else grabInv = exports[QSInv]:getUserInventory() end
-
-    elseif isStarted(OrigenInv) then
-        foundInv = OrigenInv
-        if src then grabInv = exports[OrigenInv]:GetInventory(src)
-        else grabInv = exports[OrigenInv]:getPlayerInventory() end
-
-    elseif isStarted(CoreInv) then
-        foundInv = CoreInv
-        if src then
-            if isStarted(QBExport) or isStarted(QBXExport) then
-                grabInv = Core.Functions.GetPlayer(src).PlayerData.items
-            elseif isStarted(ESXExport) then
-                local Player = ESX.GetPlayerFromId(src)
-                grabInv = Player.getInventory(false)
-            end
-        else
-            local p = promise.new()
-            Core.Functions.TriggerCallback('core_inventory:server:getInventory', function(cb) p:resolve(cb) end)
-            local result = Citizen.Await(p)
-            if type(result) == "string" then result = json.decode(result) end
-            grabInv = result
-        end
-
-    elseif isStarted(CodeMInv) then
-        foundInv = CodeMInv
-        if src then grabInv = exports[CodeMInv]:GetInventory(src)
-        else grabInv = exports[CodeMInv]:GetClientPlayerInventory() end
-
-    elseif isStarted(QBInv) then
-        foundInv = QBInv
-        if src then grabInv = Core.Functions.GetPlayer(src).PlayerData.items
-        else grabInv = Core.Functions.GetPlayerData().items end
-
-    elseif isStarted(PSInv) then
-        foundInv = PSInv
-        if src then grabInv = Core.Functions.GetPlayer(src).PlayerData.items
-        else grabInv = Core.Functions.GetPlayerData().items end
-
-    else
-        print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3exports^1.^2lua^7")
-    end
-    return grabInv, foundInv
-end
-
---- Generates a random reward from a predefined reward pool.
----
---- This function is intended for job scripts where players receive random rewards upon completing certain tasks.
---- It ensures that the player has the required item before attempting to grant a reward.
----
----@param itemName string The name of the item to check for eligibility to receive a reward.
+--- @param itemName string The item name to check.
 ---
 ---@usage
 --- ```lua
 --- getRandomReward("gold_ring")
 --- ```
-function getRandomReward(itemName) -- Intended for job scripts
+function getRandomReward(itemName)
     if Config.Rewards.RewardPool then
         local reward = false
-        if type(Config.Rewards.RewardItem) == "string" then Config.Rewards.RewardItem = { Config.Rewards.RewardItem } end
+        if type(Config.Rewards.RewardItem) == "string" then
+            Config.Rewards.RewardItem = { Config.Rewards.RewardItem }
+        end
         for k, v in pairs(Config.Rewards.RewardItem) do
-            if v == itemName then reward = true break end
+            if v == itemName then
+                reward = true
+                break
+            end
         end
         if reward then
             removeItem(itemName, 1)
             local totalRarity = 0
-            for i=1, #Config.Rewards.RewardPool do
+            for i = 1, #Config.Rewards.RewardPool do
                 totalRarity += Config.Rewards.RewardPool[i].rarity
             end
-            debugPrint("^6Bridge^7: ^3getRandomReward^7: ^2Total Rarity ^7'^6"..totalRarity.."^7'")
-
+            debugPrint("^6Bridge^7: ^3getRandomReward^7: Total Rarity '"..totalRarity.."'")
             local randomNum = math.random(1, totalRarity)
-            debugPrint("^6Bridge^7: ^3getRandomReward^7: ^2Random Number ^7'^6"..randomNum.."^7'")
+            debugPrint("^6Bridge^7: ^3getRandomReward^7: Random Number '"..randomNum.."'")
             local currentRarity = 0
-            for i=1, #Config.Rewards.RewardPool do
+            for i = 1, #Config.Rewards.RewardPool do
                 currentRarity += Config.Rewards.RewardPool[i].rarity
                 if randomNum <= currentRarity then
                     debugPrint("^6Bridge^7: ^3getRandomReward^7: ^2Selected toy ^7'^6"..Config.Rewards.RewardPool[i].item.."^7'")
@@ -537,24 +523,25 @@ function getRandomReward(itemName) -- Intended for job scripts
     end
 end
 
---- Checks if a player can carry specific items in their inventory.
+-------------------------------------------------------------
+-- Carry Capacity Check
+-------------------------------------------------------------
+
+--- Checks if a player can carry the specified items based on weight.
 ---
---- This function determines whether a player has enough capacity to carry the specified items.
---- It considers the weight of each item and the player's current inventory weight.
+--- Calculates the current total weight in the player's inventory and determines whether adding the new items would exceed capacity.
 ---
----@param itemTable table A table where keys are item names and values are the quantities to check.
----@param src number The source ID of the player.
----@return table A table where keys are item names and values are booleans indicating if the player can carry the specified quantity.
+--- @param itemTable table A table where keys are item names and values are required quantities.
+--- @param src number The player's source ID.
+--- @return table A table mapping each item to a boolean indicating if it can be carried.
 ---
----@usage
---- ```lua
---- local canCarry = canCarry({ ["health_potion"] = 2, ["mana_potion"] = 3 }, playerId)
---- if canCarry["health_potion"] and canCarry["mana_potion"] then
----     -- Proceed with adding items
+--- @usage
+--- local carryCheck = canCarry({ ["health_potion"] = 2, ["mana_potion"] = 3 }, playerId)
+--- if carryCheck["health_potion"] and carryCheck["mana_potion"] then
+---     -- Player can carry items.
 --- else
----     -- Inform the player they can't carry all items
+---     -- Notify player.
 --- end
---- ```
 function canCarry(itemTable, src)
     local resultTable = {}
     if src then
@@ -565,16 +552,28 @@ function canCarry(itemTable, src)
 
         elseif isStarted(QSInv) then
             for k, v in pairs(itemTable) do
-                resultTable[k] = exports[OXInv]:CanCarryItem(src, k, v)
+                resultTable[k] = exports[QSInv]:CanCarryItem(src, k, v)
             end
 
         elseif isStarted(CoreInv) then
-            --??
-
-        elseif isStarted(CodeMInv) then
             for k, v in pairs(itemTable) do
-                local weight = Items[k].weight
-                resultTable[k] = exports[CodeMInv]:CanCarryItem(src, weight, v)
+                resultTable[k] = exports[CoreInv]:canCarry(src, k, v)
+            end
+
+        elseif isStarted(CodeMInv) then  --- This really needs updating, their docs are confusing..
+            local items = getPlayerInv(src)
+            local totalWeight = 0
+            if not items then return false end
+            for _, item in pairs(items) do
+                totalWeight += (item.weight * item.amount)
+            end
+            for k, v in pairs(itemTable) do
+                local itemInfo = Items[k]
+                if not itemInfo then
+                    resultTable[k] = true
+                else
+                    resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight
+                end
             end
 
         elseif isStarted(OrigenInv) then
@@ -583,21 +582,18 @@ function canCarry(itemTable, src)
             end
 
         elseif isStarted(QBInv) or isStarted(PSInv) then
-            local Player = Core.Functions.GetPlayer(src)
-            local items = Player.PlayerData.items
-            local weight, totalWeight = 0, 0
+            local items = getPlayerInv(src)
+            local totalWeight = 0
             if not items then return false end
-            for _, item in pairs(items) do weight += item.weight * item.amount end
-
-            totalWeight = tonumber(weight)
-
+            for _, item in pairs(items) do
+                totalWeight += (item.weight * item.amount)
+            end
             for k, v in pairs(itemTable) do
                 local itemInfo = Items[k]
                 if not itemInfo and not Player.Offline then
-                    triggerNotify(nil, 'Item does not exist', 'error', src)
                     resultTable[k] = true
                 else
-                    resultTable[k] = (totalWeight + (Items[k]['weight'] * v)) <= InventoryWeight
+                    resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight
                 end
             end
         end
