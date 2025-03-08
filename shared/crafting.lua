@@ -168,7 +168,7 @@ function craftingMenu(data)
         headertxt = data.craftable.Headertxt,
         onBack = data.onBack or nil,
         canClose = true,
-        onExit = function() end,
+        onExit = data.onExit or (function() end),
     })
     lookEnt(data.coords)
 end

@@ -20,6 +20,8 @@
 --- ```
 function getSocietyAccount(society)
     local bankScript, amount = "", 0
+    if society == nil or society == "none" then return amount end
+
     if isStarted("qb-banking") then
         bankScript = "qb-banking"
         if not exports["qb-banking"]:GetAccount(society) then
@@ -35,11 +37,11 @@ function getSocietyAccount(society)
         end
         amount = exports["qb-banking"]:GetAccountBalance(society)
 
-    elseif isStarted("esx_society") then
-        bankScript = "esx_society"
-        -- Since esx_society does not have a native client export for retrieving money,
-        -- we use a server callback to get the final amount.
-        amount = triggerCallback(getScript() .. ":getESXSocietyAccount", society) or 0
+    --elseif isStarted("esx_society") then
+    --    bankScript = "esx_society"
+    --    -- Since esx_society does not have a native client export for retrieving money,
+    --    -- we use a server callback to get the final amount.
+    --    amount = triggerCallback(getScript()..":getESXSocietyAccount", society) or 0
 
     elseif isStarted("Renewed-Banking") then
         bankScript = "Renewed-Banking"
@@ -85,9 +87,9 @@ function chargeSociety(society, amount)
             end
 		end
         exports["qb-banking"]:RemoveMoney(society, amount)
-    elseif isStarted("esx_society") then
-        bankScript = "esx_society"
-        TriggerEvent("esx_society:withdrawMoney", society, amount)
+    --elseif isStarted("esx_society") then
+    --    bankScript = "esx_society"
+    --    TriggerEvent("esx_society:withdrawMoney", society, amount)
 
     elseif isStarted("Renewed-Banking") then
         bankScript = "Renewed-Banking"
@@ -138,12 +140,12 @@ function fundSociety(society, amount)
         end
         exports["qb-banking"]:AddMoney(society, amount)
 
-    elseif isStarted("esx_society") then
-        bankScript = "esx_society"
-        -- Use the esx_society event to deposit money.
-        TriggerServerEvent('esx_society:depositMoney', society, amount)
-        -- Use callback to return the updated balance.
-        newAmount = triggerCallback(getScript() .. ":getESXSocietyAccount", society) or 0
+    --elseif isStarted("esx_society") then
+    --    bankScript = "esx_society"
+    --    -- Use the esx_society event to deposit money.
+    --    TriggerServerEvent('esx_society:depositMoney', society, amount)
+    --    -- Use callback to return the updated balance.
+    --    newAmount = triggerCallback(getScript()..":getESXSocietyAccount", society) or 0
 
     elseif isStarted("Renewed-Banking") then
             bankScript = "Renewed-Banking"
@@ -170,7 +172,7 @@ end
 
 -- other
 if isStarted("esx_society") then
-    createCallback(getScript() .. ":getESXSocietyAccount", function(source, society)
+    createCallback(getScript()..":getESXSocietyAccount", function(source, society)
         -- Example query – adjust table/field names to match your esx_society implementation.
         local result = MySQL.scalar.await('SELECT money FROM society_money WHERE society = ?', { society })
         return result or 0

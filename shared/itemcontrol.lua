@@ -354,7 +354,7 @@ function getDurability(item)
     local durability = nil
     if isStarted(QBInv) or isStarted(PSInv) then
         local itemcheck = Core.Functions.GetPlayerData().items
-        for _, v in pairs(itemcheck) do
+        for k, v in pairs(itemcheck) do
             if v.name == item then
                 if v.slot <= lowestSlot then
                     lowestSlot = v.slot
@@ -366,7 +366,7 @@ function getDurability(item)
 
     if isStarted(OXInv) then
         local itemcheck = exports[OXInv]:Search('slots', item)
-        for _, v in pairs(itemcheck) do
+        for k, v in pairs(itemcheck) do
             if v.slot <= lowestSlot then
                 debugPrint(v.slot, itemcheck[k].metadata.durability)
                 lowestSlot = v.slot

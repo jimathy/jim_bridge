@@ -48,7 +48,6 @@ function GetStashTimeout(stashName, stop)
         stash = stashCache[stashName]
     else
         debugPrint("^6Bridge^7: ^2Local Stash ^7'^3"..stashName.."^7'^2 cache found^7")
-        ("^6Bridge^7: ^2Local Stash '^3"..stashName.."^7' cache found")
     end
 
     -- If there are already items in cache, skip recheck.

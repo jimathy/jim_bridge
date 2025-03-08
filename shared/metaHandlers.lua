@@ -28,7 +28,7 @@ function GetPlayer(source)
         return exports[QBXExport]:GetCoreObject().Functions.GetPlayer(source)
     elseif isStarted(ESXExport) then
         debugPrint("^6Bridge^7: ^3GetPlayer^7() ESXExport")
-        return exports[ESXExport]:GetPlayerFromId(source)
+        return ESX.GetPlayerFromId(source)
     elseif isStarted(OXCoreExport) then
         debugPrint("^6Bridge^7: ^3GetPlayer^7() OXCoreExport")
         return exports[OXCoreExport]:GetPlayer(source)
