@@ -10,6 +10,23 @@
 
     When running client-side (not on the server), the module checks the player's Ped after they load.
 
+    Usage Examples:
+      -- Check if the player's Ped is an animal:
+      local animalStatus = isPedAnimal()
+
+      -- Check if a given Ped is a cat:
+      if isCat(somePed) then print("This is a cat!") end
+
+      -- Determine if a Ped is a dog and whether it's big or small:
+      local isDogFlag, isBig = isDog(somePed)
+
+      -- Retrieve a flat list of all animal model hashes:
+      local allAnimalModels = getAnimalModels()
+
+    File Separation Suggestion:
+      For scalability, consider separating this module into two files:
+        • AnimalDetection.lua (for functions and callbacks)
+        • AnimalPedsData.lua (for the AnimalPeds table)
 ]]
 
 -- Global animal classification flags.

@@ -58,7 +58,7 @@ function onPlayerLoaded(func, onStart)
         if onPlayerFramework ~= "" then
             debugPrint("^6Bridge^7: ^2Registering ^3onPlayerLoaded^7()^2 with ^3" .. onPlayerFramework.."^7")
         else
-            print("^4ERROR^7: No supported core detected for onPlayerLoaded - Check exports.lua")
+            print("^4ERROR^7: No supported core detected for onPlayerLoaded - Check starter.lua")
         end
     end
 end
@@ -143,6 +143,18 @@ function waitForLogin()
             end
             Wait(100)
         end
+    elseif isStarted(OXCoreExport) then
+        if OxPlayer["stateId"] then
+            loggedIn = true
+        end
+        while not OxPlayer["stateId"] do
+            Wait(1000)
+            debugPrint("Waiting for stateId to class as logged in")
+            if OxPlayer.get["stateId"] then
+                loggedIn = true
+                break
+            end
+        end
     else
         -- For other frameworks, use LocalPlayer.state.isLoggedIn.
         while not LocalPlayer.state.isLoggedIn and (GetGameTimer() - startTime) < timeout do
@@ -159,3 +171,8 @@ function waitForLogin()
         return true
     end
 end
+
+
+--local OxPlayer = Ox.GetPlayer()
+--jsonPrint(OxPlayer)
+

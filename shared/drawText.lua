@@ -64,6 +64,15 @@ function drawText(image, input, style, oxStyleTable)
             text = '<img src="'..(radarTable[image] or "")..'" style="width:12px;height:12px">'..text
         end
         ESX.TextUI(text, nil)
+
+    elseif Config.System.drawText == "jim" then
+        for k, v in pairs(input) do
+            input[k] = v.."<br>"
+        end
+        exports["jim-nui"]:drawText({
+            icon = nil,
+            text = text,
+        })
     end
 end
 

@@ -380,7 +380,8 @@ function hasJob(job, source, grade)
             if info.name == job then hasJobFlag = true end
 
         elseif isStarted(OXCoreExport) then
-            for k, v in pairs(exports[OXCoreExport]:GetPlayerData().groups) do
+            local info = OxPlayer.getGroups()
+            for k, v in pairs(info) do
                 if k == job then hasJobFlag = true break end
             end
 
@@ -482,7 +483,9 @@ function getPlayer(source)
                 source = info.PlayerData.source,
                 job = info.PlayerData.job.name,
                 jobBoss = info.PlayerData.job.isboss,
+                jobInfo = info.PlayerData.job,
                 gang = info.PlayerData.gang.name,
+                gangInfo = info.PlayerData.gang,
                 gangBoss = info.PlayerData.gang.isboss,
                 onDuty = info.PlayerData.job.onduty,
                 account = info.PlayerData.charinfo.account,
@@ -500,25 +503,10 @@ function getPlayer(source)
                     source = info.source,
                     job = info.job.name,
                     jobBoss = info.job.isboss,
+                    jobInfo = info.job,
                     gang = info.gang.name,
                     gangBoss = info.gang.isboss,
-                    onDuty = info.job.onduty,
-                    account = info.charinfo.account,
-                    citizenId = info.citizenid,
-                }
-            else
-                local info = exports[QBExport]:GetPlayer(src).PlayerData
-                Player = {
-                    firstname = info.charinfo.firstname,
-                    lastname = info.charinfo.lastname,
-                    name = info.charinfo.firstname.." "..info.charinfo.lastname,
-                    cash = info.money["cash"],
-                    bank = info.money["bank"],
-                    source = info.source,
-                    job = info.job.name,
-                    jobBoss = info.job.isboss,
-                    gang = info.gang.name,
-                    gangBoss = info.gang.isboss,
+                    gangInfo = info.gang,
                     onDuty = info.job.onduty,
                     account = info.charinfo.account,
                     citizenId = info.citizenid,
@@ -554,11 +542,23 @@ function getPlayer(source)
                 bank = bank,
             }
         elseif isStarted(OXCoreExport) then
-            local info = exports[OXCoreExport]:GetPlayerData()
+            --local info = exports[OXCoreExport]:GetPlayerData()
+
             Player = {
-                name = info.firstName.." "..info.lastName,
+                firstname = OxPlayer.get("firstName"),
+                lastname = OxPlayer.get("lastName"),
+                name = OxPlayer.get("firstName").." "..OxPlayer.get("lastName"),
                 cash = exports[OXInv]:Search('count', "money"),
                 bank = 0,
+                --source = info.source,
+                job = OxPlayer.getGroups(),
+                --jobBoss = info.job.isboss,
+                gang = OxPlayer.getGroups(),
+                --gangBoss = info.gang.isboss,
+                --onDuty = info.job.onduty,
+                --account = info.charinfo.account,
+                citizenId = OxPlayer.get("stateId"),
+
             }
         elseif isStarted(QBXExport) then
             local info = exports[QBXExport]:GetPlayerData()
@@ -571,8 +571,10 @@ function getPlayer(source)
                 source = info.source,
                 job = info.job.name,
                 jobBoss = info.job.isboss,
+                jobInfo = info.job,
                 gang = info.gang.name,
                 gangBoss = info.gang.isboss,
+                gangInfo = info.gang,
                 onDuty = info.job.onduty,
                 account = info.charinfo.account,
                 citizenId = info.citizenid,
@@ -589,8 +591,10 @@ function getPlayer(source)
                 source = info.source,
                 job = info.job.name,
                 jobBoss = info.job.isboss,
+                jobInfo = info.job,
                 gang = info.gang.name,
                 gangBoss = info.gang.isboss,
+                gangInfo = info.gang,
                 onDuty = info.job.onduty,
                 account = info.charinfo.account,
                 citizenId = info.citizenid,

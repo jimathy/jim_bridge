@@ -39,15 +39,17 @@
 function createInput(title, opts)
     local dialog = nil
     local options = {}
-
+    local currentNum = 0
     if Config.System.Menu == "ox" then
         for i = 1, #opts do
+            currentNum += 1
+            if opts[i] == nil then currentNum -= 1 goto skip end
             if opts[i].type == "radio" then
                 -- Convert radio options to select type for OX
                 for k in pairs(opts[i].options) do
                     opts[i].options[k].label = opts[i].options[k].text
                 end
-                options[i] = {
+                options[currentNum] = {
                     type = "select",
                     isRequired = opts[i].isRequired,
                     label = opts[i].label or opts[i].text,
@@ -57,8 +59,8 @@ function createInput(title, opts)
                 }
             end
             if opts[i].type == "number" then
-                options[i] = {
-                    type = "number",
+                options[currentNum] = {
+                    type = opts[i].type,
                     label = (opts[i].label or opts[i].text)..(opts[i].txt and " - "..opts[i].txt or ""),
                     isRequired = opts[i].isRequired,
                     name = opts[i].name,
@@ -66,7 +68,7 @@ function createInput(title, opts)
                 }
             end
             if opts[i].type == "text" then
-                options[i] = {
+                options[currentNum] = {
                     type = "input",
                     label = opts[i].text..(opts[i].txt and " - "..opts[i].txt or ""),
                     default = opts[i].default,
@@ -74,8 +76,8 @@ function createInput(title, opts)
                 }
             end
             if opts[i].type == "select" then
-                options[i] = {
-                    type = "select",
+                options[currentNum] = {
+                    type = opts[i].type,
                     label = opts[i].text..(opts[i].txt and " - "..opts[i].txt or ""),
                     isRequired = opts[i].isRequired,
                     name = opts[i].name,
@@ -85,6 +87,17 @@ function createInput(title, opts)
                     default = opts[i].default,
                 }
             end
+
+            if opts[i].type == "color" then
+                options[currentNum] = {
+                    type = opts[i].type,
+                    label = opts[i].label,
+                    isRequired = opts[i].isRequired,
+                    format = opts[i].format,
+                    default = opts[i].default,
+                }
+            end
+            ::skip::
         end
         dialog = exports[OXLibExport]:inputDialog(title, options)
         return dialog

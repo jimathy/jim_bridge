@@ -49,6 +49,13 @@ for _, v in pairs(Exports) do
     end
 end
 
+OxPlayer = nil
+if isStarted(OXCoreExport) then
+    if not isServer() then
+        OxPlayer = Ox.GetPlayer()
+    end
+end
+
 -------------------------------------------------------------
 -- Resource Variables for Items, Jobs, and Vehicles
 -------------------------------------------------------------
@@ -186,12 +193,12 @@ elseif isStarted(OXCoreExport) then
             end)
         else
             local TempJobs = triggerCallback(getScript()..":getOxGroups")
-            Jobs = TempJobs or {}
+            Jobs = {}
             for k, v in pairs(TempJobs) do
                 local grades = {}
-                for i = 1, #v.grades do
-                    grades[i] = { name = v.grades[i], isboss = (i == #v.grades) }
-                end
+                --for i = 1, #v.grades do
+                --    grades[i] = { name = v.grades[i], isboss = (i == #v.grades) }
+                --end
                 Jobs[v.name] = { label = v.label, grades = grades }
             end
             Gangs = Jobs
