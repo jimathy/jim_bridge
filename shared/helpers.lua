@@ -515,6 +515,37 @@ function ensureNetToEnt(entNetID)
     return entity
 end
 
+function sendLog(text)
+	local Player = getPlayer()
+	local coords = GetEntityCoords(PlayerPedId())
+	local _, _, _, hour, min, sec = GetLocalTime()
+	local data = {
+		script = debug.getinfo(2, "nSl"),
+		coords = coords,
+		localTime = { hour = hour, min = min, sec = sec },
+		firstname = Player.firstname,
+		lastname = Player.lastname,
+		source = Player.source,
+		id = Player.citizenId,
+		text = text,
+	}
+
+    debugPrint("^5Log Message^7: "..getScript().." - "..Player.firstname.." "..Player.lastname.."("..Player.source..") ["..Player.citizenId.."]", text)
+	TriggerServerEvent(getScript()..":server:sendlog", data)
+end
+
+function sendServerLog(data)
+	local hour, min, sec = os.date('%H'), os.date('%M'), os.date('%S')
+	data.serverTime = { house = hour, min = min, sec = sec }
+    --jsonPrint(data)
+	debugPrint("^5Log Message^7: "..getScript().." - "..data.firstname.." "..data.lastname.."("..data.source..") ["..data.id.."]", data.text)
+
+    -- Add your logger here
+
+end
+
+RegisterNetEvent(getScript()..":server:sendlog", sendServerLog)
+
 -------------------------------------------------------------
 -- Material and Prop Functions
 -------------------------------------------------------------

@@ -128,14 +128,15 @@ end
 function setVehicleProperties(vehicle, props)
     if checkDifferences(vehicle, props) then
         if not DoesEntityExist(vehicle) then
-            print("Unable to set vehicle properties for '"..vehicle.."' (entity does not exist)")
+            print("Unable to set vehicle properties for '"..vehicle.."' (^1entity does not exist^7)")
         end
 
         if isStarted(QBExport) and not isStarted(QBXExport) then
             Core.Functions.SetVehicleProperties(vehicle, props)
             debugPrint("^6Bridge^7: ^2Setting Vehicle Properties ^7[^6"..QBExport.."^7] - [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7/^3"..props.model.."^7] - [^3"..props.plate.."^7]")
-        else
-            TriggerServerEvent(getScript()..":ox:setVehicleProperties", VehToNet(vehicle), props)
+        elseif isStarted(OXLibExport) then
+            lib.setVehicleProperties(vehicle, props, false)
+            debugPrint("^6Bridge^7: ^2Setting Vehicle Properties ^7[^6"..OXLibExport.."^7] - [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7/^3"..props.model.."^7] - [^3"..props.plate.."^7]")
         end
     else
         debugPrint("^6Bridge^7: ^2No Changes Found ^7 [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7/^3"..props.model.."^7] - [^3"..props.plate.."^7]")
@@ -158,7 +159,7 @@ end
 function checkDifferences(vehicle, newProps)
     local oldProps = getVehicleProperties(vehicle)
     debugPrint("^6Bridge^7: ^2Finding differences in ^3Vehicle Properties^7")
-    local differencesFound = false
+    local differencesFound = true
 
     for k in pairs(oldProps) do
         if json.encode(oldProps[k]) ~= json.encode(newProps[k]) then
@@ -199,7 +200,7 @@ AddStateBagChangeHandler(getScript()..':setVehicleProperties', '', function(bagN
     local networked = not bagName:find('localEntity')
     debugPrint("^6Bridge^7: ^2Setting Vehicle Properties ^7[^6"..OXLibExport.."^7] - [^3"..entity.."^7] - [^3"..GetEntityModel(entity).."^7] - [^3"..value.plate.."^7]")
 
-    if networked and NetworkGetEntityOwner(entity) ~= cache.playerId then return end
+    if networked then return end
 
     if lib.setVehicleProperties(entity, value) then
         Entity(entity).state:set('setVehicleProperties', nil, true)

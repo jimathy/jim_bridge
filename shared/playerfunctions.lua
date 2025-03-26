@@ -220,7 +220,6 @@ function fundPlayer(fund, moneyType, newsrc)
         debugPrint("^6Bridge^7: ^2Funding Player: '^2"..fund.."^7'", moneyType, fundResource)
     end
 end
-RegisterNetEvent(getScript()..":server:FundPlayer", fundPlayer)
 
 -------------------------------------------------------------
 -- Item Consumption & Effects
@@ -458,7 +457,7 @@ function getPlayer(source)
                 --gangBoss = info.gang.isboss,
                 onDuty = info.job.onDuty,
                 --account = info.charinfo.account,
-                --citizenId = info.citizenid,
+                citizenId = info.citizenid,
             }
 
         elseif isStarted(OXCoreExport) then
@@ -468,9 +467,20 @@ function getPlayer(source)
             chunk()
             local player = Ox.GetPlayer(src)
             Player = {
+                firstname = player.firstName,
+                lastname = player.lastName  ,
                 name = ('%s %s'):format(player.firstName, player.lastName),
                 cash = exports[OXInv]:Search(src, 'count', "money"),
                 bank = 0,
+                source = src,
+                --job = OxPlayer.getGroups(),
+                --jobBoss = info.job.isboss,
+                --gang = OxPlayer.getGroups(),
+                --gangBoss = info.gang.isboss,
+                --onDuty = info.job.onduty,
+                --account = info.charinfo.account,
+                citizenId = player.stateId,
+
             }
         elseif isStarted(QBXExport) then
             local info = exports[QBXExport]:GetPlayer(src)
@@ -513,7 +523,7 @@ function getPlayer(source)
                 }
             end
         else
-            print("^4ERROR^7: ^2No Core detected for getPlayer() - Check exports.lua")
+            print("^4ERROR^7: ^2No Core detected for getPlayer() - Check starter.lua")
         end
     else
         -- Client-side: Get current player info.
@@ -527,7 +537,9 @@ function getPlayer(source)
             Player = {
                 firstname = info.firstName,
                 lastname = info.lastName,
-
+                name = info.firstName.." "..info.lastName,
+                cash = cash,
+                bank = bank,
                 source = GetPlayerServerId(PlayerId()),
                 job = info.job.name,
                 --jobBoss = info.job.isboss,
@@ -535,30 +547,23 @@ function getPlayer(source)
                 --gangBoss = info.gang.isboss,
                 onDuty = info.job.onDuty,
                 --account = info.charinfo.account,
-                --citizenId = info.citizenid,
-
-                name = info.firstName.." "..info.lastName,
-                cash = cash,
-                bank = bank,
+                citizenId = info.identifier,
             }
         elseif isStarted(OXCoreExport) then
-            --local info = exports[OXCoreExport]:GetPlayerData()
-
             Player = {
                 firstname = OxPlayer.get("firstName"),
                 lastname = OxPlayer.get("lastName"),
                 name = OxPlayer.get("firstName").." "..OxPlayer.get("lastName"),
                 cash = exports[OXInv]:Search('count', "money"),
                 bank = 0,
-                --source = info.source,
+                source = GetPlayerServerId(PlayerId()),
                 job = OxPlayer.getGroups(),
                 --jobBoss = info.job.isboss,
                 gang = OxPlayer.getGroups(),
                 --gangBoss = info.gang.isboss,
                 --onDuty = info.job.onduty,
                 --account = info.charinfo.account,
-                citizenId = OxPlayer.get("stateId"),
-
+                citizenId = OxPlayer.userId,
             }
         elseif isStarted(QBXExport) then
             local info = exports[QBXExport]:GetPlayerData()

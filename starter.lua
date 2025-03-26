@@ -71,9 +71,11 @@ for _, v in pairs({ -- This is a specific load order
     'input.lua',
     'notify.lua',
     'drawText.lua',
+    'skillcheck.lua',
 
     -- Crafting / Shops / Stashes
     'crafting.lua',
+    'shops.lua',
     'stashcontrol.lua',
 
     -- Kind of "other"

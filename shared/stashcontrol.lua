@@ -99,7 +99,7 @@ function checkHasItem(stashes, itemTable)
             for item, amount in pairs(itemTable) do
                 debugPrint("^6Bridge^7: ^2Checking "..(name and " '^3"..name.."^7'" or "").." ingredients - ^6"..item.."^7")
                 if stashhasItem(stashCache[name].items, item, amount) then
-                    successes = successes + 1
+                    successes += 1
                     if successes == itemCount then
                         return true, name
                     end
@@ -271,7 +271,6 @@ function stashRemoveItem(stashItems, stashName, items)
 
     if isStarted(OXInv) then
         for k, v in pairs(items) do
-            debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..OXInv, k, v)
             if type(stashName) == "table" then
                 for _, name in pairs(stashName) do
                     local success = exports[OXInv]:RemoveItem(name, k, v)

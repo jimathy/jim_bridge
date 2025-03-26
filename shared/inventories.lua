@@ -59,7 +59,11 @@ function hasItem(items, amount, src)
             debugPrint(foundMessage)
             hasTable[item] = { hasItem = count >= amt, count = count }
         end
-        for k, v in pairs(hasTable) do if not v.hasItem then return false, hasTable end end
+        for k, v in pairs(hasTable) do
+            if not v.hasItem then
+                return false, hasTable
+            end
+        end
         return true, hasTable
     end
 end

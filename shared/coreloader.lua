@@ -140,7 +140,7 @@ if isStarted(QBXExport) or isStarted(QBExport) then
 elseif isStarted(OXCoreExport) then
     Vehicles = {}
     for k, v in pairs(Ox.GetVehicleData()) do
-        Vehicles[k] = { model = k, price = v.price, name = v.name, brand = v.make }
+        Vehicles[k] = { model = k, hash = GetHashKey(k), price = v.price, name = v.name, brand = v.make }
     end
     vehResource = OXCoreExport
 
@@ -159,6 +159,7 @@ elseif isStarted(ESXExport) then
                 Vehicles = Vehicles or {}
                 Vehicles[v.model] = {
                     model = v.model,
+                    hash = GetHashKey(v.model),
                     price = v.price,
                     name = v.name,
                     brand = GetMakeNameFromVehicleModel(v.model):lower():gsub("^%l", string.upper)

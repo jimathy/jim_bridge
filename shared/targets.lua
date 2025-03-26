@@ -119,9 +119,8 @@ function createEntityTarget(entity, opts, dist)
                 item = opts[i].item or nil,
                 groups = opts[i].job or opts[i].gang,
                 onSelect = opts[i].action,
-                canInteract = function(_, distance)
-                    return distance < dist and true or false
-                end
+                distance = dist,
+                canInteract = opts[i].canInteract or nil,
             }
         end
         exports[OXTargetExport]:addLocalEntity(entity, options)
@@ -223,9 +222,8 @@ function createBoxTarget(data, opts, dist)
                 item = opts[i].item or nil,
                 groups = opts[i].job or opts[i].gang,
                 onSelect = opts[i].onSelect or opts[i].action,
-                canInteract = function(_, distance)
-                    return distance < dist and true or false
-                end
+                distance = dist,
+                canInteract = opts[i].canInteract or nil,
             }
         end
         if not data[5].useZ then
@@ -324,9 +322,8 @@ function createCircleTarget(data, opts, dist)
                 item = opts[i].item or nil,
                 groups = opts[i].job or opts[i].gang,
                 onSelect = opts[i].onSelect or opts[i].action,
-                canInteract = function(_, distance)
-                    return distance < dist
-                end
+                distance = dist,
+                canInteract = opts[i].canInteract or nil,
             }
         end
         local target = exports[OXTargetExport]:addSphereZone({
@@ -385,9 +382,8 @@ function createModelTarget(models, opts, dist)
                 item = opts[i].item or nil,
                 groups = opts[i].job or opts[i].gang,
                 onSelect = opts[i].action,
-                canInteract = function(_, distance)
-                    return distance < dist and true or false
-                end
+                distance = dist,
+                canInteract = opts[i].canInteract or nil,
             }
         end
         exports[OXTargetExport]:addModel(models, options)

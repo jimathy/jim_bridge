@@ -31,7 +31,7 @@ function debugScaleForm(textTable, loc)
         local size = vec2(0.18, totalHeight + boxPadding * 2)
 
         -- Draw background rectangle.
-        DrawRect(loc.x + size.x / 2, loc.y + size.y / 2, size.x, size.y, 0, 0, 0, 255)
+        DrawRect(loc.x + size.x / 2, loc.y + size.y / 2, size.x, size.y, 0, 0, 0, 200)
 
         -- Render each line of text.
         for i = 1, #textTable do

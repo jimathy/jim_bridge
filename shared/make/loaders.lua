@@ -137,11 +137,11 @@ end
 --- ```
 function loadScriptBank(bank)
     local timeout = 2000
-    debugPrint("^6Debug^7: ^2Loading ^3Script ^2AudioBank^7...")
-    while not RequestScriptAudioBank(bank, 0) do Wait(10) timeout -= 10 if timeout <= 0 then break end end
+    debugPrint("^6Bridge^7: ^2Loading ^3Script ^2AudioBank^7...")
+    while not RequestScriptAudioBank(bank, false) do Wait(10) timeout -= 10 if timeout <= 0 then break end end
 
-    local success = RequestScriptAudioBank(bank, 0)
-    debugPrint("^6Debug^7: "..(success and "^3Successfully ^2loaded^7: '^4" or "^1Failed to ^2load^7: '^4")..bank.."^7'")
+    local success = RequestScriptAudioBank(bank, false)
+    debugPrint("^6Bridge^7: "..(success and "^3Successfully ^2loaded^7: '^4" or "^1Failed to ^2load^7: '^4")..bank.."^7'")
     return success
 end
 
@@ -159,14 +159,14 @@ end
 --- ```
 function loadAmbientBank(bank)
     local timeout = 2000
-    debugPrint("^6Debug^7: ^2Loading ^3Ambient ^2AudioBank^7...")
+    debugPrint("^6Bridge^7: ^2Loading ^3Ambient ^2AudioBank^7...")
     while not RequestAmbientAudioBank(bank, 0) do
         Wait(10)
         timeout -= 10
         if timeout <= 0 then break end
     end
     local success = RequestAmbientAudioBank(bank, 0)
-    debugPrint("^6Debug^7: "..(success and "^3Successfully ^2loaded^7: '^4" or "^1Failed to ^2load^7: '^4")..bank.."^7'")
+    debugPrint("^6Bridge^7: "..(success and "^3Successfully ^2loaded^7: '^4" or "^1Failed to ^2load^7: '^4")..bank.."^7'")
     return success
 end
 
@@ -224,16 +224,18 @@ end
 --- ```lua
 --- playGameSound('DLC_HEIST_HACKING_SNAKE_SOUNDS', 'Beep', vector3(0, 0, 0), false, 15.0)
 --- ```
-function playGameSound(bank, sound, coords, synced, range)
-    debugPrint("^6Debug^7: ^2Attempting to play: ^3"..sound.." ^7(^4"..bank.."^7')")
+function playGameSound(audioBank, soundSet, soundRef, coords, synced, range)
+    debugPrint("^6Bridge^7: ^2Attempting to play: ^3"..soundRef.." ^7('^4"..audioBank.."^7')")
+    loadScriptBank(audioBank)
     local range = range or 10.0
     local soundId = GetSoundId()
     while not soundId do Wait(10) end
     if type(coords) == "vector3" or type(coords) == "vector4" then
-        debugPrint("^6Debug^7: ^2Playing sound from Coord^7: "..formatCoord(coords.xyz))
-        PlaySoundFromCoord(soundId, sound, coords.x, coords.y, coords.z, bank, synced, range, 0)
+        debugPrint("^6Bridge^7: ^2Playing sound from Coord^7: "..formatCoord(coords.xyz))
+        PlaySoundFromCoord(soundId, soundRef, coords.x, coords.y, coords.z, soundSet, synced, range, 0)
     else
-        debugPrint("^6Debug^7: ^2Playing sound from Entity^7: ^4"..coords.."^7")
-        PlaySoundFromEntity(soundId, sound, coords, bank, synced, 0)
+        debugPrint("^6Bridge^7: ^2Playing sound from Entity^7: ^4"..coords.."^7")
+        PlaySoundFromEntity(soundId, soundRef, coords, soundSet, synced, 1.0)
     end
+    ReleaseScriptAudioBank(audioBank)
 end

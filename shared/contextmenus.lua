@@ -95,7 +95,7 @@ function openMenu(Menu, data)
                 Menu[k].args = Menu[k].params.args or {}
             end
             if Menu[k].isMenuHeader then
-                Menu[k].disabled = true
+                Menu[k].readOnly = true
             end
         end
         local menuID = 'Menu'

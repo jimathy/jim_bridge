@@ -12,6 +12,14 @@
 -------------------------------------------------------------
 CraftLock = false
 
+-- helper filter table for crafting menus
+local excludeKeys = {
+    amount = true, metadata = true, description = true, info = true,
+    job = true, gang = true, oneUse = true, slot = true,
+    blueprintRef = true, craftingLevel = true, craftedItems = true,
+    hasCrafted = true, exp = true, anim = true, time = true,
+}
+
 -------------------------------------------------------------
 -- Crafting Menu
 -------------------------------------------------------------
@@ -73,6 +81,7 @@ function craftingMenu(data)
     for i = 1, #Recipes do
         for k in pairs(Recipes[i]) do
             if k == "hasCrafted" and not data.craftable.craftedItems then
+                -- Retreive list of already crafted items from playermetadata to see if we should class this recipe as "new"
                 craftedItems = GetMetadata(nil, "craftedItems") or {}
                 data.craftable.craftedItems = craftedItems
             end
@@ -88,12 +97,6 @@ function craftingMenu(data)
     for i = 1, #Recipes do
         if not Recipes[i]["amount"] then Recipes[i]["amount"] = 1 end
         for k, _ in pairs(Recipes[i]) do
-            local excludeKeys = {
-                amount = true, metadata = true, description = true, info = true,
-                job = true, gang = true, oneUse = true, slot = true,
-                blueprintRef = true, craftingLevel = true, craftedItems = true,
-                hasCrafted = true, exp = true, anim = true, time = true,
-            }
             if not excludeKeys[k] then
                 local hasjob = true
                 if Recipes[i].job then
@@ -203,48 +206,79 @@ end
 --- })
 --- ```
 function multiCraft(data)
-    local Menu = {}
-    local amounts = Config.Crafting.MultiCraftAmounts
-    local metadata = data.metadata or nil
-
-    -- Header for the multi-craft menu.
-    Menu[#Menu + 1] = {
-        isMenuHeader = true,
-        icon = invImg(metadata and metadata.image or data.item),
-        header = metadata and metadata.label or Items[data.item].label,
-    }
-
-    for k in pairsByKeys(amounts) do
-        local settext = ""
+    local max = 0
+    local stashName = nil
+    for i = 1, 100 do
         local itemTable = {}
         for l, b in pairs(data.craft[data.item]) do
-            itemTable[l] = (b * k)
-            settext = settext..(settext ~= "" and br or "")..Items[l].label..(b * k > 1 and " x"..b * k or "")
-            Wait(0)
+            debugPrint("")
+            itemTable[l] = (b * i)
         end
-        local disable, stashname = checkHasItem(data.stashName, itemTable)
-        Menu[#Menu + 1] = {
-            isMenuHeader = not disable,
-            arrow = disable,
-            header = "Craft - x"..(k * data.craft.amount),
-            txt = settext,
-            onSelect = function()
-                makeItem({
-                    item = data.item,
-                    craft = data.craft,
-                    craftable = data.craftable,
-                    amount = k,
-                    coords = data.coords,
-                    stashName = stashname,
-                    stashTable = data.stashName,
-                    onBack = data.onBack,
-                    metadata = data.metadata,
-                })
-            end,
-        }
+
+        if data.stashName then
+            debugPrint("")
+            local hasItems, stashname = checkHasItem(data.stashName, itemTable)
+            if hasItems == true then
+                max += 1
+                stashName = stashname
+            else
+                break
+            end
+        else
+            debugPrint("")
+            local has, _ = hasItem(itemTable, nil, nil)
+            if has then
+                max += 1
+            else
+                break
+            end
+        end
+        Wait(10)
     end
 
-    openMenu(Menu, { header = data.craftable.Header, onBack = function() craftingMenu(data) end })
+    local dialog = createInput(data.craftable.Header, {
+        ((Config.System.Menu == "ox") and {
+            type = "slider",
+            label = "How many to craft?",
+            required = true,
+            default = 1,
+            min = 1,
+            max = max
+        }) or nil,
+        ((Config.System.Menu == "qb") and {
+            type = "number",
+            label = "How many to craft?"..br.."Max: "..max,
+            name = "amount",
+            isRecuired = true,
+            default = 1,
+        }) or nil,
+    })
+
+    if dialog then
+        if Config.System.Menu == "ox" then
+
+        end
+        if Config.System.Menu == "qb" then
+            if dialog["amount"] > max or dialog["amount"] < 1 or dialog["amount"] == nil or dialog["amount"] == "" then
+                triggerNotify(nil, "Invalid Amount", "error")
+                craftingMenu(data)
+                return
+            end
+        end
+
+
+        makeItem({
+            item = data.item,
+            craft = data.craft,
+            craftable = data.craftable,
+            amount = dialog["amount"] or dialog[1],
+            coords = data.coords,
+            stashName = stashName or nil,
+            --stashTable = data.stashName,
+            onBack = data.onBack,
+            metadata = data.metadata,
+        })
+    end
 end
 
 -------------------------------------------------------------
@@ -300,12 +334,6 @@ function makeItem(data)
 
     for i = 1, craftAmount do
         for k, v in pairs(data.craft) do
-            local excludeKeys = {
-                amount = true, info = true, metadata = true, description = true,
-                job = true, gang = true, oneUse = true, slot = true,
-                blueprintRef = true, craftingLevel = true, craftedItems = true,
-                hasCrafted = true, exp = true, anim = true, time = true,
-            }
             if not excludeKeys[k] then
                 if type(v) == "table" then
                     for l, b in pairs(v) do
@@ -392,6 +420,7 @@ end
 --- @param craftable table The crafting recipe and details.
 --- @param stashName string|table The stash name(s) to remove ingredients from.
 --- @param metadata table (optional) Metadata for the crafted item.
+--- @usage
 RegisterNetEvent(getScript()..":Crafting:GetItem", function(ItemMake, craftable, stashName, metadata)
     local src = source
     local hasItems, hasTable = hasItem(ItemMake, 1, src)
@@ -424,188 +453,6 @@ RegisterNetEvent(getScript()..":Crafting:GetItem", function(ItemMake, craftable,
     end
     addItem(ItemMake, craftable.amount or 1, metadata, src)
     -- Optionally, add experience here:
+    -- for example:
     -- if isStarted("core_skills") then exports["core_skills"]:AddExperience(src, 2) end
 end)
-
--------------------------------------------------------------
--- Selling Menu and Animation
--------------------------------------------------------------
-
---- Opens a selling menu with available items and prices.
----
---- @param data table Contains selling menu data:
----     - sellTable (`table`) Table with Header and Items (item names and prices).
----     - ped (optional) (`number`) Ped entity involved.
----     - onBack (optional) (`function`) Callback for returning.
---- @usage
---- ```lua
---- sellMenu({
----     sellTable = {
----         Header = "Sell Items",
----         Items = {
----             ["gold_ring"] = 100,
----             ["diamond"] = 500,
----         },
----     },
----     ped = pedEntity,
----     onBack = function() print("Returning to previous menu") end,
---- })
---- ```
-function sellMenu(data)
-    local origData = data
-    local Menu = {}
-    if data.sellTable.Items then
-        local itemList = {}
-        for k, v in pairs(data.sellTable.Items) do itemList[k] = 1 end
-        local _, hasTable = hasItem(itemList)
-        for k, v in pairsByKeys(data.sellTable.Items) do
-            Menu[#Menu + 1] = {
-                isMenuHeader = not hasTable[k].hasItem,
-                icon = invImg(k),
-                header = Items[k].label..(hasTable[k].hasItem and "💰 (x"..hasTable[k].count..")" or ""),
-                txt = Loc[Config.Lan].info["sell_all"]..v.." "..Loc[Config.Lan].info["sell_each"],
-                onSelect = function()
-                    sellAnim({ item = k, price = v, ped = data.ped, onBack = function() sellMenu(data) end })
-                end,
-            }
-        end
-    else
-        for k, v in pairsByKeys(data.sellTable) do
-            if type(v) == "table" then
-                Menu[#Menu + 1] = {
-                    arrow = true,
-                    header = k,
-                    txt = "Amount of items: "..countTable(v.Items),
-                    onSelect = function()
-                        v.onBack = function() sellMenu(origData) end
-                        v.sellTable = data.sellTable[k]
-                        sellMenu(v)
-                    end,
-                }
-            end
-        end
-    end
-    openMenu(Menu, {
-        header = data.sellTable.Header or "Amount of items: "..countTable(data.sellTable.Items),
-        headertxt = data.sellTable.Header and "Amount of items: "..countTable(data.sellTable.Items) or "",
-        canClose = true,
-        onBack = data.onBack,
-    })
-end
-
---- Plays the selling animation and processes the sale transaction.
----
---- Checks if the player has the item, plays animations, triggers the server event for selling,
---- and then calls the onBack callback if provided.
----
---- @param data table Contains:
----   `- item: The item to sell.
----   `- price: Price per item.
----   `- ped (optional): Ped entity involved.
----   `- onBack (optional): Callback to call on completion.
----@usage
---- ```lua
---- sellAnim({
----     item = "gold_ring",
----     price = 100,
----     ped = pedEntity,
----     onBack = function() sellMenu(data) end,
---- })
---- ```
-function sellAnim(data)
-    if not hasItem(data.item, 1) then
-        triggerNotify(nil, Loc[Config.Lan].error["dont_have"].." "..Items[data.item].label, "error")
-        return
-    end
-
-    -- Remove any attached clipboard objects.
-    for _, obj in pairs(GetGamePool('CObject')) do
-        for _, model in pairs({ `p_cs_clipboard` }) do
-            if GetEntityModel(obj) == model and IsEntityAttachedToEntity(data.ped, obj) then
-                DeleteObject(obj)
-                DetachEntity(obj, 0, 0)
-                SetEntityAsMissionEntity(obj, true, true)
-                Wait(100)
-                DeleteEntity(obj)
-            end
-        end
-    end
-
-    TriggerServerEvent(getScript().."Sellitems", data)
-    lookEnt(data.ped)
-    local dict = "mp_common"
-    playAnim(dict, "givetake2_a", 0.3, 2)
-    playAnim(dict, "givetake2_b", 0.3, 2, data.ped)
-    Wait(2000)
-    StopAnimTask(PlayerPedId(), dict, "givetake2_a", 0.5)
-    StopAnimTask(data.ped, dict, "givetake2_b", 0.5)
-    if data.onBack then data.onBack() end
-end
-
---- Server event handler for processing item sales.
---- Removes sold items from inventory and funds the player based on the sale.
-RegisterNetEvent(getScript().."Sellitems", function(data)
-    local src = source
-    local hasItems, hasTable = hasItem(data.item, 1, src)
-    if hasItems then
-        removeItem(data.item, hasTable[data.item].count, src)
-        TriggerEvent(getScript()..":server:FundPlayer", (hasTable[data.item].count * data.price), "cash", src)
-    else
-        triggerNotify(nil, Loc[Config.Lan].error["dont_have"].." "..Items[data.item].label, "error", src)
-    end
-end)
-
--------------------------------------------------------------
--- Shop Interface
--------------------------------------------------------------
-
---- Opens a shop interface for the player.
----
---- Checks job/gang restrictions, then uses the active inventory system to open the shop.
---- @param data table Contains:
----     - shop (`string`) The shop identifier.
----     - items (`table`) The items available in the shop.
----     - coords (`vector3`) where the shop is located.
----     - job/gang (optional) (`string`) Job or gang requirements.
----@usage
---- ```lua
---- openShop({
----     shop = "weapon_shop",
----     items = weaponShopItems,
----     coords = vector3(100.0, 200.0, 300.0),
----     job = "police",
---- })
---- ```
-function openShop(data)
-    if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
-
-    if isStarted(OXInv) then
-        exports[OXInv]:openInventory('shop', { type = data.shop })
-
-    elseif isStarted(QBInv) then
-        if QBInvNew then
-            TriggerServerEvent(getScript()..':server:OpenShopNewQB', data.shop)
-        else
-            TriggerServerEvent(Config.General.JimShops and "jim-shops:ShopOpen" or "inventory:server:OpenInventory", "shop", data.items.label, data.items)
-        end
-
-    --elseif isStarted(OrigenInv) then -- Needs testing, not sure if i did this right
-    --    exports[OrigenInv]:openInventory('shop', data.shop, data.items)
-
-    else
-        TriggerServerEvent(Config.General.JimShops and "jim-shops:ShopOpen" or "inventory:server:OpenInventory", "shop", data.items.label, data.items)
-    end
-    lookEnt(data.coords)
-end
-
---- Server event handler for opening a shop using the new QB inventory system.
-RegisterNetEvent(getScript()..':server:OpenShopNewQB', function(data)
-    exports[QBInv]:OpenShop(source, data)
-end)
-
--------------------------------------------------------------
--- Server Callback Registration
--------------------------------------------------------------
-if isServer() then
-    createCallback(getScript()..':server:canCarry', function(source, itemTable) local result = canCarry(itemTable, source) return result end)
-end

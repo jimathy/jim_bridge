@@ -97,13 +97,34 @@ function createInput(title, opts)
                     default = opts[i].default,
                 }
             end
+            if opts[i].type == "slider" then
+                options[currentNum] = {
+                    type = opts[i].type,
+                    label = opts[i].label,
+                    isRequired = opts[i].required,
+                    min = opts[i].min,
+                    max = opts[i].max,
+                    default = opts[i].default,
+                }
+            end
             ::skip::
         end
         dialog = exports[OXLibExport]:inputDialog(title, options)
         return dialog
     elseif Config.System.Menu == "qb" then
-        dialog = exports['qb-input']:ShowInput({ header = title, submitText = "Accept", inputs = opts })
+        for k, v in pairs(opts) do
+            currentNum += 1
+            if opts[k] == nil then
+                currentNum -= 1
+            else
+                options[currentNum] = opts[k]
+            end
+        end
+        dialog = exports['qb-input']:ShowInput(
+            { header = title, submitText = "Accept", inputs = options }
+        )
         return dialog
+
     elseif Config.System.Menu == "gta" then
         WarMenu.CreateMenu(tostring(opts),
             title,

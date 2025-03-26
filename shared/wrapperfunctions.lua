@@ -119,7 +119,18 @@ if isServer() then
     --- ```lua
     --- TriggerEvent(getScript()..":server:makeOXStash", name, label, slots, weight, owner, coords)
     --- ```
-    RegisterNetEvent(getScript()..":server:makeOXStash", function(name, label, slots, weight, owner, coords)
+    RegisterNetEvent(getScript()..":server:makeOXStash", function(name, label, slots, weight, owner, coords, token)
+        local src = source or nil
+        if src then
+            debugPrint("^1Auth^7: ^2Auth token received^7, ^2checking against server cache^7..")
+            if token ~= validTokens[src] then
+                debugPrint("^1Auth^7: ^1Tokens don't match! ^7", token, validTokens[src])
+            else
+                debugPrint("^1Auth^7: ^2Client and Server Auth tokens match^7!", token, validTokens[src])
+                validTokens[src] = nil
+            end
+        end
+
         registerStash(name, label, slots, weight, owner, coords)
     end)
 end

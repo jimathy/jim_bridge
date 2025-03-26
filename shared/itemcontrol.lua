@@ -12,6 +12,7 @@
       • Granting random rewards from a reward pool.
       • Checking if a player can carry specific items based on weight.
 ]]
+validTokens = {}
 
 -------------------------------------------------------------
 -- Registering Usable Items
@@ -74,7 +75,7 @@ function invImg(item)
         elseif isStarted(QBInv) then
             imgLink = "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
         else
-            print("^4ERROR^7: ^2No Inventory detected for invImg - Check exports.lua")
+            print("^4ERROR^7: ^2No Inventory detected for invImg - Check starter.lua")
         end
     end
     return imgLink
@@ -103,7 +104,8 @@ function addItem(item, amount, info, src)
     if src then
         TriggerEvent(getScript()..":server:toggleItem", true, item, amount, src, info)
     else
-        TriggerServerEvent(getScript()..":server:toggleItem", true, item, amount, nil, info)
+        TriggerServerEvent(getScript()..":server:toggleItem", true, item, amount, currentToken, info)
+        currentToken = nil -- clear client cached token
     end
 end
 
@@ -159,7 +161,25 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
         return
     end
 
-    local src = newsrc or source
+    local src = source or newsrc
+    if (give == true or give == 1) then
+        if newsrc == nil then -- must be coming from client this would be blank
+            debugPrint("^1Auth^7: ^1No token recieved^7")
+            dupeWarn(src, item, "Auth: Player "..src.." attempted to spawn "..item.." without an auth token")
+        else
+            if type(newsrc) ~= "number" then -- checks if the newsrc is a source or token, if number its coming form the server itself
+                debugPrint("^1Auth^7: ^2Auth token received^7, ^2checking against server cache^7..")
+                if newsrc ~= validTokens[src] then
+                    debugPrint("^1Auth^7: ^1Tokens don't match! ^7", newsrc, validTokens[src])
+                    dupeWarn(src, item, "Auth: "..src.." attempted to spawn "..item.." with an incorrect auth token")
+                else
+                    debugPrint("^1Auth^7: ^2Client and Server Auth tokens match^7!", newsrc, validTokens[src])
+                    validTokens[src] = nil
+                end
+            end
+        end
+    end
+
     local action = (tostring(give) == "true" and "addItem" or "removeItem")
     local remamount = amount or 1
     if item == nil then return end
@@ -599,4 +619,62 @@ function canCarry(itemTable, src)
         end
     end
     return resultTable
+end
+
+-------------------------------------------------------------
+-- Server Callback Registration
+-------------------------------------------------------------
+currentToken = nil
+if isServer() then
+    createCallback(getScript()..":server:canCarry", function(source, itemTable)
+        local result = canCarry(itemTable, source)
+        return result
+    end)
+
+    local AuthEvent = getScript()..":"..keyGen()..keyGen()..keyGen()..keyGen()..":"..keyGen()..keyGen()..keyGen()..keyGen()
+    validTokens = validTokens or {}
+
+    createCallback(AuthEvent, function(source)
+        local src = source
+        local token = keyGen()..keyGen()..keyGen()..keyGen()  -- Use a secure random generator here
+        debugPrint("^1Auth^7:^2 Player Source^7: "..src.." ^2requested new token^7:", token)
+        validTokens[src] = token
+        timeOutAuth(validTokens[src], src) -- Give script 10 seconds, then clear token
+        return token
+    end)
+
+    function timeOutAuth(token, src)
+        local token = token
+        SetTimeout(10000, function()
+            if token == validTokens[src] then
+                print("^1--------------------------------------------^7")
+                print("^7Clearing token for player ^1"..src.."^7", token)
+                print("^7This shouldn't happen unless a token has been called by a player or script and it hasn't been used")
+                print("^1--------------------------------------------^7")
+            end
+        end)
+    end
+
+    RegisterNetEvent(getScript()..":clearAuthToken", function()
+        local src = source
+        debugPrint("^1Auth^7: ^2Manually removing token for Player Source^7:", src, validTokens[src])
+        validTokens[src] = nil
+    end)
+
+    receivedEvent = {}
+    createCallback(getScript()..":callback:GetAuthEvent", function(source)
+        local src = source
+        debugPrint("^1Auth^7: ^2Player Source^7: "..src.." ^2requested ^3AuthEvent^7", AuthEvent)
+        if not receivedEvent[src] then receivedEvent[src] = true
+            return AuthEvent
+        else
+            print("^1Auth^7: ^1Player ^7"..src.." ^1tried to request auth token more than once^7")
+            return ""
+        end
+    end)
+else
+    onResourceStart(function()
+        debugPrint("^1Auth^7: ^2Requesting ^3Auth Event^7")
+        AuthEvent = triggerCallback(getScript()..":callback:GetAuthEvent")
+    end, true)
 end

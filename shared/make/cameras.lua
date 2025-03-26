@@ -22,15 +22,21 @@ function createTempCam(ent, coords)
 			triggerNotify(nil, "ModCam Created", "success")
 		end
 		local camCoords = nil
+		local pointCoords = nil
 		if type(ent) ~= "vector3" then
 			camCoords = GetOffsetFromEntityInWorldCoords(ent, 1.0, -0.3, 0.8)
 		else
 			camCoords = ent
 		end
-		-- Create the camera with specified parameters
+
 		cam = CreateCamWithParams("DEFAULT_SCRIPTED_CAMERA", camCoords.x, camCoords.y, camCoords.z + 0.5, 1.0, 0.0, 0.0, 60.00, false, 0)
-		-- Point the camera at the target coordinates
-		PointCamAtCoord(cam, coords)
+
+		if type(coords) == "number" then
+			SetCamCoord(cam, GetCamCoord(cam) + vec3(0, 0, 1.0))
+			PointCamAtEntity(cam, coords)
+		else
+			PointCamAtCoord(cam, coords)
+		end
 	end
 	return cam
 end

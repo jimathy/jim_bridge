@@ -57,6 +57,7 @@ function triggerCallback(callbackName, ...)
             p:resolve(cbResult)
         end, ...)
         result = Citizen.Await(p)
+        Wait(10)
     elseif isStarted(ESXExport) then
         local p = promise.new()
         ESX.TriggerServerCallback(callbackName, function(cbResult)
