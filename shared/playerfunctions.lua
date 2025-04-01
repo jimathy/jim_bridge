@@ -154,7 +154,10 @@ end
 function chargePlayer(cost, moneyType, newsrc)
     local src = newsrc or source
     local fundResource = ""
-
+    if cost < 0 then
+        debugPrint("^1Error^7: ^7SRC: ^3"..src.." ^2Tried to charge a minus value^7", cost)
+        return
+    end
     if moneyType == "cash" then
         if isStarted(OXInv) then fundResource = OXInv
             exports[OXInv]:RemoveItem(src, "money", cost)
@@ -177,7 +180,14 @@ function chargePlayer(cost, moneyType, newsrc)
         debugPrint("^6Bridge^7: ^2Charging ^2Player^7: '^6"..cost.."^7'", moneyType, fundResource)
     end
 end
-RegisterNetEvent(getScript()..":server:ChargePlayer", chargePlayer)
+RegisterNetEvent(getScript()..":server:ChargePlayer", function(cost, moneyType, newsrc)
+    debugPrint(GetInvokingResource())
+	if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= "qb-core" then
+        debugPrint("^1Error^7: ^1Possible exploit^7, ^1vital function was called from an external resource^7")
+        return
+    end
+    chargePlayer(cost, moneyType, newsrc)
+end)
 
 --- Funds a player by adding money to their account.
 ---

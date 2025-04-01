@@ -5,8 +5,6 @@
     various frameworks: QB, OX, GTA, and ESX.
 ]]
 
-local radarTable = {}  -- Table to store image references for drawing text
-
 --- Displays text on the screen using the configured draw text system.
 ---
 --- Depending on Config.System.drawText, this function will use different methods to
@@ -23,7 +21,7 @@ local radarTable = {}  -- Table to store image references for drawing text
 --- ```
 function drawText(image, input, style, oxStyleTable)
     local text = ""
-
+    if not radarTable then radarTable = {} end
     if Config.System.drawText == "qb" then
         -- Concatenate lines for QB system with HTML line breaks.
         for i = 1, #input do

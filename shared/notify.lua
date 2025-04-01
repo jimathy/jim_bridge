@@ -50,10 +50,18 @@ function triggerNotify(title, message, type, src)
             TriggerClientEvent('ox_lib:notify', src, { title = title, description = message, type = type or "success" })
         end
     elseif Config.System.Notify == "gta" then
-        if not src then
-            TriggerEvent(getScript()..":DisplayGTANotify", title, message)
+        if isStarted("jim-gtaui") then
+            if not src then
+                TriggerEvent("jim-gtaui:Notify", title, message, type)
+            else
+                TriggerClientEvent("jim-gtaui:Notify", src, title, message, type)
+            end
         else
-            TriggerClientEvent(getScript()..":DisplayGTANotify", src, title, message)
+            if not src then
+                TriggerEvent(getScript()..":DisplayGTANotify", title, message)
+            else
+                TriggerClientEvent(getScript()..":DisplayGTANotify", src, title, message)
+            end
         end
     elseif Config.System.Notify == "esx" then
         if not src then

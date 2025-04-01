@@ -171,8 +171,3 @@ function waitForLogin()
         return true
     end
 end
-
-
---local OxPlayer = Ox.GetPlayer()
---jsonPrint(OxPlayer)
-

@@ -19,9 +19,11 @@ local Peds = {}
 -- makeDistPed(pedData, pedCoords, true, false, 'WORLD_HUMAN_STAND_IMPATIENT', nil, true)
 -- ```
 function makeDistPed(data, coords, freeze, collision, scenario, anim, synced)
+    local zoneCoords = type(data) == "table" and data.coords or coords
+
     createCirclePoly({
         name = keyGen()..keyGen(),
-        coords = vec3(data.coords.x, data.coords.y, data.coords.z - 1.03),
+        coords = vec3(zoneCoords.x, zoneCoords.y, zoneCoords.z - 1.03),
         radius = 50.0,
         onEnter = function()
             Peds[#Peds + 1] = makePed(data, coords, freeze, collision, scenario, anim, synced)

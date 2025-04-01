@@ -169,7 +169,7 @@ end
 ---           name = 'storageBox',
 ---           heading = 100.0,
 ---           debugPoly = true,
----           minZ = 27.0
+---           minZ = 27.0,
 ---           maxZ = 32.0,
 ---       },
 ---   },
@@ -388,7 +388,7 @@ function createModelTarget(models, opts, dist)
         end
         exports[OXTargetExport]:addModel(models, options)
     elseif isStarted(QBTargetExport) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Entity^2 target with ^6"..QBTargetExport)
+        debugPrint("^6Bridge^7: ^2Creating new ^3Model^2 target with ^6"..QBTargetExport)
         local options = { options = opts, distance = dist }
         exports[QBTargetExport]:AddTargetModel(models, options)
     end
@@ -439,6 +439,25 @@ function removeZoneTarget(target)
     end
 end
 
+--- Removes a previously created model target.
+---
+--- @param model table The model ID whose target should be removed.
+---
+--- @usage
+--- ```lua
+--- removeModelTarget(model)
+--- ```
+function removeModelTarget(model)
+    if isStarted(QBTargetExport) then
+        exports[QBTargetExport]:RemoveTargetModel(model, "Test")
+    end
+    if isStarted(OXTargetExport) then
+        exports[OXTargetExport]:removeModel(model, nil)
+    end
+    if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
+        TextTargets[entity] = nil
+    end
+end
 -------------------------------------------------------------
 -- Fallback: DrawText3D Targets (Experimental)
 -------------------------------------------------------------
@@ -455,12 +474,20 @@ if (Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStar
             local closestTarget = nil
             local closestDist = math.huge
 
+            -- Create a shallow copy of TextTargets
+            local targetsCopy = {}
+            for k, target in pairs(TextTargets) do
+                targetsCopy[k] = target
+            end
+
             -- Identify the closest target in front of the camera.
-            for _, target in pairs(TextTargets) do
+            for _, target in pairs(targetsCopy) do
                 local dist = #(pedCoords - target.coords)
                 local vecToTarget = target.coords - camCoords
                 local vecToTargetNormalized = normalizeVector(vecToTarget)
-                local dot = camForwardVector.x * vecToTargetNormalized.x + camForwardVector.y * vecToTargetNormalized.y + camForwardVector.z * vecToTargetNormalized.z
+                local dot = camForwardVector.x * vecToTargetNormalized.x +
+                            camForwardVector.y * vecToTargetNormalized.y +
+                            camForwardVector.z * vecToTargetNormalized.z
                 local isFacingTarget = dot > 0.5 -- Threshold for facing target.
 
                 if dist <= target.dist and isFacingTarget then
@@ -472,7 +499,7 @@ if (Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStar
             end
 
             -- Render the DrawText3D targets and listen for key presses.
-            for _, target in pairs(TextTargets) do
+            for _, target in pairs(targetsCopy) do
                 local isClosest = (target == closestTarget)
                 if #(pedCoords - target.coords) <= target.dist then
                     for i = 1, #target.options do
@@ -481,9 +508,12 @@ if (Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStar
                             if target.options[i].action then target.options[i].action() end
                         end
                     end
-                    DrawText3D(vec3(target.coords.x, target.coords.y, target.coords.z + 0.7), concatenateText(target.buttontext), isClosest)
+                    DrawText3D(vec3(target.coords.x, target.coords.y, target.coords.z + 0.7),
+                               concatenateText(target.buttontext),
+                               isClosest)
                 end
             end
+
             Wait(0)
         end
     end)

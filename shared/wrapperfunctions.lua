@@ -73,37 +73,6 @@ function registerStash(name, label, slots, weight, owner, coords)
     end
 end
 
---- Registers a shop with the active inventory system.
---- Supports either OXInv or QBInv (with QBInvNew flag).
----
---- @param name string Unique shop identifier.
---- @param label string Display name for the shop.
---- @param items table List of available shop items.
---- @param society string|nil (Optional) Society identifier for shared shops.
---- @usage
---- ```lua
---- registerShop("weaponShop", "Weapon Shop", weaponItems, "society_weapons")
---- ```
-function registerShop(name, label, items, society)
-    if isStarted(OXInv) then
-        debugPrint("^6Bridge^7: ^2Registering ^3OX ^2Store^7:", name, label)
-        exports[OXInv]:RegisterShop(name, {
-            name = label,
-            inventory = items,
-            society = society,
-        })
-    elseif isStarted(QBInv) and QBInvNew then
-        debugPrint("^6Bridge^7: ^2Registering ^3QB ^2Store^7:", name, label)
-        exports[QBInv]:CreateShop({
-            name = name,
-            label = label,
-            slots = #items,
-            items = items,
-            society = society,
-        })
-    end
-end
-
 if isServer() then
     --- Registers an event to create an OX stash from the server.
     --- When triggered, it calls registerStash with the provided parameters.

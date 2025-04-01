@@ -94,46 +94,73 @@ function progressBar(data)
         })
 
     elseif Config.System.ProgressBar == "gta" then
-        local wait = debugMode and 1000 or data.time
+        loadTextureDict("timerbars")
+        if inProgress then return false end
         inProgress = true
-        if not (data.dead or false) then
-            lockInv(true)
-            displaySpinner(data.label)
-            if data.dict then
-                playAnim(data.dict, data.anim, -1, (data.flag == 8 and 32 or data.flag) or nil)
-            end
-            if data.task then
-                TaskStartScenarioInPlace(ped, data.task, -1, true)
-            end
-            while inProgress and wait > 0 do
-                wait -= 15
-                local waitTimer = 0
+        local wait = debugMode and 1000 or data.time
+        local endTime = GetGameTimer() + wait
+        local ped = PlayerPedId()
+
+        -- Setup Animation/Task if specified
+        if data.dict then
+            playAnim(data.dict, data.anim, -1, data.flag or 32)
+        elseif data.task then
+            TaskStartScenarioInPlace(ped, data.task, -1, true)
+        end
+
+        -- Progress bar rendering loop
+        CreateThread(function()
+            while GetGameTimer() < endTime and inProgress do
+                Wait(0)
+                local elapsed = GetGameTimer()
+                local percentage = ((elapsed - (endTime - wait)) / wait) * 100
+
+                -- Convert to segmented progress (assuming 5 segments here)
+                local segments = 5  -- Number of segments in the bar
+                local segmentProgress = {}
+                local progressPerSegment = 100 / segments
+
+                for i = 1, segments do
+                    local segmentStart = (i - 1) * progressPerSegment
+                    local segmentEnd = i * progressPerSegment
+                    if percentage >= segmentEnd then
+                        segmentProgress[i] = 100
+                    elseif percentage <= segmentStart then
+                        segmentProgress[i] = 0
+                    else
+                        segmentProgress[i] = ((percentage - segmentStart) / progressPerSegment) * 100
+                    end
+                end
+
+                percentage = percentage >= 100 and 100 or percentage
+                -- Draw your segmented progress bar
+                ShowGTAProgressBar(segmentProgress, data.label, ("%.0f%%"):format(percentage))
+
+                -- Controls to disable during progress
                 DisablePlayerFiring(ped, true)
                 DisableControlAction(0, 25, true) -- Disable aim
                 DisableControlAction(0, 21, true) -- Disable sprint
                 DisableControlAction(0, 30, true) -- Disable move left/right
                 DisableControlAction(0, 31, true) -- Disable move forward/back
                 DisableControlAction(0, 36, true) -- Disable stealth
-                if data.cam ~= nil then
-                    DisableControlAction(0, 1, true)   -- Disable look left/right
-                    DisableControlAction(0, 2, true)   -- Disable look up/down
-                    DisableControlAction(0, 106, true) -- Disable vehicle mouse control
+
+                if data.cancel and (IsControlJustReleased(0, 202) or IsControlJustReleased(0, 177) or IsControlJustReleased(0, 73)) then
+                    inProgress = false
                 end
-                if data.cancel then
-                    if IsControlJustReleased(0, 202) or IsControlJustReleased(0, 77) then -- Cancel key (Backspace or Delete)
-                        inProgress = false
-                        waitTimer = 1500
-                        displaySpinner(Loc[Config.Lan].error["cancel"])
-                    end
-                end
-                Wait(waitTimer)
             end
-            inProgress = false
-            if data.dict then stopAnim(data.dict, data.anim, ped) end
-            ClearPedTasks(ped)
+        end)
+
+        -- Wait for completion or cancel
+        while GetGameTimer() < endTime and inProgress do
+            Wait(100)
         end
-        stopSpinner()
-        result = (wait <= 0)
+
+        -- Cleanup animations/tasks
+        if data.dict then stopAnim(data.dict, data.anim, ped) end
+        ClearPedTasks(ped)
+
+        result = inProgress
+        inProgress = false
     end
 
     while result == nil do Wait(10) end
@@ -141,26 +168,80 @@ function progressBar(data)
     -- Cleanup
     FreezeEntityPosition(ped, false)
     lockInv(false)
-    if data.cam then stopTempCam(data.cam) end
+    if data.cam then
+        stopTempCam(data.cam)
+    end
     if result == false and data.shared then
         debugPrint("^6Bridge^7: ^2Sending cancel to ^6"..storedPID.."^7")
         TriggerServerEvent(getScript().."server:sharedProg:cancel", storedPID)
     end
     storedPID = nil
+    if result == false then
+        currentToken = nil
+        TriggerServerEvent(getScript()..":clearAuthToken")
+    end
+    if result == true and data.request then
+        TriggerServerEvent(getScript()..":clearAuthToken")
+        currentToken = triggerCallback(AuthEvent)
+    end
     return result
+end
+
+function ShowGTAProgressBar(currentProg, title, level)
+    local loc = vec2(0.37, 0.90)
+    local size = vec2(0.3, 0.03)
+
+    -- Draw background box
+    DrawSprite("timerbars", "all_black_bg", loc.x +0.028, loc.y-0.01, 0.15, 0.07, 0.0, 255, 255, 255, 255)
+    DrawSprite("timerbars", "all_black_bg", loc.x +0.170, loc.y-0.01, 0.15, 0.07, 180.0, 255, 255, 255, 255)
+
+    SetTextFont(0)
+    SetTextProportional(1)
+    SetTextScale(0.35, 0.35)
+    SetTextColour(255, 255, 255, 255)
+    SetTextDropshadow(0, 0, 0, 0, 255)
+    SetTextDropShadow()
+    SetTextOutline()
+    SetTextEntry("STRING")
+    AddTextComponentString(title)
+    DrawText(loc.x - size.x / 4 + 0.074, loc.y - 0.034)  -- Adjust text position
+
+    SetTextFont(0)
+    SetTextProportional(1)
+    SetTextScale(0.35, 0.25)
+    SetTextColour(255, 255, 255, 255)
+    SetTextEntry("STRING")
+    AddTextComponentString(level)
+    DrawText(loc.x - size.x / 4 + 0.246, loc.y - 0.030)  -- Right-aligned additional text
+
+    local segmentWidth = (size.x + 0.05) / (#currentProg * 2)  -- Divide the total width by 18 (9 segments * 2 gaps for each)
+    local gap = segmentWidth / #currentProg  -- Smaller gap between segments
+
+    for i = 1, #currentProg do
+        local segmentX = (loc.x - size.x / 4 ) + 0.075 + (i - 1) * (segmentWidth + gap)
+        local fillPercentage = currentProg[i]
+        local progressBarWidth = segmentWidth * (fillPercentage / 100)
+
+        -- Semi-transparent background for each segment
+        DrawRect(segmentX + segmentWidth / 2, loc.y, segmentWidth, size.y / 3.4, 100, 100, 100, 255)
+
+        -- Filling progress for each segment
+        if progressBarWidth > 0 then
+            DrawRect(segmentX + progressBarWidth / 2, loc.y, progressBarWidth, size.y / 3.4, 93, 182, 229, 255)  -- Blue progress
+        end
+    end
 end
 
 --- Stops the current progress bar.
 ---
 --- This function cancels the progress bar based on the configured progress bar system, handling any necessary cleanup.
-function stopPropgressBar()
+function stopProgressBar()
     if Config.System.ProgressBar == "ox" then
         exports[OXLibExport]:cancelProgress()
     elseif Config.System.ProgressBar == "qb" then
         TriggerEvent("progressbar:client:cancel")
     elseif Config.System.ProgressBar == "gta" then
         inProgress = false
-        BusyspinnerOff()
     end
 end
 
@@ -201,9 +282,5 @@ end)
 --- This event is triggered when the server wants the client to cancel a shared progress bar.
 RegisterNetEvent(getScript()..":client:sharedProg:Cancel", function()
     debugPrint("^6Bridge^7: ^2Receiving cancel progressBar^7")
-    stopPropgressBar()
+    stopProgressBar()
 end)
-
---- Cleans up when the resource stops.
---- This event handler ensures that any active spinners or progress bars are stopped when the resource is stopped.
-onResourceStop(function() stopSpinner() end, true)

@@ -51,12 +51,12 @@ end
 --- }
 --- makeDistProp(propData, true, false)
 --- ```
-function makeDistProp(data, freeze, synced)
+function makeDistProp(data, freeze, synced, range)
     local prop = nil
     createCirclePoly({
         name = keyGen()..keyGen(),
         coords = vec3(data.coords.x, data.coords.y, data.coords.z - 1.03),
-        radius = 50.0,
+        radius = range or 50.0,
         onEnter = function()
             prop = makeProp(data, freeze, synced)
         end,

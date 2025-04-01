@@ -359,6 +359,10 @@ function makeItem(data)
                             craftProp = makeProp({ prop = prop.model, coords = vec4(0, 0, 0, 0), true, true })
                             AttachEntityToEntity(craftProp, PlayerPedId(), GetPedBoneIndex(PlayerPedId(), prop.bone), prop.pos.x, prop.pos.y, prop.pos.z, prop.rot.x, prop.rot.y, prop.rot.z, true, true, false, true, 1, true)
                         end
+                        if data.sound then
+                            local s = data.sound
+                            PlaySoundFromEntity(s.soundId, s.audioName, PlayerPedId(), s.audioRef, true, 0)
+                        end
                         if crafting and progressBar({
                             label = bartext..((metadata and metadata.label) or Items[data.item].label),
                             time = bartime,
@@ -388,6 +392,12 @@ function makeItem(data)
                                 local breakId = GetSoundId()
                                 PlaySoundFromEntity(breakId, "Drill_Pin_Break", PlayerPedId(), "DLC_HEIST_FLEECA_SOUNDSET", 1, 0)
                                 canReturn = false
+                            end
+                            if data.sound then
+                                StopSound(data.sound.soundId)
+                            end
+                            if data.requiredItemfunc then
+                                data.requiredItemfunc()
                             end
                         else
                             crafting = false

@@ -87,33 +87,51 @@ function getPlayerInv(src)
 
     if isStarted(OXInv) then
         foundInv = OXInv
-        if src then grabInv = exports[OXInv]:GetInventoryItems(src)
-        else grabInv = exports[OXInv]:GetPlayerItems() end
+        if src then
+            grabInv = exports[OXInv]:GetInventoryItems(src)
+        else
+            grabInv = exports[OXInv]:GetPlayerItems()
+        end
 
     elseif isStarted(QSInv) then
         foundInv = QSInv
-        if src then grabInv = exports[QSInv]:GetInventory(src)
-        else grabInv = exports[QSInv]:getUserInventory() end
+        if src then
+            grabInv = exports[QSInv]:GetInventory(src)
+        else
+            grabInv = exports[QSInv]:getUserInventory()
+        end
 
     elseif isStarted(OrigenInv) then
         foundInv = OrigenInv
-        if src then grabInv = exports[OrigenInv]:getInventory(src)
-        else grabInv = exports[OrigenInv]:getInventory() end
+        if src then
+            grabInv = exports[OrigenInv]:getInventory(src)
+        else
+            grabInv = exports[OrigenInv]:getInventory()
+        end
 
     elseif isStarted(CoreInv) then
         foundInv = CoreInv
-        if src then grabInv = exports[CoreInv]:getInventory(src)
-        else grabInv = exports[CoreInv]:getInventory() end
+        if src then
+            grabInv = exports[CoreInv]:getInventory(src)
+        else
+            grabInv = exports[CoreInv]:getInventory()
+        end
 
     elseif isStarted(CodeMInv) then
         foundInv = CodeMInv
-        if src then grabInv = exports[CodeMInv]:GetInventory(src)
-        else grabInv = exports[CodeMInv]:GetClientPlayerInventory() end
+        if src then
+            grabInv = exports[CodeMInv]:GetInventory(src)
+        else
+            grabInv = exports[CodeMInv]:GetClientPlayerInventory()
+        end
 
     elseif isStarted(QBInv) then
         foundInv = QBInv
-        if src then grabInv = Core.Functions.GetPlayer(src).PlayerData.items
-        else grabInv = Core.Functions.GetPlayerData().items end
+        if src then
+            grabInv = Core.Functions.GetPlayer(src).PlayerData.items
+        else
+            grabInv = Core.Functions.GetPlayerData().items
+        end
 
     elseif isStarted(PSInv) then
         foundInv = PSInv
