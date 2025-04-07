@@ -161,9 +161,14 @@ function chargePlayer(cost, moneyType, newsrc)
     if moneyType == "cash" then
         if isStarted(OXInv) then fundResource = OXInv
             exports[OXInv]:RemoveItem(src, "money", cost)
-        elseif isStarted(QBExport) or isStarted(QBXExport) then fundResource = QBExport
+        elseif isStarted(QBExport) or isStarted(QBXExport) then
+            fundResource = QBExport
             Core.Functions.GetPlayer(src).Functions.RemoveMoney("cash", cost)
-        elseif isStarted(ESXExport) then fundResource = ESXExport
+        elseif isStarted(RSGExport) then
+            fundResource = QBExport
+            Core.Functions.GetPlayer(src).Functions.RemoveMoney("cash", cost)
+        elseif isStarted(ESXExport) then
+            fundResource = ESXExport
             ESX.GetPlayerFromId(src).removeMoney(cost, "")
         end
     elseif moneyType == "bank" then
@@ -532,6 +537,27 @@ function getPlayer(source)
                     citizenId = info.citizenid,
                 }
             end
+        elseif isStarted(RSGExport) then
+            if Core.Functions.GetPlayer then
+                local info = Core.Functions.GetPlayer(src).PlayerData
+                Player = {
+                    firstname = info.charinfo.firstname,
+                    lastname = info.charinfo.lastname,
+                    name = info.charinfo.firstname.." "..info.charinfo.lastname,
+                    cash = info.money["cash"],
+                    bank = info.money["bank"],
+                    source = info.source,
+                    job = info.job.name,
+                    jobBoss = info.job.isboss,
+                    jobInfo = info.job,
+                    gang = info.gang.name,
+                    gangBoss = info.gang.isboss,
+                    gangInfo = info.gang,
+                    onDuty = info.job.onduty,
+                    account = info.charinfo.account,
+                    citizenId = info.citizenid,
+                }
+            end
         else
             print("^4ERROR^7: ^2No Core detected for getPlayer() - Check starter.lua")
         end
@@ -595,6 +621,26 @@ function getPlayer(source)
                 citizenId = info.citizenid,
             }
         elseif isStarted(QBExport) and not isStarted(QBXExport) then
+            local info = nil
+            Core.Functions.GetPlayerData(function(PlayerData) info = PlayerData end)
+            Player = {
+                firstname = info.charinfo.firstname,
+                lastname = info.charinfo.lastname,
+                name = info.charinfo.firstname.." "..info.charinfo.lastname,
+                cash = info.money["cash"],
+                bank = info.money["bank"],
+                source = info.source,
+                job = info.job.name,
+                jobBoss = info.job.isboss,
+                jobInfo = info.job,
+                gang = info.gang.name,
+                gangBoss = info.gang.isboss,
+                gangInfo = info.gang,
+                onDuty = info.job.onduty,
+                account = info.charinfo.account,
+                citizenId = info.citizenid,
+            }
+        elseif isStarted(RSGExport) then
             local info = nil
             Core.Functions.GetPlayerData(function(PlayerData) info = PlayerData end)
             Player = {

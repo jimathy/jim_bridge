@@ -1,3 +1,5 @@
+gameName = not IsDuplicityVersion() and GetCurrentGameName()
+
 Exports = {
     QBExport = "qb-core",
     QBXExport = "qbx_core",
@@ -17,7 +19,11 @@ Exports = {
     QBMenuExport = "qb-menu",
 
     QBTargetExport = "qb-target",
-    OXTargetExport = "ox_target"
+    OXTargetExport = "ox_target",
+
+    -- REDM
+    RSGExport = "rsg-core",
+    RSGInv = "rsg-inventory"
 }
 
 -- Required variables

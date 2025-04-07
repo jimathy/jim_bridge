@@ -93,6 +93,22 @@ function progressBar(data)
             end
         })
 
+    elseif Config.System.ProgressBar == "red" then
+        -- Currently only uses jim-redui if you choose this option
+        if exports["jim-redui"]:progressBar({
+            label = data.label,
+            time = debugMode and 1000 or data.time,
+            dict = data.dict,
+            anim = data.anim,
+            flag = data.flag or 32,
+            task = data.task,
+            cancel = true,
+        }) then
+            result = true
+        else
+            result = false
+        end
+
     elseif Config.System.ProgressBar == "gta" then
         loadTextureDict("timerbars")
         if inProgress then return false end

@@ -71,6 +71,16 @@ function drawText(image, input, style, oxStyleTable)
             icon = nil,
             text = text,
         })
+
+    elseif Config.System.drawText == "red" then
+        -- Concatenate input lines and apply GTA style formatting.
+        for i = 1, #input do
+            if input[i] ~= "" then
+                text = text..input[i].."\n~q~"
+            end
+        end
+        TriggerEvent("jim-redui:DrawText", text)
+
     end
 end
 
@@ -91,5 +101,7 @@ function hideText()
         ClearAllHelpMessages()
     elseif Config.System.drawText == "esx" then
         ESX.HideUI()
+    elseif Config.System.drawText == "red" then
+        TriggerEvent("jim-redui:HideText")
     end
 end

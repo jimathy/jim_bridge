@@ -53,6 +53,9 @@ function onPlayerLoaded(func, onStart)
         elseif isStarted(OXCoreExport) then
             onPlayerFramework = OXCoreExport
             AddEventHandler('ox:playerLoaded', tempFunc)
+        elseif isStarted(RSGExport) then
+            onPlayerFramework = RSGExport
+            AddEventHandler('RSGCore:Client:OnPlayerLoaded', tempFunc)
         end
 
         if onPlayerFramework ~= "" then
@@ -75,6 +78,7 @@ end
 function onPlayerUnload(func)
     AddEventHandler('QBCore:Client:OnPlayerUnload', function() func() end)
     AddEventHandler('ox:playerLogout', function() func() end)
+    AddEventHandler('RSGCore:Client:OnPlayerUnload', function() func() end)
 
     --AddEventHandler('esx:playerLogout', function() func() end)
     -- ^ Only server side for now, need a way to send it to client if not already available

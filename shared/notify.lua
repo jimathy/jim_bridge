@@ -76,6 +76,15 @@ function triggerNotify(title, message, type, src)
         else
             TriggerClientEvent("jim-nui:client:notify'", src, type, message)
         end
+
+    elseif Config.System.Notify == "red" then
+        if isStarted("jim-redui") then
+            if not src then
+                TriggerEvent("jim-redui:Notify", title, message, type)
+            else
+                TriggerClientEvent("jim-redui:Notify", src, title, message, type)
+            end
+        end
     end
 end
 

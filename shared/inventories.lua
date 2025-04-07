@@ -148,6 +148,14 @@ function getPlayerInv(src)
             grabInv = xPlayer.inventory
         end
 
+    elseif isStarted(RSGInv) then
+        foundInv = RSGInv
+        if src then
+            grabInv = Core.Functions.GetPlayer(src).PlayerData.items
+        else
+            grabInv = Core.Functions.GetPlayerData().items
+        end
+
     else
         print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3starter^1.^2lua^7")
     end

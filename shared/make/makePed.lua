@@ -20,16 +20,16 @@ local Peds = {}
 -- ```
 function makeDistPed(data, coords, freeze, collision, scenario, anim, synced)
     local zoneCoords = type(data) == "table" and data.coords or coords
-
+    local randName = keyGen()..keyGen()
     createCirclePoly({
-        name = keyGen()..keyGen(),
+        name = randName,
         coords = vec3(zoneCoords.x, zoneCoords.y, zoneCoords.z - 1.03),
         radius = 50.0,
         onEnter = function()
-            Peds[#Peds + 1] = makePed(data, coords, freeze, collision, scenario, anim, synced)
+            Peds[randName] = makePed(data, coords, freeze, collision, scenario, anim, synced)
         end,
         onExit = function()
-            DeletePed(Peds[#Peds])
+            DeletePed(Peds[randName])
         end,
         debug = debugMode,
     })
@@ -114,7 +114,14 @@ function makePed(data, coords, freeze, collision, scenario, anim, synced)
     else
         model = data
         loadModel(model)
-        ped = CreatePed(0, model, coords.x, coords.y, coords.z - 1.03, coords.w, synced or false, false)
+        if gameName == "rdr3" then
+            ped = CreatePed(model, coords.x, coords.y, coords.z - 1.03, coords.w, synced or false, false)
+            SetEntityVisible(ped, 1) -- SetEntityVisible
+            SetEntityAlpha(ped, 255, false) -- SetEntityAlpha
+            SetRandomOutfitVariation(ped, true) -- Invisible without
+        else
+            ped = CreatePed(0, model, coords.x, coords.y, coords.z - 1.03, coords.w, synced or false, false)
+        end
     end
 
     SetEntityInvincible(ped, true)
@@ -127,10 +134,13 @@ function makePed(data, coords, freeze, collision, scenario, anim, synced)
         loadAnimDict(anim[1])
         TaskPlayAnim(ped, anim[1], anim[2], 0.5, 1.0, -1, 1, 0.2, 0, 0, 0)
     end
-
-    debugPrint("^6Bridge^7: ^1Ped ^2Created^7: '^6"..ped.."^7' | ^2Hash^7: ^7'^5"..(model).."^7' | ^2Coord^7: "..formatCoord(coords))
+    if DoesEntityExist(ped) then
+        debugPrint("^6Bridge^7: ^1Ped ^2Created^7: '^6"..ped.."^7' | ^2Hash^7: ^7'^5"..(model).."^7' | ^2Coord^7: "..formatCoord(coords))
+    else
+        print("error ped")
+    end
     unloadModel(model)
-    Peds[#Peds + 1] = ped
+    Peds[keyGen()..keyGen()] = ped
     return ped
 end
 
@@ -229,4 +239,8 @@ function GenerateRandomPedData(data)
 end
 
 --- Cleans up all created Peds when the resource stops.
-onResourceStop(function() for i = 1, #Peds do DeletePed(Peds[i]) end end, true)
+onResourceStop(function()
+    for k in pairs(Peds) do
+        DeletePed(Peds[k])
+    end
+end, true)

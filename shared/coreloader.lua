@@ -36,6 +36,10 @@ OXInv, QBInv, PSInv, QSInv, CoreInv, CodeMInv, OrigenInv =
     Exports.CodeMInv or "",
     Exports.OrigenInv or ""
 
+RSGExport, RSGInv =
+    Exports.RSGExport or "",
+    Exports.RSGInv or ""
+
 QBMenuExport = Exports.QBMenuExport or ""
 QBTargetExport, OXTargetExport = Exports.QBTargetExport or "", Exports.OXTargetExport or ""
 
@@ -112,6 +116,18 @@ elseif isStarted(ESXExport) then
             debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Items).." ^3Items^2 from ^7"..itemResource)
         end
     end)
+
+elseif isStarted(RSGExport) then
+    itemResource = RSGExport
+    Core = Core or exports[RSGExport]:GetCoreObject()
+    Items = Core and Core.Shared.Items or nil
+    if isStarted(RSGExport) and not isStarted(QBXExport) then
+        RegisterNetEvent('QBCore:Client:UpdateObject', function()
+            Core = Core or exports[RSGExport]:GetCoreObject()
+            Items = Core and Core.Shared.Items or nil
+        end)
+    end
+
 end
 
 if not isStarted(ESXExport) then
@@ -167,6 +183,17 @@ elseif isStarted(ESXExport) then
             end
         end
     end)
+
+elseif isStarted(RSGExport) then
+    Core = Core or exports[RSGExport]:GetCoreObject()
+    Vehicles = Core and Core.Shared.Vehicles
+    if isStarted(RSGExport) then
+        RegisterNetEvent('RSGExport:Client:UpdateObject', function()
+            Core = Core or exports[RSGExport]:GetCoreObject()
+            Vehicles = Core and Core.Shared.Vehicles
+        end)
+    end
+    vehResource = RSGExport
 end
 
 if vehResource == nil then
@@ -239,6 +266,17 @@ elseif isStarted(ESXExport) then
             Gangs = Jobs
         end
     end)
+
+elseif isStarted(RSGExport) then
+    jobResource = RSGExport
+    Core = Core or exports[RSGExport]:GetCoreObject()
+    Jobs, Gangs = Core.Shared.Jobs, Core.Shared.Gangs
+    if isStarted(RSGExport) and not isStarted(QBXExport) then
+        RegisterNetEvent('QBCore:Client:UpdateObject', function()
+            Core = exports[RSGExport]:GetCoreObject()
+            Jobs, Gangs = Core.Shared.Jobs, Core.Shared.Gangs
+        end)
+    end
 end
 
 if not isStarted(ESXExport) and Jobs then

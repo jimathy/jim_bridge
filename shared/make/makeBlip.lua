@@ -1,3 +1,5 @@
+local blipTable = {}
+
 --- Creates a blip at specified coordinates with given properties.
 --
 -- This function adds a map blip at the provided coordinates and sets various display properties such as sprite, color, scale, and more.
@@ -30,31 +32,48 @@
 -- local blip = makeBlip(blipData)
 -- ```
 function makeBlip(data)
-    local blip = AddBlipForCoord(vec3(data.coords.x, data.coords.y, data.coords.z))
-    SetBlipCoords(blip, data.coords.x, data.coords.y, data.coords.z) -- Manually set blip coordinates again as sometimes it just refuses
-    SetBlipAsShortRange(blip, true)
-    SetBlipSprite(blip, data.sprite or 106)
-    SetBlipColour(blip, data.col or 5)
-    SetBlipScale(blip, data.scale or 0.7)
-    SetBlipDisplay(blip, data.disp or 6)
-    if data.category then SetBlipCategory(blip, data.category) end
-    BeginTextCommandSetBlipName('STRING')
-    AddTextComponentString(tostring(data.name))
-    EndTextCommandSetBlipName(blip)
-    -- Handle preview image if certain resources are running
-    if isStarted("fs_smallresources") or isStarted("blip_info") or isStarted("blipinfo") then
-        if data.preview then
-            local txname = string.gsub(tostring(data.name..'preview'..string.gsub(data.coords.z, "%.", "")), "[ ()~]", "")
-            if data.preview:find("http") or data.preview:find("nui") then
-                createDui(txname, data.preview, vec2(512, 256), scriptTxd)
-            else
-                CreateRuntimeTextureFromImage(scriptTxd, txname, data.preview)
+    local blip = nil
+    if gameName == "rdr3" then
+        blip = BlipAddForCoords(1664425300, data.coords.x, data.coords.y, data.coords.z)
+        SetBlipSprite(blip, data.sprite or `blip_shop_market_stall`)
+        SetBlipScale(blip, data.scale or 0.2)
+        SetBlipName(blip, data.name)
+        --BlipSetStyle(blip, data.col or `BLIP_STYLE_CREATOR_DEFAULT`)
+    else
+        blip = AddBlipForCoord(vec3(data.coords.x, data.coords.y, data.coords.z))
+        SetBlipCoords(blip, data.coords.x, data.coords.y, data.coords.z) -- Manually set blip coordinates again as sometimes it just refuses
+        SetBlipAsShortRange(blip, true)
+        SetBlipSprite(blip, data.sprite or 106)
+        SetBlipColour(blip, data.col or 5)
+        SetBlipScale(blip, data.scale or 0.7)
+        SetBlipDisplay(blip, data.disp or 6)
+        if data.category then
+            SetBlipCategory(blip, data.category)
+        end
+        BeginTextCommandSetBlipName('STRING')
+        AddTextComponentString(tostring(data.name))
+        EndTextCommandSetBlipName(blip)
+        -- Handle preview image if certain resources are running
+        if isStarted("fs_smallresources") or isStarted("blip_info") or isStarted("blipinfo") then
+            if data.preview then
+                local txname = string.gsub(tostring(data.name..'preview'..string.gsub(data.coords.z, "%.", "")), "[ ()~]", "")
+                if data.preview:find("http") or data.preview:find("nui") then
+                    createDui(txname, data.preview, vec2(512, 256), scriptTxd)
+                else
+                    CreateRuntimeTextureFromImage(scriptTxd, txname, data.preview)
+                end
+                exports["fs_smallresources"]:SetBlipInfoImage(blip, getScript()..'scriptTxd', txname)
+                exports["fs_smallresources"]:SetBlipInfoTitle(blip, data.name, false)
             end
-            exports["fs_smallresources"]:SetBlipInfoImage(blip, getScript()..'scriptTxd', txname)
-            exports["fs_smallresources"]:SetBlipInfoTitle(blip, data.name, false)
         end
     end
-    debugPrint("^6Bridge^7: ^6Blip ^2created^7: '^6"..data.name.."^7' - '"..formatCoord(data.coords).."'")
+    blipTable[blip] = blip
+
+    if DoesBlipExist(blip) then
+        debugPrint("^6Bridge^7: ^6Blip ^2created^7: '^6"..data.name.."^7' - '"..formatCoord(data.coords).."'")
+    else
+        print("Error making blip")
+    end
     return blip
 end
 
@@ -90,30 +109,54 @@ end
 -- local blip = makeEntityBlip(blipData)
 -- ```
 function makeEntityBlip(data)
-    AddBlipForEntity(data.entity)
-    local blip = GetBlipFromEntity(data.entity)
-    SetBlipAsShortRange(blip, true)
-    SetBlipSprite(blip, data.sprite or 106)
-    SetBlipColour(blip, data.col or 5)
-    SetBlipScale(blip, data.scale or 0.7)
-    SetBlipDisplay(blip, data.disp or 6)
-    if data.category then SetBlipCategory(blip, data.category) end
-    BeginTextCommandSetBlipName('STRING')
-    AddTextComponentString(tostring(data.name))
-    EndTextCommandSetBlipName(blip)
-    -- Handle preview image if certain resources are running
-    if isStarted("fs_smallresources") or isStarted("blip-info") or isStarted("blipinfo") then
-        if data.preview then
-            local txname = string.gsub(tostring(data.name..'preview'), "[ ()~]", "")
-            if data.preview:find("http") or data.preview:find("nui") then
-                createDui(txname, data.preview, vec2(512, 256), scriptTxd)
-            else
-                CreateRuntimeTextureFromImage(scriptTxd, txname, data.preview)
+    local blip = nil
+    if gameName == "rdr3" then
+        blip = BlipAddForEntity(1664425300, data.entity)
+        SetBlipSprite(blip, data.sprite or `blip_ambient_coach`)
+        SetBlipScale(blip, data.scale or 0.2)
+        SetBlipName(blip, data.name)
+
+    else
+        AddBlipForEntity(data.entity)
+        blip = GetBlipFromEntity(data.entity)
+        blipTable[blip] = blip
+        SetBlipAsShortRange(blip, true)
+        SetBlipSprite(blip, data.sprite or 106)
+        SetBlipColour(blip, data.col or 5)
+        SetBlipScale(blip, data.scale or 0.7)
+        SetBlipDisplay(blip, data.disp or 6)
+        if data.category then SetBlipCategory(blip, data.category) end
+        BeginTextCommandSetBlipName('STRING')
+        AddTextComponentString(tostring(data.name))
+        EndTextCommandSetBlipName(blip)
+        -- Handle preview image if certain resources are running
+        if isStarted("fs_smallresources") or isStarted("blip-info") or isStarted("blipinfo") then
+            if data.preview then
+                local txname = string.gsub(tostring(data.name..'preview'), "[ ()~]", "")
+                if data.preview:find("http") or data.preview:find("nui") then
+                    createDui(txname, data.preview, vec2(512, 256), scriptTxd)
+                else
+                    CreateRuntimeTextureFromImage(scriptTxd, txname, data.preview)
+                end
+                exports["fs_smallresources"]:SetBlipInfoImage(blip, getScript()..'previewTxd', txname)
+                exports["fs_smallresources"]:SetBlipInfoTitle(blip, data.name, false)
             end
-            exports["fs_smallresources"]:SetBlipInfoImage(blip, getScript()..'previewTxd', txname)
-            exports["fs_smallresources"]:SetBlipInfoTitle(blip, data.name, false)
         end
     end
-    debugPrint("^6Bridge^7: ^6Blip ^2created for Entity^7: '^6"..data.name.."^7'")
+    blipTable[blip] = blip
+
+    if DoesBlipExist(blip) then
+        debugPrint("^6Bridge^7: ^6Blip ^2created for Entity^7: '^6"..data.name.."^7'")
+    else
+        print("Error making blip")
+    end
     return blip
+end
+
+if gameName == "rdr3" then
+    onResourceStop(function()
+        for k in pairs(blipTable) do
+            RemoveBlip(k)
+        end
+    end, true)
 end

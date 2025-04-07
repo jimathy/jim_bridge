@@ -28,7 +28,7 @@ function makeProp(data, freeze, synced)
 
     debugPrint("^6Bridge^7: ^1Prop ^2Created^7: '^6"..prop.."^7' | ^2Hash^7: ^7'^6"..data.prop.."^7' | ^2Coord^7: "..formatCoord(data.coords))
     SetModelAsNoLongerNeeded(data.prop)
-    Props[#Props + 1] = prop
+    Props[keyGen()..keyGen()] = prop
     return prop
 end
 
@@ -52,16 +52,16 @@ end
 --- makeDistProp(propData, true, false)
 --- ```
 function makeDistProp(data, freeze, synced, range)
-    local prop = nil
+    local name = keyGen()..keyGen()
     createCirclePoly({
-        name = keyGen()..keyGen(),
+        name = name,
         coords = vec3(data.coords.x, data.coords.y, data.coords.z - 1.03),
         radius = range or 50.0,
         onEnter = function()
-            prop = makeProp(data, freeze, synced)
+            Props[name] = makeProp(data, freeze, synced)
         end,
         onExit = function()
-            destroyProp(prop)
+            destroyProp(Props[name])
         end,
         debug = debugMode,
     })
@@ -87,4 +87,8 @@ function destroyProp(entity)
 end
 
 --- Cleans up all created props when the resource stops.
-onResourceStop(function() for i = 1, #Props do destroyProp(Props[i]) end end, true)
+onResourceStop(function()
+    for k in pairs(Props) do
+        destroyProp(Props[k])
+    end
+end, true)

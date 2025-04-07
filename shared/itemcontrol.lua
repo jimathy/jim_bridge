@@ -74,6 +74,8 @@ function invImg(item)
             imgLink = "nui://"..OrigenInv.."/html/img/"..(Items[item].image or "")
         elseif isStarted(QBInv) then
             imgLink = "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
+        elseif isStarted(RSGInv) then
+            imgLink = "nui://"..RSGInv.."/html/images/"..(Items[item].image or "")
         else
             print("^4ERROR^7: ^2No Inventory detected for invImg - Check starter.lua")
         end
@@ -99,12 +101,15 @@ end
 --- addItem("health_potion", 2, { quality = "high" })
 --- ```
 function addItem(item, amount, info, src)
-    if not Items[item] then print("^6Bridge^7: ^1Error^7 - ^2Tried to give ^7'^3"..item.."^7'^2 but it doesn't exist") return end
+    if not Items[item] then
+        print("^6Bridge^7: ^1Error^7 - ^2Tried to give ^7'^3"..item.."^7'^2 but it doesn't exist")
+        return
+    end
 
     if src then
         TriggerEvent(getScript()..":server:toggleItem", true, item, amount, src, info)
     else
-        TriggerServerEvent(getScript()..":server:toggleItem", true, item, amount, currentToken, info)
+        TriggerServerEvent(getScript()..":server:toggleItem", true, item, amount, nil, info, nil, currentToken)
         currentToken = nil -- clear client cached token
     end
 end
@@ -129,6 +134,7 @@ function removeItem(item, amount, src, slot)
     end
 
     if src then
+        debugPrint(src)
         TriggerEvent(getScript()..":server:toggleItem", false, item, amount, src, nil, slot)
     else
         TriggerServerEvent(getScript()..":server:toggleItem", false, item, amount, nil, nil, slot)
@@ -155,26 +161,33 @@ end
 --- ```lua
 --- TriggerServerEvent(getScript()..":server:toggleItem", true, "health_potion", 1)
 --- ```
-RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount, newsrc, info, slot)
+RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount, newsrc, info, slot, token)
+    debugPrint(GetInvokingResource())
+	if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= "qb-core" then
+        debugPrint("^1Error^7: ^1Possible exploit^7, ^1vital function was called from an external resource^7")
+        return
+    end
     if not Items[item] then
         print("^6Bridge^7: ^1Error^7 - ^2Tried to "..(tostring(give) == "true" and "add" or "remove").." '^3"..item.."^7' but it doesn't exist")
         return
     end
 
-    local src = source or newsrc
+    local src = newsrc or source
     if (give == true or give == 1) then
         if newsrc == nil then -- must be coming from client this would be blank
-            debugPrint("^1Auth^7: ^1No token recieved^7")
-            dupeWarn(src, item, "Auth: Player "..src.." attempted to spawn "..item.." without an auth token")
-        else
-            if type(newsrc) ~= "number" then -- checks if the newsrc is a source or token, if number its coming form the server itself
-                debugPrint("^1Auth^7: ^2Auth token received^7, ^2checking against server cache^7..")
-                if newsrc ~= validTokens[src] then
-                    debugPrint("^1Auth^7: ^1Tokens don't match! ^7", newsrc, validTokens[src])
-                    dupeWarn(src, item, "Auth: "..src.." attempted to spawn "..item.." with an incorrect auth token")
-                else
-                    debugPrint("^1Auth^7: ^2Client and Server Auth tokens match^7!", newsrc, validTokens[src])
-                    validTokens[src] = nil
+            if token == nil then
+                debugPrint("^1Auth^7: ^1No token recieved^7")
+                dupeWarn(src, item, "Auth: Player "..src.." attempted to spawn "..item.." without an auth token")
+            else
+                if type(token) ~= "number" then -- checks if the newsrc is a source or token, if number its coming form the server itself
+                    debugPrint("^1Auth^7: ^2Auth token received^7, ^2checking against server cache^7..")
+                    if token ~= validTokens[src] then
+                        debugPrint("^1Auth^7: ^1Tokens don't match! ^7", token, validTokens[src])
+                        dupeWarn(src, item, "Auth: "..src.." attempted to spawn "..item.." with an incorrect auth token")
+                    else
+                        debugPrint("^1Auth^7: ^2Client and Server Auth tokens match^7!", token, validTokens[src])
+                        validTokens[src] = nil
+                    end
                 end
             end
         end
@@ -230,6 +243,20 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
                 if Config.Crafting.showItemBox then
                     TriggerClientEvent("inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
                 end
+
+            elseif isStarted(RSGInv) then invName = RSGInv
+                while remamount > 0 do
+                    if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1, slot) then
+                        remamount -= 1
+                    else
+                        print("^1Error removing "..item.." Amount left: "..remamount)
+                        break
+                    end
+                end
+                if Config.Crafting.showItemBox then
+                    TriggerClientEvent("rsg-inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
+                end
+
             end
             -----
             -- Fallback for if no inventory found:
@@ -272,6 +299,11 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
         elseif isStarted(QBInv) then invName = QBInv
             if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
                 TriggerClientEvent((isStarted(QBInv) and QBInvNew and "qb-" or "").."inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
+            end
+
+        elseif isStarted(RSGInv) then invName = RSGInv
+            if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
+                TriggerClientEvent("rsg-inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
             end
 
         elseif isStarted(PSInv) then invName = PSInv
@@ -601,7 +633,12 @@ function canCarry(itemTable, src)
                 resultTable[k] = exports[OrigenInv]:canCarryItem(src, k, v)
             end
 
-        elseif isStarted(QBInv) or isStarted(PSInv) then
+        elseif isStarted(QBInv) then
+            for k, v in pairs(itemTable) do
+                resultTable[k] = exports[QBInv]:CanAddItem(src, k, v)
+            end
+
+        elseif isStarted(PSInv) then
             local items = getPlayerInv(src)
             local totalWeight = 0
             if not items then return false end
@@ -611,6 +648,22 @@ function canCarry(itemTable, src)
             for k, v in pairs(itemTable) do
                 local itemInfo = Items[k]
                 if not itemInfo and not Player.Offline then
+                    resultTable[k] = true
+                else
+                    resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight
+                end
+            end
+
+        elseif isStarted(RSGInv) then
+            local items = getPlayerInv(src)
+            local totalWeight = 0
+            if not items then return false end
+            for _, item in pairs(items) do
+                totalWeight += (item.weight * item.amount)
+            end
+            for k, v in pairs(itemTable) do
+                local itemInfo = Items[k]
+                if not itemInfo then
                     resultTable[k] = true
                 else
                     resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight
@@ -637,6 +690,11 @@ if isServer() then
     createCallback(AuthEvent, function(source)
         local src = source
         local token = keyGen()..keyGen()..keyGen()..keyGen()  -- Use a secure random generator here
+        debugPrint(GetInvokingResource())
+        if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= "qb-core" then
+            debugPrint("^1Error^7: ^1Possible exploit^7, ^1vital function was called from an external resource^7")
+            return  ""
+        end
         debugPrint("^1Auth^7:^2 Player Source^7: "..src.." ^2requested new token^7:", token)
         validTokens[src] = token
         timeOutAuth(validTokens[src], src) -- Give script 10 seconds, then clear token
@@ -664,6 +722,11 @@ if isServer() then
     receivedEvent = {}
     createCallback(getScript()..":callback:GetAuthEvent", function(source)
         local src = source
+        debugPrint(GetInvokingResource())
+        if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= "qb-core" then
+            debugPrint("^1Error^7: ^1Possible exploit^7, ^1vital callback was called from an external resource^7")
+            return ""
+        end
         debugPrint("^1Auth^7: ^2Player Source^7: "..src.." ^2requested ^3AuthEvent^7", AuthEvent)
         if not receivedEvent[src] then receivedEvent[src] = true
             return AuthEvent
@@ -673,8 +736,6 @@ if isServer() then
         end
     end)
 else
-    onResourceStart(function()
-        debugPrint("^1Auth^7: ^2Requesting ^3Auth Event^7")
-        AuthEvent = triggerCallback(getScript()..":callback:GetAuthEvent")
-    end, true)
+    debugPrint("^1Auth^7: ^2Requesting ^3Auth Event^7")
+    AuthEvent = triggerCallback(getScript()..":callback:GetAuthEvent")
 end

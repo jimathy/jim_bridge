@@ -69,7 +69,7 @@ end
 function jobCheck(job)
     local canDo = true
     if Jobs[job] then
-        if not hasJob(job) or not onDuty then
+        if not hasJob(job) or not getPlayer().onDuty then
             triggerNotify(nil, Loc[Config.Lan].error["not_clockedin"])
             canDo = false
         end
@@ -92,10 +92,10 @@ end
 --- toggleDuty()  -- Player receives a notification of their new duty status.
 --- ```
 function toggleDuty()
+    onDuty = not onDuty
     if isStarted(QBExport) or isStarted(QBXExport) then
         TriggerServerEvent("QBCore:ToggleDuty")
     else
-        onDuty = not onDuty
         if onDuty then
             triggerNotify(nil, "Now on duty", "success")
         else
