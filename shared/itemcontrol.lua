@@ -404,7 +404,7 @@ end
 function getDurability(item)
     local lowestSlot = 100
     local durability = nil
-    if isStarted(QBInv) or isStarted(PSInv) then
+    if isStarted(QBInv) or isStarted(PSInv) or isStarted(RSGInv) then
         local itemcheck = Core.Functions.GetPlayerData().items
         for k, v in pairs(itemcheck) do
             if v.name == item then
@@ -503,7 +503,7 @@ end
 --- ```
 RegisterNetEvent(getScript()..":server:setMetaData", function(data)
     local src = source
-    if isStarted(QBInv) or isStarted(PSInv) then
+    if isStarted(QBInv) or isStarted(PSInv) or isStarted(RSGInv) then
         debugPrint(src, data.item, 1, data.slot)
         local Player = Core.Functions.GetPlayer(src)
         Player.PlayerData.items[data.slot].info = data.metadata
@@ -648,22 +648,6 @@ function canCarry(itemTable, src)
             for k, v in pairs(itemTable) do
                 local itemInfo = Items[k]
                 if not itemInfo and not Player.Offline then
-                    resultTable[k] = true
-                else
-                    resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight
-                end
-            end
-
-        elseif isStarted(RSGInv) then
-            local items = getPlayerInv(src)
-            local totalWeight = 0
-            if not items then return false end
-            for _, item in pairs(items) do
-                totalWeight += (item.weight * item.amount)
-            end
-            for k, v in pairs(itemTable) do
-                local itemInfo = Items[k]
-                if not itemInfo then
                     resultTable[k] = true
                 else
                     resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight

@@ -150,21 +150,20 @@ end)
 function openShop(data)
     if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
 
-    if isStarted(OXInv) then
+    if Config.General.JimShops then
+        TriggerServerEvent("jim-shops:ShopOpen", "shop", data.items.label, data.items)
+
+    elseif isStarted(OXInv) then
         exports[OXInv]:openInventory('shop', { type = data.shop })
 
     elseif isStarted(QBInv) then
         if QBInvNew then
             TriggerServerEvent(getScript()..':server:OpenShopNewQB', data.shop)
         else
-            TriggerServerEvent(Config.General.JimShops and "jim-shops:ShopOpen" or "inventory:server:OpenInventory", "shop", data.items.label, data.items)
+            TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
         end
-
-    --elseif isStarted(OrigenInv) then -- Needs testing, not sure if i did this right
-    --    exports[OrigenInv]:openInventory('shop', data.shop, data.items)
-
-    else
-        TriggerServerEvent(Config.General.JimShops and "jim-shops:ShopOpen" or "inventory:server:OpenInventory", "shop", data.items.label, data.items)
+    elseif isStarted(RSGInv) then
+        TriggerServerEvent(getScript()..':server:OpenShopNewRSG', data.shop)
     end
     lookEnt(data.coords)
 end
@@ -172,6 +171,10 @@ end
 --- Server event handler for opening a shop using the new QB inventory system.
 RegisterNetEvent(getScript()..':server:OpenShopNewQB', function(data)
     exports[QBInv]:OpenShop(source, data)
+end)
+
+RegisterNetEvent(getScript()..':server:OpenShopNewRSG', function(data)
+    exports[RSGInv]:OpenShop(source, data)
 end)
 
 --- Registers a shop with the active inventory system.
@@ -196,6 +199,16 @@ function registerShop(name, label, items, society)
     elseif isStarted(QBInv) and QBInvNew then
         debugPrint("^6Bridge^7: ^2Registering ^3QB ^2Store^7:", name, label)
         exports[QBInv]:CreateShop({
+            name = name,
+            label = label,
+            slots = #items,
+            items = items,
+            society = society,
+        })
+
+    elseif isStarted(RSGInv) then
+        debugPrint("^6Bridge^7: ^2Registering ^3RSG ^2Store^7:", name, label)
+        exports[RSGInv]:CreateShop({
             name = name,
             label = label,
             slots = #items,

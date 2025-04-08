@@ -163,7 +163,17 @@ function openStash(data)
             TriggerEvent("inventory:client:SetCurrentStash", data.stash)
             TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, data.stashOptions)
         end
+
+    elseif isStarted(RSGInv) then
+        TriggerServerEvent(getScript()..':server:OpenStashRSG', {
+            stashName = data.stash,
+            label = data.label,
+            maxweight = data.maxWeight or 600000,
+            slots = data.slots or 40
+        })
+
     else
+        --Fallback to these commands
         TriggerEvent("inventory:client:SetCurrentStash", data.stash)
         TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, data.stashOptions)
     end
@@ -175,6 +185,11 @@ end
 RegisterNetEvent(getScript()..':server:OpenStashQB', function(data)
     exports[QBInv]:OpenInventory(source, data.stashName, data)
 end)
+
+RegisterNetEvent(getScript()..':server:OpenStashRSG', function(data)
+    exports[RSGInv]:OpenInventory(source, data.stashName, data)
+end)
+
 
 -------------------------------------------------------------
 -- Stash Retrieval Function
@@ -199,28 +214,40 @@ function getStash(stashName)
     end
 
     local stashItems, items = {}, {}
-    if isStarted(OXInv) then stashResource = OXInv
+    if isStarted(OXInv) then
+        stashResource = OXInv
         stashItems = exports[OXInv]:Inventory(stashName).items
 
-    elseif isStarted(QSInv) then stashResource = QSInv
+    elseif isStarted(QSInv) then
+        stashResource = QSInv
         stashItems = exports[QSInv]:GetStashItems(stashName)
 
-    elseif isStarted(CoreInv) then stashResource = CoreInv
+    elseif isStarted(CoreInv) then
+        stashResource = CoreInv
         stashItems = exports[CoreInv]:getInventory(stashName)
 
-    elseif isStarted(CodeMInv) then stashResource = CodeMInv
+    elseif isStarted(CodeMInv) then
+        stashResource = CodeMInv
         stashItems = exports[CodeMInv]:GetStashItems(stashName)
 
-    elseif isStarted(OrigenInv) then stashResource = OrigenInv
+    elseif isStarted(OrigenInv) then
+        stashResource = OrigenInv
         stashItems = exports[OrigenInv]:getInventory(stashName)
 
-    elseif isStarted(PSInv) then stashResource = PSInv
+    elseif isStarted(PSInv) then
+        stashResource = PSInv
         local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
 		if result then stashItems = json.decode(result) end
 
-    elseif isStarted(QBInv) then stashResource = QBInv
+    elseif isStarted(QBInv) then
+        stashResource = QBInv
         local result = MySQL.scalar.await("SELECT items FROM "..(QBInvNew and "inventories" or "stashitem").." WHERE identifier = ?", { stashName })
         if result then stashItems = json.decode(result) end
+
+    elseif isStarted(RSGInv) then
+        stashResource = RSGInv
+        stashItems = exports[RSGInv]:GetInventory(stashName)
+
     end
 
     debugPrint("^6Bridge^7: ^2Retrieving ^3Stash^2 with ^7"..stashResource)
