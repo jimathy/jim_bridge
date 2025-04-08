@@ -1,4 +1,4 @@
-name "Jim_RedBridge"
+name "Jim_Bridge"
 author "Jimathy"
 version "2.0"
 description "Framework Bridge By Jimathy"

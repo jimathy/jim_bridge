@@ -100,13 +100,11 @@ elseif isStarted(ESXExport) then
         print("Waiting for ESX")
         Wait(0)
     end
-    if isServer() then
-        Items = ESX.GetItems()
-        debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Items).." ^3Items^2 from ^7"..itemResource)
-    end
     CreateThread(function()
         while not ESX do Wait(0) end
         if isServer() then
+            Items = ESX.GetItems()
+            while not createCallback do Wait(100) end
             createCallback(getScript()..":getItems", function(source)
                 return Items
             end)
@@ -130,13 +128,13 @@ elseif isStarted(RSGExport) then
 
 end
 
-if not isStarted(ESXExport) then
-    if not Items then
-        print("^4ERROR^7: ^2No Core Items detected ^7- ^2Check ^3starter^1.^2lua^7")
-    else
-        debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Items).." ^3Items^2 from ^7"..itemResource)
-    end
+if itemResource == nil then
+    print("^4ERROR^7: ^2No Item info detected ^7- ^2Check ^3starter^1.^2lua^7")
+else
+    while not Items do Wait(100) end
+    debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Items).." ^3Items^2 from ^7"..itemResource)
 end
+
 
 -------------------------------------------------------------
 -- Loading Vehicles
@@ -163,13 +161,16 @@ elseif isStarted(OXCoreExport) then
 elseif isStarted(ESXExport) then
     CreateThread(function()
         if isServer() then
+            vehResource = ESXExport
             createCallback(getScript()..":getVehiclesPrices", function(source)
-                Vehicles = MySQL.query.await('SELECT model, price, name FROM vehicles')
-                vehResource = ESXExport
                 return Vehicles
             end)
+            Vehicles = MySQL.query.await('SELECT model, price, name FROM vehicles')
+            --jsonPrint(Vehicles)
+            --while not createCallback do print("waiting") Wait(100) end
         end
         if not isServer() then
+            --while not triggerCallback do print("waiting") Wait(100) end
             local TempVehicles = triggerCallback(getScript()..":getVehiclesPrices")
             for _, v in pairs(TempVehicles) do
                 Vehicles = Vehicles or {}
@@ -199,6 +200,7 @@ end
 if vehResource == nil then
     print("^4ERROR^7: ^2No Vehicle info detected ^7- ^2Check ^3starter^1.^2lua^7")
 else
+    while not Vehicles do Wait(100) print("Waiting") end
     debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Vehicles).." ^3Vehicles^2 from ^7"..vehResource)
 end
 
@@ -279,7 +281,10 @@ elseif isStarted(RSGExport) then
     end
 end
 
-if not isStarted(ESXExport) and Jobs then
+if jobResource == nil then
+    print("^4ERROR^7: ^2No Vehicle info detected ^7- ^2Check ^3starter^1.^2lua^7")
+else
+    while not Jobs do Wait(100) end
     debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Jobs).." ^3Jobs^2 from ^7"..jobResource)
     debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Gangs).." ^3Gangs^2 from ^7"..jobResource)
 end

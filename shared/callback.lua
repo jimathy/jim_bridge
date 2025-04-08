@@ -14,6 +14,7 @@
 --- ```
 function createCallback(callbackName, funct)
     if isServer() then
+        debugPrint("^6Bridge^7: ^3Registering callback^7:", callbackName)
         if isStarted(OXLibExport) then
             lib.callback.register(callbackName, funct)
         else
@@ -49,6 +50,7 @@ end
 --- ```
 function triggerCallback(callbackName, ...)
     local result = nil
+    debugPrint("^6Bridge^7: ^3Triggering callback^7:", callbackName)
     if isStarted(OXLibExport) then
         result = lib.callback.await(callbackName, false, ...)
     elseif isStarted(QBExport) then

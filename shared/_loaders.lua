@@ -140,6 +140,7 @@ function waitForLogin()
     if isStarted(ESXExport) then
         debugPrint("^6Bridge^7: ^3ESX waitForLogin^7() ^2running^7")
         while (GetGameTimer() - startTime) < timeout do
+            while not ESX do Wait(100) end
             local playerData = ESX.GetPlayerData()
             if playerData and playerData.job then
                 loggedIn = true
