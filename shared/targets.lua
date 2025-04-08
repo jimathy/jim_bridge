@@ -20,6 +20,8 @@
 -------------------------------------------------------------
 -- Utility Data & Tables
 -------------------------------------------------------------
+---
+local KEY_TABLE = { 38, 29, 47, 23, 45, }
 
 -- Mapping of key codes to human-readable key names.
 local Keys = {
@@ -77,13 +79,12 @@ local circleTargets  = {}   -- For circular zone targets.
 function createEntityTarget(entity, opts, dist)
     -- Store the target entity for later cleanup.
     targetEntities[#targetEntities + 1] = entity
-    local entityCoords = GetEntityCoords(entity)
 
     -- Fallback: Use DrawText3D if targeting systems are disabled or unavailable.
     if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
+        local entityCoords = GetEntityCoords(entity)
         debugPrint("^6Bridge^7: ^2Creating new ^3Entity^2 target with DrawText for entity ^7"..entity)
         local existingTarget = nil
-        -- Check if a target already exists at similar coordinates.
         for _, target in pairs(TextTargets) do
             if #(target.coords - entityCoords) < 0.01 then
                 existingTarget = target
@@ -91,23 +92,27 @@ function createEntityTarget(entity, opts, dist)
             end
         end
 
-        local keyTable = { 38, 29, 303, 45, 46, 47, 48 }  -- Predefined key codes for options.
         if existingTarget then
-            -- Append new options to the existing target.
             for i = 1, #opts do
-                local key = keyTable[#existingTarget.options + i]
+                local key = KEY_TABLE[#existingTarget.options + i]
                 opts[i].key = key
-                existingTarget.buttontext[#existingTarget.buttontext + 1] = " ~b~[~w~"..Keys[key].."~b~] ~w~"..opts[i].label
+                existingTarget.buttontext[#existingTarget.buttontext + 1] = " ~b~[~w~" .. Keys[key] .. "~b~] ~w~" .. opts[i].label
                 existingTarget.options[#existingTarget.options + 1] = opts[i]
             end
+            updateCachedText(existingTarget)
         else
-            -- Create a new target entry.
             local tempText = {}
             for i = 1, #opts do
-                opts[i].key = keyTable[i]
-                tempText[#tempText + 1] = " ~b~[~w~"..Keys[opts[i].key].."~b~] ~w~"..opts[i].label
+                opts[i].key = KEY_TABLE[i]
+                tempText[#tempText + 1] = " ~b~[~w~" .. Keys[opts[i].key] .. "~b~] ~w~" .. opts[i].label
             end
-            TextTargets[entity] = { coords = vec3(entityCoords.x, entityCoords.y, entityCoords.z), buttontext = tempText, options = opts, dist = dist }
+            TextTargets[entity] = {
+                coords = vec3(entityCoords.x, entityCoords.y, entityCoords.z),
+                buttontext = tempText,
+                options = opts,
+                dist = dist,
+                text = table.concat(tempText, "\n")
+            }
         end
     elseif isStarted(OXTargetExport) then
         debugPrint("^6Bridge^7: ^2Creating new ^3Entity ^2target with ^6"..OXTargetExport.." ^2for entity ^7"..entity)
@@ -195,21 +200,27 @@ function createBoxTarget(data, opts, dist)
             end
         end
 
-        local keyTable = { 38, 29, 303, 45, 46, 47, 48 }
         if existingTarget then
             for i = 1, #opts do
-                local key = keyTable[#existingTarget.options + i]
+                local key = KEY_TABLE[#existingTarget.options + i]
                 opts[i].key = key
-                existingTarget.buttontext[#existingTarget.buttontext + 1] = " ~b~[~w~"..Keys[key].."~b~] ~w~"..opts[i].label
+                existingTarget.buttontext[#existingTarget.buttontext + 1] = " ~b~[~w~" .. Keys[key] .. "~b~] ~w~" .. opts[i].label
                 existingTarget.options[#existingTarget.options + 1] = opts[i]
             end
+            updateCachedText(existingTarget)
         else
             local tempText = {}
             for i = 1, #opts do
-                opts[i].key = keyTable[i]
-                tempText[#tempText + 1] = " ~b~[~w~"..Keys[opts[i].key].."~b~] ~w~"..opts[i].label
+                opts[i].key = KEY_TABLE[i]
+                tempText[#tempText + 1] = " ~b~[~w~" .. Keys[opts[i].key] .. "~b~] ~w~" .. opts[i].label
             end
-            TextTargets[data[1]] = { coords = data[2], buttontext = tempText, options = opts, dist = dist }
+            TextTargets[data[1]] = {
+                coords = data[2],
+                buttontext = tempText,
+                options = opts,
+                dist = dist,
+                text = table.concat(tempText, "\n")
+            }
         end
         return data[1]
     elseif isStarted(OXTargetExport) then
@@ -287,31 +298,37 @@ end
 function createCircleTarget(data, opts, dist)
     if Config.System.DontUseTarget then
         debugPrint("^6Bridge^7: ^2Creating new ^3Circle ^2target with ^6DrawText ^2for zone ^7"..data[1])
-        local existingTarget = nil
-        for _, target in pairs(TextTargets) do
-            if #(target.coords - data[2]) < 0.01 then
-                existingTarget = target
-                break
-            end
+    local existingTarget = nil
+    for _, target in pairs(TextTargets) do
+        if #(target.coords - data[2]) < 0.01 then
+            existingTarget = target
+            break
         end
+    end
 
-        local keyTable = { 38, 29, 303, 45, 46, 47, 48 }
-        if existingTarget then
-            for i = 1, #opts do
-                local key = keyTable[#existingTarget.options + i]
-                opts[i].key = key
-                existingTarget.buttontext[#existingTarget.buttontext + 1] = " ~b~[~w~"..Keys[key].."~b~] ~w~"..opts[i].label
-                existingTarget.options[#existingTarget.options + 1] = opts[i]
-            end
-        else
-            local tempText = {}
-            for i = 1, #opts do
-                opts[i].key = keyTable[i]
-                tempText[#tempText + 1] = " ~b~[~w~"..Keys[opts[i].key].."~b~] ~w~"..opts[i].label
-            end
-            TextTargets[data[1]] = { coords = data[2], buttontext = tempText, options = opts, dist = dist }
+    if existingTarget then
+        for i = 1, #opts do
+            local key = KEY_TABLE[#existingTarget.options + i]
+            opts[i].key = key
+            existingTarget.buttontext[#existingTarget.buttontext + 1] = " ~b~[~w~" .. Keys[key] .. "~b~] ~w~" .. opts[i].label
+            existingTarget.options[#existingTarget.options + 1] = opts[i]
         end
-        return data[1]
+        updateCachedText(existingTarget)
+    else
+        local tempText = {}
+        for i = 1, #opts do
+            opts[i].key = KEY_TABLE[i]
+            tempText[#tempText + 1] = " ~b~[~w~" .. Keys[opts[i].key] .. "~b~] ~w~" .. opts[i].label
+        end
+        TextTargets[data[1]] = {
+            coords = data[2],
+            buttontext = tempText,
+            options = opts,
+            dist = dist,
+            text = table.concat(tempText, "\n")
+        }
+    end
+    return data[1]
     elseif isStarted(OXTargetExport) then
         debugPrint("^6Bridge^7: ^2Creating new ^3Circle ^2target with ^6"..OXTargetExport.." ^2for zone ^7"..data[1])
         local options = {}
@@ -371,7 +388,30 @@ end
 ---```
 function createModelTarget(models, opts, dist)
     if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
-        -- Fallback for model targets is not implemented.
+        if type(models) ~= "table" then
+            models = { models }
+        end
+
+        local tempText = {}
+        for i = 1, #opts do
+            opts[i].key = KEY_TABLE[i]
+            tempText[#tempText + 1] = " ~b~[~w~" .. Keys[opts[i].key] .. "~b~] ~w~" .. opts[i].label
+        end
+
+        local keyStr = ""
+        for i, m in ipairs(models) do
+            keyStr = keyStr .. tostring(m) .. (i < #models and "_" or "")
+        end
+        local targetKey = "model_" .. keyStr
+
+        TextTargets[targetKey] = {
+            models = models,
+            buttontext = tempText,
+            options = opts,
+            dist = dist,
+            coords = vec3(0, 0, 0),
+            text = table.concat(tempText, "\n")
+        }
     elseif isStarted(OXTargetExport) then
         debugPrint("^6Bridge^7: ^2Creating new ^3Model^2 target with ^6"..OXTargetExport)
         local options = {}
@@ -465,58 +505,79 @@ end
 -- If no targeting system is detected and this is a client script, use DrawText3D for targets.
 if (Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport))) and not isServer() then
     CreateThread(function()
+        local wait = 1000
         while true do
             local pedCoords = GetEntityCoords(PlayerPedId())
             local camCoords = GetGameplayCamCoord()
-            local camRotation = GetGameplayCamRot(2) -- Camera rotation (degrees)
-            local camForwardVector = RotationToDirection(camRotation) -- Convert rotation to direction
+            local camRot = GetGameplayCamRot(2)
+            local camForward = RotationToDirection(camRot)
+            local closestTarget, closestDist = nil, math.huge
+            local notificationShown = false
+            local targetEntity = nil
+            -- Update model targets and determine the closest target.
+            for _, target in pairs(TextTargets) do
+                if target.models then
+                    for _, model in ipairs(target.models) do
+                        local entity = GetClosestObjectOfType(pedCoords.x, pedCoords.y, pedCoords.z, target.dist, model, false, false, false)
+                        if entity and entity ~= 0 then
+                            target.coords = GetEntityCoords(entity)
+                            targetEntity = entity
+                            break
+                        end
+                    end
+                end
 
-            local closestTarget = nil
-            local closestDist = math.huge
-
-            -- Create a shallow copy of TextTargets
-            local targetsCopy = {}
-            for k, target in pairs(TextTargets) do
-                targetsCopy[k] = target
-            end
-
-            -- Identify the closest target in front of the camera.
-            for _, target in pairs(targetsCopy) do
                 local dist = #(pedCoords - target.coords)
-                local vecToTarget = target.coords - camCoords
-                local vecToTargetNormalized = normalizeVector(vecToTarget)
-                local dot = camForwardVector.x * vecToTargetNormalized.x +
-                            camForwardVector.y * vecToTargetNormalized.y +
-                            camForwardVector.z * vecToTargetNormalized.z
-                local isFacingTarget = dot > 0.5 -- Threshold for facing target.
-
-                if dist <= target.dist and isFacingTarget then
-                    if dist < closestDist then
+                if dist <= target.dist then
+                    local vecToTarget = target.coords - camCoords
+                    local normVec = normalizeVector(vecToTarget)
+                    local dot = camForward.x * normVec.x + camForward.y * normVec.y + camForward.z * normVec.z
+                    if dot > 0.5 and dist < closestDist then
                         closestDist = dist
                         closestTarget = target
                     end
                 end
             end
 
-            -- Render the DrawText3D targets and listen for key presses.
-            for _, target in pairs(targetsCopy) do
-                local isClosest = (target == closestTarget)
+            -- Render targets, listen for key presses and display the help notification.
+            for key, target in pairs(TextTargets) do
                 if #(pedCoords - target.coords) <= target.dist then
-                    for i = 1, #target.options do
-                        if IsControlJustPressed(0, target.options[i].key) and isClosest then
-                            if target.options[i].onSelect then target.options[i].onSelect() end
-                            if target.options[i].action then target.options[i].action() end
+                    local isClosest = (target == closestTarget)
+                    for i, opt in ipairs(target.options) do
+                        if IsControlJustPressed(0, opt.key) and isClosest then
+                            if opt.onSelect then opt.onSelect(targetEntity) end
+                            if opt.action then opt.action(targetEntity) end
                         end
                     end
-                    DrawText3D(vec3(target.coords.x, target.coords.y, target.coords.z + 0.7),
-                               concatenateText(target.buttontext),
-                               isClosest)
+
+                    notificationShown = true
+                    ShowFloatingHelpNotification(vec3(target.coords.x, target.coords.y, target.coords.z + 0.7), target.text)
                 end
             end
 
-            Wait(0)
+            -- If no notification was drawn this frame, clear help messages.
+            if notificationShown then
+                wait = 0
+            else
+                ClearAllHelpMessages()
+                wait = 1000
+            end
+
+            Wait(wait)
         end
     end)
+end
+
+function ShowFloatingHelpNotification(coord, text, highlight)
+    AddTextEntry("FloatingText", text)
+    SetFloatingHelpTextWorldPosition(1, coord.x, coord.y, coord.z)
+    SetFloatingHelpTextStyle(1, 1, 62, -1, 3, 0)
+    BeginTextCommandDisplayHelp("FloatingText")
+    EndTextCommandDisplayHelp(2, false, false, -1)
+end
+
+function updateCachedText(target)
+    target.text = table.concat(target.buttontext, "\n")
 end
 
 -------------------------------------------------------------
