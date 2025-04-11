@@ -7,7 +7,7 @@
     and large multiplayer messages), including customizable transitions and durations.
 ]]
 
-local BigMessage = {}
+BigMessage = {}
 BigMessage.__index = BigMessage
 
 --- Creates a new BigMessage instance.
