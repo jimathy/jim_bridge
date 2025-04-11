@@ -88,6 +88,19 @@ function createInput(title, opts)
                 }
             end
 
+            if opts[i].type == "checkbox" then
+                jsonPrint(opts[i])
+                for k in pairs(opts[i].options) do
+                    if options[currentNum] then currentNum += 1 end
+                    options[currentNum] = {
+                        type = opts[i].type,
+                        label = opts[i].options[k].text..(opts[i].txt and " - "..opts[i].txt or ""),
+                        name = opts[i].options[k].value,
+                    }
+
+                end
+            end
+
             if opts[i].type == "color" then
                 options[currentNum] = {
                     type = opts[i].type,
