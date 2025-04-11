@@ -515,6 +515,9 @@ function getPlayer(source)
                 onDuty = info.PlayerData.job.onduty,
                 account = info.PlayerData.charinfo.account,
                 citizenId = info.PlayerData.citizenid,
+                isDead = info.PlayerData.metadata["isdead"],
+                isDown = info.PlayerData.metadata["inlaststand"],
+                charInfo = info.charinfo,
             }
         elseif isStarted(QBExport) and not isStarted(QBXExport) then
             if Core.Functions.GetPlayer then
@@ -535,6 +538,9 @@ function getPlayer(source)
                     onDuty = info.job.onduty,
                     account = info.charinfo.account,
                     citizenId = info.citizenid,
+                    isDead = info.PlayerData.metadata["isdead"],
+                    isDown = info.PlayerData.metadata["inlaststand"],
+                    charInfo = info.charinfo,
                 }
             end
         elseif isStarted(RSGExport) then
@@ -556,6 +562,9 @@ function getPlayer(source)
                     onDuty = info.job.onduty,
                     account = info.charinfo.account,
                     citizenId = info.citizenid,
+                    isDead = info.PlayerData.metadata["isdead"],
+                    isDown = info.PlayerData.metadata["inlaststand"],
+                    charInfo = info.charinfo,
                 }
             end
         else
@@ -584,6 +593,8 @@ function getPlayer(source)
                 onDuty = info.job.onDuty,
                 --account = info.charinfo.account,
                 citizenId = info.identifier,
+                isDead = IsEntityDead(PlayerPedId()),
+                isDown = IsPedDeadOrDying(PlayerPedId(), true)
             }
         elseif isStarted(OXCoreExport) then
             Player = {
@@ -600,6 +611,8 @@ function getPlayer(source)
                 --onDuty = info.job.onduty,
                 --account = info.charinfo.account,
                 citizenId = OxPlayer.userId,
+                isDead = IsEntityDead(PlayerPedId()),
+                isDown = IsPedDeadOrDying(PlayerPedId(), true)
             }
         elseif isStarted(QBXExport) then
             local info = exports[QBXExport]:GetPlayerData()
@@ -619,6 +632,9 @@ function getPlayer(source)
                 onDuty = info.job.onduty,
                 account = info.charinfo.account,
                 citizenId = info.citizenid,
+                isDead = info.metadata["isdead"],
+                isDown = info.metadata["inlaststand"],
+                charInfo = info.charinfo,
             }
         elseif isStarted(QBExport) and not isStarted(QBXExport) then
             local info = nil
@@ -639,6 +655,9 @@ function getPlayer(source)
                 onDuty = info.job.onduty,
                 account = info.charinfo.account,
                 citizenId = info.citizenid,
+                isDead = info.metadata["isdead"],
+                isDown = info.metadata["inlaststand"],
+                charInfo = info.charinfo,
             }
         elseif isStarted(RSGExport) then
             local info = nil
@@ -659,6 +678,9 @@ function getPlayer(source)
                 onDuty = info.job.onduty,
                 account = info.charinfo.account,
                 citizenId = info.citizenid,
+                isDead = info.metadata["isdead"],
+                isDown = info.metadata["inlaststand"],
+                charInfo = info.charinfo,
             }
         else
             print("^4ERROR^7: ^2No Core detected for hasJob ^7- ^2Check ^3starter^1.^2lua^7")
