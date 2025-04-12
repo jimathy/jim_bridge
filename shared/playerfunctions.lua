@@ -538,8 +538,8 @@ function getPlayer(source)
                     onDuty = info.job.onduty,
                     account = info.charinfo.account,
                     citizenId = info.citizenid,
-                    isDead = info.PlayerData.metadata["isdead"],
-                    isDown = info.PlayerData.metadata["inlaststand"],
+                    isDead = info.metadata["isdead"],
+                    isDown = info.metadata["inlaststand"],
                     charInfo = info.charinfo,
                 }
             end
@@ -562,8 +562,8 @@ function getPlayer(source)
                     onDuty = info.job.onduty,
                     account = info.charinfo.account,
                     citizenId = info.citizenid,
-                    isDead = info.PlayerData.metadata["isdead"],
-                    isDown = info.PlayerData.metadata["inlaststand"],
+                    isDead = info.metadata["isdead"],
+                    isDown = info.metadata["inlaststand"],
                     charInfo = info.charinfo,
                 }
             end
