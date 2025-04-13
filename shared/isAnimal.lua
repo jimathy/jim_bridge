@@ -188,7 +188,33 @@ if not isServer() then
         end
         return animalModels
     end
+
+    --- Compiles and returns a table of animal animations for the ped model.
+    ---
+    --- Iterates through every category in AnimalPeds and collects all anims.
+    ---
+    --- @return table table A table containing all current model anims.
+    ---
+    ---@usage
+    --- ```lua
+    --- local getAnim = getAnimalAnims(ped)
+    --- playAnim(getAnim.sitDict, getAnim.sitAnim, -1, 1)
+    --- ```
+    function getAnimalAnims(ped)
+        local model = GetEntityModel(ped)
+        local animalTable = {}
+        for _, animalCategory in pairs(AnimalPeds) do
+            for k, v in pairs(animalCategory) do
+                if k == model then
+                    animalTable = v
+                    break
+                end
+            end
+        end
+        return animalTable
+    end
 end
+
 -------------------------------------------------------------
 -- Animal Models Data
 -------------------------------------------------------------
