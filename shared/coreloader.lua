@@ -165,6 +165,7 @@ elseif isStarted(ESXExport) then
             createCallback(getScript()..":getVehiclesPrices", function(source)
                 return Vehicles
             end)
+            while not MySQL do Wait(2000) print("^1Waiting for MySQL to exist") end
             Vehicles = MySQL.query.await('SELECT model, price, name FROM vehicles')
             --jsonPrint(Vehicles)
             --while not createCallback do print("waiting") Wait(100) end
@@ -200,7 +201,7 @@ end
 if vehResource == nil then
     print("^4ERROR^7: ^2No Vehicle info detected ^7- ^2Check ^3starter^1.^2lua^7")
 else
-    while not Vehicles do Wait(100) print("Waiting") end
+    while not Vehicles do Wait(1000) print("Waiting") end
     debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Vehicles).." ^3Vehicles^2 from ^7"..vehResource)
 end
 
