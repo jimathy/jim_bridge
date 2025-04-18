@@ -197,12 +197,13 @@ elseif isStarted(RSGExport) then
     end
     vehResource = RSGExport
 end
-
 if vehResource == nil then
     print("^4ERROR^7: ^2No Vehicle info detected ^7- ^2Check ^3starter^1.^2lua^7")
 else
-    while not Vehicles do Wait(1000) print("Waiting") end
-    debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Vehicles).." ^3Vehicles^2 from ^7"..vehResource)
+    CreateThread(function()
+        while not Vehicles do Wait(1000) print("Waiting") end
+        debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Vehicles).." ^3Vehicles^2 from ^7"..vehResource)
+    end)
 end
 
 -------------------------------------------------------------

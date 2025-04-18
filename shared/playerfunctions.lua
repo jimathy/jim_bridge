@@ -472,7 +472,7 @@ function getPlayer(source)
                 --gangBoss = info.gang.isboss,
                 onDuty = info.job.onDuty,
                 --account = info.charinfo.account,
-                citizenId = info.citizenid,
+                citizenId = info.identifier,
             }
 
         elseif isStarted(OXCoreExport) then
