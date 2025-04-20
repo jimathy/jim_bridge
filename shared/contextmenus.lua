@@ -3,7 +3,7 @@
     ---------------------
     This module provides a unified function to open menus using the configured menu system.
     Supported systems include:
-      • jim-nui (kinda)
+      • jim_bridge (built-in nui menu that works on any framework)
       • ox (or ox_context)
       • qb (using QBMenuExport)
       • gta (using WarMenu)

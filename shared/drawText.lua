@@ -63,15 +63,6 @@ function drawText(image, input, style, oxStyleTable)
         end
         ESX.TextUI(text, nil)
 
-    elseif Config.System.drawText == "jim" then
-        for k, v in pairs(input) do
-            input[k] = v.."<br>"
-        end
-        exports["jim-nui"]:drawText({
-            icon = nil,
-            text = text,
-        })
-
     elseif Config.System.drawText == "red" then
         -- Concatenate input lines and apply GTA style formatting.
         for i = 1, #input do

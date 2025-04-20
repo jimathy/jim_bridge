@@ -1,9 +1,23 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;500&display=swap");
 
 :root {
-	--clr-yes: 8px solid red;
 	--font-family: "Poppins", sans-serif !important;
 	--width: 65%;
+
+
+	--text-colour: white;
+	--text-colour-hover: black;
+	--background-button: rgba(23, 23, 23, 85%);
+	--background-button-hover: rgba(200, 200, 200, 85%);
+	--background-title: rgba(23, 23, 23, 100%);
+
+    /*
+	--text-colour: black;
+	--text-colour-hover: white;
+	--background-button: rgba(200, 200, 200, 85%);
+	--background-button-hover: rgba(0, 0, 0, 85%);
+	--background-title: rgba(200, 200, 200);
+    */
 }
 
 * {
@@ -48,29 +62,47 @@ html, body { background: transparent !important; }
 body::-webkit-scrollbar { display: none; }
 
 .button {
-	width: auto;
-	max-width: 55%;
-	height: 10%;
-	background-color: rgba(23, 23, 23, 85%);
-	color: grey;
+	max-width: 56%;
+	height: 60%;
+	background-color: var(--background-button);
+	color: var(--text-colour);
 	margin: auto;
 	position: relative;
 	top: 10%;
 	overflow: hidden;
-	padding: 0.35rem;
+	padding: 0.45rem;
 	display: flex;
 	flex-direction: column;
 	cursor: pointer;
-	border-left: 8px solid rgba(23, 23, 23, 1%);
-	transition-property: color, background-color, border-left;
-	transition-duration: 0.1s, 0.3s;
+	z-index: 1;
+	transition-property: color;
+	transition-duration: 0.1s, 0.2s;
 	transition-timing-function: linear, ease-in;
 }
 
+.button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 100%;
+    background-color: var(--background-button-hover);
+    z-index: 0;
+    transition: width 0.2s ease;
+}
+
+.button:hover::before {
+    width: 100%;
+}
+
+.button > * {
+    position: relative;
+    z-index: 1;
+}
+
 .button:hover {
-	border-left: var(--clr-yes);
-	background: rgba(0, 0, 0);
-	color: white;
+    color: var(--text-colour-hover);
 }
 
 .icon > img {
@@ -113,15 +145,14 @@ body::-webkit-scrollbar { display: none; }
 	width: auto;
 	max-width: 56%;
 	height: 60%;
-	background: rgba(23, 23, 23);
-	border-left: 8px solid rgba(23, 23, 23, 1%);
-	color: white;
+	background: var(--background-title);
+	color: var(--text-colour);
 	margin: auto;
 	margin-left: -0.5;
 	position: relative;
 	top: 10%;
 	overflow: hidden;
-	padding: 0.35rem;
+	padding: 0.45rem;
 	flex-direction: column;
 	border-left: 0px;
 }
@@ -150,34 +181,270 @@ div > .header {
 	position: relative;
 	justify-content: left;
 	overflow: wrap;
-	color: white;
-	font-size: 1.2vh;
+	font-size: 1.3vh;
 	font-weight: 400;
 	overflow: hidden;
 }
 
 /* Search input */
 
-.search-container {
-	margin-top: -10px;
-	margin-bottom: 10px;
-	position: relative;
-	left:55%;
-	z-index: 1;
+.title.search-container {
+    background: var(--background-button);
+    color: var(--text-colour);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    z-index: 3;
 }
 
-.search-container input[type="text"] {
-	color: white;
-	font-family: var(--font-family);
-    padding: 0.35rem;
-    width: 100%;
-    font-size: 1.0rem;
+.title.search-container input[type="text"] {
+    color: var(--text-colour);
+    font-family: var(--font-family);
+    font-size: 1rem;
+	width: auto;
+	max-width: 56%;
     border: none;
-    border-bottom: 2px solid red;
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: transparent;
+	transition: background-color 0.2s ease, color 0.2s ease;
+	outline: none;
 }
 
-.search-container input[type="text"]:focus {
-    outline: none;
-    border-bottom: 2px solid red;
+
+.title.search-container input[type="text"]::placeholder {
+    color: var(--text-colour);
+    opacity: 0.5;
+}
+
+.progress-container {
+	z-index: 99999;
+    width: auto;
+	max-width: 56%;
+    background-color: var(--background-title);
+    height: 0.4vh;
+	padding-left: 0.45rem;
+	padding-right: 0.45rem;
+    margin: auto;
+}
+
+.progress-bar {
+    height: 90%;
+	max-width: auto;
+    transition: width 0.3s ease-in-out;
+}
+
+
+
+.hidden {
+    display: none !important;
+}
+
+#input-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.input-box {
+	font-weight: 300;
+    background: var(--background-button);
+    color: var(--text-colour);
+    width: 25vw;
+	box-shadow: 0 0 15px var(--background-button-hover);
+}
+
+.input-header {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    margin-top: 0.5rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.input-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+.input-actions button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    margin-bottom: 0.8rem;
+    margin-left: 0.6rem;
+    margin-right: 0.6rem;
+    cursor: pointer;
+    background: var(--background-button);
+    color: var(--text-colour);
+    transition: background 0.2s ease;
+}
+
+.input-actions button:hover {
+	color: var(--text-colour-hover);
+	background: var(--background-button-hover);
+}
+
+.input-wrapper {
+    position: relative;
+    width: 95%;
+    padding: 0.1rem;
+    margin-left: 0.6rem;
+    margin-bottom: 0.8rem;
+	background-color: var(--background-title);
+    overflow: hidden;
+}
+
+.input-wrapper::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 100%;
+    background-color: var(--background-button-hover);
+    z-index: 0;
+    transition: width 0.2s ease;
+}
+
+.input-wrapper:focus-within::before {
+    width: 100%;
+}
+
+.input-wrapper:focus-within .input-field {
+    color: var(--text-colour-hover) !important;
+}
+
+.input-wrapper:focus-within .input-label {
+    color: var(--text-colour-hover) !important;
+}
+
+.checkbox-wrapper:has(.checkbox-input:focus) .checkbox-label {
+    color: var(--text-colour-hover) !important;
+}
+
+.input-wrapper:focus-within .color-preview {
+    color: var(--text-colour-hover) !important;
+}
+
+.input-wrapper:has(input[type="range"]:focus) .slider-values {
+    color: var(--text-colour-hover) !important;
+}
+
+.input-wrapper:focus-within .slider-current {
+    color: var(--text-colour-hover) !important;
+}
+
+
+.input-field {
+	width: 100%;
+    position: relative;
+    z-index: 1;
+    border: transparent;
+    background: transparent;
+    color: var(--text-colour);
+    font-size: 1rem;
+    transition: color 0.2s ease;
+}
+
+.input-wrapper:hover .input-field {
+    color: var(--text-colour-hover);
+}
+
+.input-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-colour);
+    margin-bottom: 0.25rem;
+    z-index: 1;
+    position: relative;
+}
+
+.radio-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--background-title);
+    border-radius: 4px;
+    z-index: 1;
+}
+
+.radio-input {
+    transform: scale(1.2);
+    accent-color: var(--background-button-hover);
+    z-index: 1;
+}
+
+.radio-label {
+    color: var(--text-colour);
+    font-size: 0.95rem;
+    z-index: 1;
+}
+
+/* Focus styling */
+.radio-wrapper:has(.radio-input:focus) .radio-label {
+    color: var(--text-colour-hover) !important;
+}
+.input-wrapper:focus-within .radio-label {
+	color: var(--text-colour-hover) !important;
+  }
+.input-wrapper.color-picker {
+    display: flex;
+    flex-direction: column; /* this is key */
+    align-items: flex-start;
+    justify-content: flex-start;
+    z-index: 1;
+}
+
+.input-field[type="color"] {
+    width: 100%; /* half width */
+    padding: 0.2rem;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.color-preview {
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-colour);
+    z-index: 1;
+    position: relative;
+}
+
+.slider-values {
+    z-index: 2;
+	position: relative; /* <-- this is the key */
+	margin-left: 0.6rem;
+    margin-right: 0.6rem;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--text-colour);
+    margin-bottom: 0.3rem;
+}
+
+.slider-current {
+    font-weight: bold;
+    color: var(--text-colour);
+    z-index: 1;
+}
+
+.input-field select,
+.input-field option {
+    background-color: var(--background-button);
+    color: var(--text-colour);
+}
+
+.input-field option:hover,
+.input-field option:focus {
+    background-color: var(--background-button-hover);
+    color: var(--text-colour-hover);
 }

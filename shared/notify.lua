@@ -70,13 +70,6 @@ function triggerNotify(title, message, type, src)
             TriggerClientEvent(getScript()..":DisplayESXNotify", src, type, message)
         end
 
-    elseif Config.System.Notify == "jim" then
-        if not src then
-            exports["jim-nui"]:Notify(type, message)
-        else
-            TriggerClientEvent("jim-nui:client:notify'", src, type, message)
-        end
-
     elseif Config.System.Notify == "red" then
         if isStarted("jim-redui") then
             if not src then

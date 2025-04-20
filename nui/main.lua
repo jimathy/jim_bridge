@@ -1,11 +1,9 @@
-local debug = GetConvar("jim_DisableDebug", "false") == "true" and false or true
 Config = Config or { System = {} }
 
 CreateThread(function()
     local fileLoader = assert(load(LoadResourceFile('jim_bridge', ('starter.lua')), ('@@jim_bridge/starter.lua')))
     fileLoader()
 end)
-print("yay")
 
 local headerShown = true
 local sendData = nil
@@ -32,13 +30,11 @@ local colours = {
 
 -- Functions
 function openNuiMenu(data, modifiers)
-    print("Trying to open menu")
     if not data or not next(data) then return end
 	for _, v in pairs(data) do
         v["icon"] = v["arrow"] and "fas fa-angle-right" or v["icon"] or nil
         v["colorScheme"] = v["colourScheme"] and colours[v["colourScheme"]] or (v["colorScheme"] and colours[v["colorScheme"]] or colours["green.7"])
         if v["onSelect"] then
-            if debug then print("^5Debug^7: ^6onSelect^2 found^7 -^2 sending to ^7'^6params^7.^6isAction^3()^7'") end
             v.params = { isAction = true, event = v["onSelect"] }
         end
     end
@@ -53,7 +49,7 @@ local function closeMenu()
     sendData = nil
     sendModifiers = nil
     headerShown = false
-    SetNuiFocus(false)
+    SetNuiFocus(false, false)
     SendNUIMessage({ action = 'CLOSE_MENU' })
 end
 
@@ -66,7 +62,7 @@ end
 
 -- Events
 
-RegisterNetEvent("jim_bridge:client:openMenu", function(data) print("test") openNuiMenu(data) end)
+RegisterNetEvent("jim_bridge:client:openMenu", function(data) openNuiMenu(data) end)
 
 RegisterNetEvent("jim_bridge:client:closeMenu", function() closeMenu() end)
 
@@ -75,7 +71,7 @@ RegisterNetEvent("jim_bridge:client:closeMenu", function() closeMenu() end)
 RegisterNUICallback('clickedButton', function(option)
     if headerShown then headerShown = false end
     PlaySound(-1, "CLICK_BACK", "WEB_NAVIGATION_SOUNDS_PHONE", 0, 0, 1)
-    SetNuiFocus(false)
+    SetNuiFocus(false, false)
     if sendData then
         local data = sendData[tonumber(option)]
         sendData = nil
@@ -102,7 +98,7 @@ RegisterNUICallback('closeMenu', function()
     headerShown = false
     sendModifiers = nil
     sendData = nil
-    SetNuiFocus(false)
+    SetNuiFocus(false, false)
 end)
 
 -- Command and Keymapping
@@ -113,3 +109,30 @@ RegisterKeyMapping('playerFocus', 'Give Menu Focus', 'keyboard', 'LMENU')
 exports('openMenu', function(data) openNuiMenu(data) end)
 exports('closeMenu', function() closeMenu() end)
 exports('showHeader', function(data) showHeader(data) end)
+
+
+-- Input Dialog
+-- function inputDialog(title, config)
+--     local p = promise.new()
+--     local cbId = math.random(111111, 999999)
+--
+--     RegisterNUICallback("inputResult", function(data, cb)
+--         if data.cbId == cbId then
+--             cb({})
+--             SetNuiFocus(false, false)
+--             p:resolve(data.result)
+--         end
+--     end)
+--
+--     SendNUIMessage({
+--         action = "SHOW_INPUT",
+--         title = title,
+--         data = config,
+--         cbId = cbId
+--     })
+--
+--     SetNuiFocus(true, true)
+--     return Citizen.Await(p)
+-- end
+--
+-- exports('inputDialog', inputDialog)
