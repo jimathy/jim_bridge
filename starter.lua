@@ -29,12 +29,26 @@ Exports = {
 -- Required variables
 debugMode = Config.System.Debug
 
+-- Check server convars for hard set defaults
+if Config and Config.System then
+    if Config.System.Debug then
+        if GetConvar("jim_DisableDebug", "false") == "true" then debugMode = false end
+    end
+    Config.System.Menu = GetConvar("jim_menuScript", Config.System.Menu)
+    Config.System.Notify = GetConvar("jim_notifyScript", Config.System.Notify)
+    Config.System.ProgressBar = GetConvar("jim_progressBarScript", Config.System.ProgressBar)
+    Config.System.drawText = GetConvar("jim_drawTextScript", Config.System.drawText)
+    Config.System.skillCheck = GetConvar("jim_skillCheckScript", Config.System.skillCheck)
+    Config.System.DontUseTarget = GetConvar("jim_dontUseTarget", "false")
+end
+
 QBInvNew = true
 
 InventoryWeight = 120000
 
 -- Load files here into the invoking script
 for _, v in pairs({ -- This is a specific load order
+    --'convarCheck.lua',
     'helpers.lua',  -- needs to be first
     '_loaders.lua',
 

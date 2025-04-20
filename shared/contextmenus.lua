@@ -48,21 +48,45 @@
 --- ```
 function openMenu(Menu, data)
     if Config.System.Menu == "jim" then
-        -- Insert "Return" option if onBack is defined.
         if data.onBack then
             table.insert(Menu, 1, {
                 icon = "fas fa-circle-arrow-left",
-                title = "Return",
-                onSelect = data.onBack,
+                header = " ",
+                txt = "Return",
+                params = {
+                    isAction = true,
+                    event = data.onBack,
+                },
+            })
+        elseif data.canClose then
+            table.insert(Menu, 1, {
+                icon = "fas fa-circle-xmark",
+                header = " ",
+                txt = "Close",
+                params = {
+                    isAction = true,
+                    event = data.onExit and data.onExit or (function() exports[QBMenuExport]:closeMenu() end),
+                },
             })
         end
-        exports["jim-nui"]:openMenu({
-            title = data.header..(data.headertxt and " -- "..data.headertxt or ""),
-            canClose = data.canClose and data.canClose or nil,
-            onClose = (data.onBack and data.onBack) or (data.onExit and data.onExit) or nil,
-            onExit = data.onExit and data.onExit or nil,
-            options = Menu,
-        })
+        if data.header ~= nil then
+            local tempMenu = {}
+            for k, v in pairs(Menu) do tempMenu[k + 1] = v end
+            tempMenu[1] = { header = data.header, txt = data.headertxt or "", isMenuHeader = true }
+            Menu = tempMenu
+        end
+        for k in pairs(Menu) do
+            if not Menu[k].params or not Menu[k].params.event then
+                Menu[k].params = {
+                    isAction = true,
+                    event = Menu[k].onSelect or function() end,
+                }
+            end
+            if not Menu[k].header then Menu[k].header = " " end
+            if Menu[k].arrow then Menu[k].icon = "fas fa-angle-right" end
+            Menu[k].isMenuHeader = Menu[k].isMenuHeader or Menu[k].disable
+        end
+        TriggerEvent("jim_bridge:client:openMenu", Menu)
 
     elseif Config.System.Menu == "ox" then
         local index = nil

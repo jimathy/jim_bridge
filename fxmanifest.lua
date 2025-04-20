@@ -13,3 +13,8 @@ files {
     'shared/make/*.lua',
     'shared/scaleforms/*.lua',
 }
+
+-- NUI Menu Loading
+client_scripts { 'nui/*.lua' }
+ui_page 'nui/index.html'
+files { 'nui/index.html', 'nui/script.js', 'nui/style.css' }
