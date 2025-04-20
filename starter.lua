@@ -32,14 +32,26 @@ debugMode = Config.System.Debug
 -- Check server convars for hard set defaults
 if Config and Config.System then
     if Config.System.Debug then
-        if GetConvar("jim_DisableDebug", "false") == "true" then debugMode = false end
+        if GetConvar("jim_DisableDebug", "false") == "true" then
+            debugMode = false
+        end
+        if GetConvar("jim_DisableEventDebug", "false") == "true" then
+            Config.System.EventDebug = false
+        end
     end
+
     Config.System.Menu = GetConvar("jim_menuScript", Config.System.Menu)
     Config.System.Notify = GetConvar("jim_notifyScript", Config.System.Notify)
     Config.System.ProgressBar = GetConvar("jim_progressBarScript", Config.System.ProgressBar)
     Config.System.drawText = GetConvar("jim_drawTextScript", Config.System.drawText)
     Config.System.skillCheck = GetConvar("jim_skillCheckScript", Config.System.skillCheck)
-    Config.System.DontUseTarget = GetConvar("jim_dontUseTarget", "false")
+
+    if GetConvar("jim_dontUseTarget", "false") == "true" then
+        Config.System.DontUseTarget = true
+     end
+
+    --Config.System.DontUseTarget = GetConvar("jim_dontUseTarget", "false")
+    --print(Config.System.DontUseTarget)
 end
 
 QBInvNew = true
