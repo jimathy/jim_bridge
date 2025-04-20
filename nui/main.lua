@@ -5,7 +5,7 @@ CreateThread(function()
     fileLoader()
 end)
 
-local headerShown = true
+local headerShown = false
 local sendData = nil
 local sendModifiers = nil
 
