@@ -7,12 +7,16 @@ rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aw
 games { 'gta5', 'rdr3' }
 lua54 'yes'
 
+
 files {
     'starter.lua',
     'shared/*.lua',
     'shared/make/*.lua',
     'shared/scaleforms/*.lua',
 }
+
+-- Version checker
+server_scripts { '_versioncheck.lua' }
 
 -- NUI Menu Loading
 client_scripts { 'nui/*.lua' }
