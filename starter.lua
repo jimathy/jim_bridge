@@ -48,10 +48,7 @@ if Config and Config.System then
 
     if GetConvar("jim_dontUseTarget", "false") == "true" then
         Config.System.DontUseTarget = true
-     end
-
-    --Config.System.DontUseTarget = GetConvar("jim_dontUseTarget", "false")
-    --print(Config.System.DontUseTarget)
+    end
 end
 
 QBInvNew = true
@@ -117,7 +114,7 @@ for _, v in pairs({ -- This is a specific load order
     'effects.lua',
 
     -- Do version check last
-    '_versioncheck.lua'
+    '_scriptversioncheck.lua'
 }) do
     if debugMode then
         --print("^5Loading^7: 'jim_bridge/shared/"..v.."' ^2into ^7'"..GetCurrentResourceName().."' ...")
