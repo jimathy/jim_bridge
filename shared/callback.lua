@@ -8,8 +8,18 @@
 ---
 ---@usage
 --- ```lua
+--- local table = { ["info"] = "HI" }
 --- createCallback('myCallback', function(source, ...)
----     -- Your callback code here
+---     return table
+--- end)
+---
+--- createCallback("callback:checkVehicleOwned", function(source, plate)
+--- 	local result = isVehicleOwned(plate)
+--- 	if result then
+---         return true
+---      else
+---         return false
+---     end
 --- end)
 --- ```
 function createCallback(callbackName, funct)
@@ -46,7 +56,11 @@ end
 ---
 ---@usage
 --- ```lua
---- local result = triggerCallback('myCallback', arg1, arg2)
+--- local result = triggerCallback('myCallback')
+--- jsonPrint(result)
+---
+--- local result = triggerCallback("callback:checkVehicleOwned", plate)
+--- print(result)
 --- ```
 function triggerCallback(callbackName, ...)
     local result = nil

@@ -67,3 +67,44 @@ function makeInstructionalButtons(info)
     -- Final full-screen draw with full opacity.
     DrawScaleformMovieFullscreen(build, 255, 255, 255, 255, 0)
 end
+
+-- EXPERIMENTAL --
+-- RedM Button Prompts --
+-- Creates the promot, then shows it, this needs to be run in a loop
+local promptGroups = {}
+
+function makeRedInstructionalButtons(info, title)
+    if not promptGroups[title] then  -- Create group if not exists
+        promptGroups[title] = {
+            title = CreateVarString(10, 'LITERAL_STRING', title),
+            id = GetRandomIntInRange(0, 0xffffff),
+            prompts = {},
+        }
+        for i = 1, #info do
+            promptGroups[title].prompts[i] = {
+                keys = info[i].keys,
+                text = info[i].text,
+            }
+            local keyTitle = CreateVarString(10, 'LITERAL_STRING', info[i].text)
+            -- Create one prompt per entry
+            local promptSet = UiPromptRegisterBegin()
+            -- Register all keys for this prompt
+            for k = 1, #info[i].keys do
+                PromptSetControlAction(promptSet, info[i].keys[k])
+            end
+            PromptSetText(promptSet, keyTitle)
+            PromptSetEnabled(promptSet, true)
+            PromptSetVisible(promptSet, true)
+            PromptSetGroup(promptSet, promptGroups[title].id)
+            PromptRegisterEnd(promptSet)
+        end
+    end
+    PromptSetActiveGroupThisFrame(promptGroups[title].id, promptGroups[title].title)
+end
+
+onResourceStop(function()
+    for k, v in pairs(promptGroups) do
+        print("^5Bridge^7: ^2Removing Prompt Group^7: ^3" .. k .. "^7")
+        PromptDelete(promptGroups[k].id, 1)
+    end
+end, true)

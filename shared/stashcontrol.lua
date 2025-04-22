@@ -82,9 +82,9 @@ end
 ---
 --- @usage
 --- ```lua
---- local found, stashName = checkHasItem({"playerStash", "storageStash"}, { iron = 2, wood = 5 })
+--- local found, stashName = checkStashItem({"playerStash", "storageStash"}, { iron = 2, wood = 5 })
 --- ```
-function checkHasItem(stashes, itemTable)
+function checkStashItem(stashes, itemTable)
     if not stashes then
         return hasItem(itemTable), nil
     end

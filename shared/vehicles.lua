@@ -262,7 +262,7 @@ end
 ---
 --- @usage
 --- ```lua
---- local closestVeh, distance = getClosestVehicle({ x = 100, y = 200, z = 30 }, true)
+--- local closestVeh, distance = getClosestVehicle({ x = 100, y = 200, z = 30 }, src)
 --- ```
 function getClosestVehicle(coords, src)
     local ped, vehicles, closestDistance, closestVehicle

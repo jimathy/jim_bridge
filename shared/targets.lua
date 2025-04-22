@@ -373,8 +373,7 @@ end
 ---
 --- @usage
 --- ```lua
----createModelTarget(
----{ model1, model2 },
+---createModelTarget({ model1, model2 },
 ---{
 ---   {
 ---       action = function()

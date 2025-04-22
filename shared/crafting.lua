@@ -36,26 +36,26 @@ local excludeKeys = {
 ---
 --- @usage
 --- ```lua
----craftingMenu({
----     craftable = {
----         Header = "Weapon Crafting",
----         Recipes = {
----             [1] = {
----                 ["weapon_pistol"] = { ["steel"] = 5, ["plastic"] = 2 },
----                 amount = 1,
----             },
----             -- More recipes...
----         },
----         Anims = {
----             animDict = "amb@prop_human_parking_meter@male@idle_a",
----             anim = "idle_a",
----         },
----     },
----     coords = vector3(100.0, 200.0, 300.0),
----stashTable = "crafting_stash",
----    job = "mechanic",
----    onBack = function() print("Returning to previous menu") end,
----})
+--- craftingMenu({
+---      craftable = {
+---          Header = "Weapon Crafting",
+---          Recipes = {
+---              [1] = {
+---                  ["weapon_pistol"] = { ["steel"] = 5, ["plastic"] = 2 },
+---                  amount = 1,
+---              },
+---              -- More recipes...
+---          },
+---          Anims = {
+---              animDict = "amb@prop_human_parking_meter@male@idle_a",
+---              anim = "idle_a",
+---          },
+---      },
+---      coords = vector3(100.0, 200.0, 300.0),
+---      stashTable = "crafting_stash",
+---      job = "mechanic",
+---      onBack = function() print("Returning to previous menu") end,
+--- })
 function craftingMenu(data)
     if CraftLock then return end
 
@@ -118,7 +118,7 @@ function craftingMenu(data)
                     end
 
                     while not canCarryTable do Wait(0) end
-                    disable = not checkHasItem(data.stashName, itemTable)
+                    disable = not checkStashItem(data.stashName, itemTable)
                     setheader = ((metadata and metadata.label) or (Items[tostring(k)] and Items[tostring(k)].label) or "error - "..tostring(k))
                                ..(Recipes[i]["amount"] > 1 and " x"..Recipes[i]["amount"] or "")
 
@@ -217,7 +217,7 @@ function multiCraft(data)
 
         if data.stashName then
             debugPrint("")
-            local hasItems, stashname = checkHasItem(data.stashName, itemTable)
+            local hasItems, stashname = checkStashItem(data.stashName, itemTable)
             if hasItems == true then
                 max += 1
                 stashName = stashname

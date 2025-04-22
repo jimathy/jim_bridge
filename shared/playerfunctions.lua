@@ -432,7 +432,7 @@ function hasJob(job, source, grade)
     return hasJobFlag, duty
 end
 
---- Retrieves basic player information (name, cash, bank, job, etc.) based on the active inventory system.
+--- Retrieves basic player information (name, cash, bank, job, etc.) based on the active core/inventory system.
 ---
 --- Can be called server-side (passing a player source) or client-side (for current player).
 ---

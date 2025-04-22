@@ -23,10 +23,6 @@
       -- Retrieve a flat list of all animal model hashes:
       local allAnimalModels = getAnimalModels()
 
-    File Separation Suggestion:
-      For scalability, consider separating this module into two files:
-        • AnimalDetection.lua (for functions and callbacks)
-        • AnimalPedsData.lua (for the AnimalPeds table)
 ]]
 
 -- Global animal classification flags.
