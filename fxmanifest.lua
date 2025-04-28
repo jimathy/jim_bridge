@@ -1,14 +1,24 @@
 name "Jim_Bridge"
 author "Jimathy"
-version "1.0.14"
+version "2.0"
 description "Framework Bridge By Jimathy"
 fx_version "cerulean"
-game "gta5"
+rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aware my resources *will* become incompatible once RedM ships.'
+games { 'gta5', 'rdr3' }
 lua54 'yes'
 
+
 files {
-    'exports.lua',
-    'functions.lua',
-    'wrapper.lua',
-    'crafting.lua',
+    'starter.lua',
+    'shared/*.lua',
+    'shared/make/*.lua',
+    'shared/scaleforms/*.lua',
 }
+
+-- Version checker
+server_scripts { '_versioncheck.lua' }
+
+-- NUI Menu Loading
+client_scripts { 'nui/*.lua' }
+ui_page 'nui/index.html'
+files { 'nui/index.html', 'nui/script.js', 'nui/style.css' }
