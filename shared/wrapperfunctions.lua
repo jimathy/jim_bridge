@@ -61,7 +61,7 @@ function registerStash(name, label, slots, weight, owner, coords)
         exports[OXInv]:RegisterStash(name, label, slots or 50, weight or 4000000, owner or nil)
     elseif isStarted(QSInv) then
         debugPrint("^6Bridge^7: ^2Registering ^3QS ^2Stash^7:", name, label)
-        exports[QSInv]:RegisterStash(nil, name, slots or 50, weight or 4000000)
+        exports[QSInv]:RegisterStash(name, label, slots or 50, weight or 4000000)
 
     --elseif isStarted(CoreInv) then
     --    debugPrint("^6Bridge^7: ^2Registering ^3CoreInv ^2Stash^7:", name, label)
