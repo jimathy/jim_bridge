@@ -349,7 +349,7 @@ end)
 --- ```
 function dupeWarn(src, item, amount)
     local name = getPlayer(src).name
-    print("^5DupeWarn^7: "..name.." (^1"..tostring(src).."^7) ^2Tried to remove item '^3"..item.."^7' but it wasn't there")
+    print("^5DupeWarn^7: "..name.." (^1"..tostring(src).."^7) ^2Tried to remove item '^3"..item.."^7'^2 but it wasn't there^7")
     if not debugMode then
         DropPlayer(src, name.."("..tostring(src)..") Kicked for suspected duplicating items: "..item)
     end
@@ -452,7 +452,7 @@ function getDurability(item)
         for _, v in pairs(itemcheck) do
             if v.name == item and v.slot <= lowestSlot then
                 lowestSlot = v.slot
-                durability = v.metadata.durability
+                durability = v.info.durability
             end
         end
     end
