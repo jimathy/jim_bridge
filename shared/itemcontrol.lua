@@ -661,6 +661,7 @@ end
 -------------------------------------------------------------
 -- Server Callback Registration
 -------------------------------------------------------------
+AuthEvent = nil
 currentToken = nil
 if isServer() then
     createCallback(getScript()..":server:canCarry", function(source, itemTable)
@@ -720,6 +721,8 @@ if isServer() then
         end
     end)
 else
-    debugPrint("^1Auth^7: ^2Requesting ^3Auth Event^7")
-    AuthEvent = triggerCallback(getScript()..":callback:GetAuthEvent")
+    onPlayerLoaded(function()
+        debugPrint("^1Auth^7: ^2Requesting ^3Auth Event^7")
+        AuthEvent = triggerCallback(getScript()..":callback:GetAuthEvent")
+    end, true)
 end

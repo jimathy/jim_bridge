@@ -55,9 +55,28 @@ QBInvNew = true
 
 InventoryWeight = 120000
 
+-- Testing loading the core files here instead of in fxmanifests
+--for k, v in pairs({ -- This is a specific load order
+--    [Exports.OXLibExport] = "init.lua",
+--    [Exports.OXCoreExport] = "lib/init.lua",
+--    [Exports.ESXExport] = "imports.lua",
+--    [Exports.QBXExport] = "modules/playerdata.lua",
+--}) do
+--    if GetResourceState(k) == "started" then
+--        print("^5Loading^7: '"..k.."/"..v.."' ^2into ^7'"..GetCurrentResourceName().."' ...")
+--        local fileLoader = assert(load(LoadResourceFile(k, (v)), ('@@'..k..'/'..v)))
+--        fileLoader()
+--        print("^2Success^7: ^2loaded ^1Core ^2file^7: ^3"..k.."^7/^3"..(v):gsub("/", "^7/^3"):gsub("%.lua", "^7.lua").."^7")
+--    else
+--        if debugMode then
+--            print("^3Warning^7: ^3"..k.." ^2not found^7, ^2skipping")
+--        end
+--    end
+--end
+
 -- Load files here into the invoking script
 for _, v in pairs({ -- This is a specific load order
-    --'convarCheck.lua',
+
     'helpers.lua',  -- needs to be first
     '_loaders.lua',
 
