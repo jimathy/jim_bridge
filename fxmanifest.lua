@@ -17,8 +17,3 @@ files {
 
 -- Version checker
 server_scripts { '_versioncheck.lua' }
-
--- NUI Menu Loading
-client_scripts { 'nui/*.lua' }
-ui_page 'nui/index.html'
-files { 'nui/index.html', 'nui/script.js', 'nui/style.css' }
