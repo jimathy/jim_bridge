@@ -295,7 +295,9 @@ end
 --- stashRemoveItem(currentItems, "playerStash", { iron = 2, wood = 5 })
 --- ```
 function stashRemoveItem(stashItems, stashName, items)
-
+    if type(stashName) ~= "table" then
+        stashName = { stashName }
+    end
     if isStarted(OXInv) then
         for k, v in pairs(items) do
             if type(stashName) == "table" then
