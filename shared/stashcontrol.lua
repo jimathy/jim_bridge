@@ -322,7 +322,7 @@ function stashRemoveItem(stashItems, stashName, items)
                         stashItems[l] = nil
                     else
                         debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QBInv, k, v)
-                        exports[QSInv]:RemoveItemIntoStash(stashName, k, v, l)
+                        exports[QSInv]:RemoveItemIntoStash(stashName[1], k, v, l)
                     end
                 end
             end
@@ -350,6 +350,7 @@ function stashRemoveItem(stashItems, stashName, items)
         end
         exports[CodeMInv]:UpdateStash(stashName, stashItems)
         debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3CodeM^2 stash ^7'^6"..stashName.."^7'")
+
     elseif isStarted(OrigenInv) then
         for k, v in pairs(items) do
             exports[OrigenInv]:RemoveFromStash(stashName, k, v)
