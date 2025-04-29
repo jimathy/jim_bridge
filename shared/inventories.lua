@@ -122,7 +122,7 @@ function getPlayerInv(src)
         if src then
             grabInv = exports[CodeMInv]:GetInventory(src)
         else
-            grabInv = exports[CodeMInv]:GetClientPlayerInventory()
+            grabInv = exports[CodeMInv]:getUserInventory()
         end
 
     elseif isStarted(QBInv) then
