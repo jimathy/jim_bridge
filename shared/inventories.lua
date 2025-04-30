@@ -120,7 +120,7 @@ function getPlayerInv(src)
     elseif isStarted(CodeMInv) then
         foundInv = CodeMInv
         if src then
-            grabInv = exports[CodeMInv]:GetInventory(src)
+            grabInv = exports[CodeMInv]:GetInventory(getPlayer(src).citizenId, src)
         else
             grabInv = exports[CodeMInv]:getUserInventory()
         end
