@@ -160,6 +160,9 @@ function openShop(data)
     elseif isStarted(QSInv) then
         TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
 
+    elseif isStarted(TgiannInv) then
+        TriggerServerEvent(getScript()..':server:OpenShopTgiann', data.shop)
+
     elseif isStarted(QBInv) then
         if QBInvNew then
             TriggerServerEvent(getScript()..':server:OpenShopNewQB', data.shop)
@@ -168,17 +171,20 @@ function openShop(data)
         end
 
     elseif isStarted(RSGInv) then
-        TriggerServerEvent(getScript()..':server:OpenShopNewRSG', data.shop)
+        TriggerServerEvent(getScript()..':server:OpenShopRSG', data.shop)
     end
     lookEnt(data.coords)
 end
 
---- Server event handler for opening a shop using the new QB inventory system.
 RegisterNetEvent(getScript()..':server:OpenShopNewQB', function(data)
     exports[QBInv]:OpenShop(source, data)
 end)
 
-RegisterNetEvent(getScript()..':server:OpenShopNewRSG', function(data)
+RegisterNetEvent(getScript()..':server:OpenShopTgiann', function(data)
+    exports[TgiannInv]:OpenShop(source, data)
+end)
+
+RegisterNetEvent(getScript()..':server:OpenShopRSG', function(data)
     exports[RSGInv]:OpenShop(source, data)
 end)
 
@@ -201,6 +207,11 @@ function registerShop(name, label, items, society)
             inventory = items,
             society = society,
         })
+
+    elseif isStarted(TgiannInv) then
+        debugPrint("^6Bridge^7: ^2Registering ^3Tgiann ^2Store^7:", name, label)
+        exports[TgiannInv]:RegisterShop(name, items)
+
     elseif isStarted(QBInv) and QBInvNew then
         debugPrint("^6Bridge^7: ^2Registering ^3QB ^2Store^7:", name, label)
         exports[QBInv]:CreateShop({

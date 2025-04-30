@@ -70,6 +70,10 @@ function registerStash(name, label, slots, weight, owner, coords)
     elseif isStarted(OrigenInv) then
         debugPrint("^6Bridge^7: ^2Registering ^3OrigenInv ^2Stash^7:", name, label)
         exports["origen_inventory"]:registerStash(name, label, slots or 50, weight or 4000000)
+
+    elseif isStarted(TgiannInv) then
+        debugPrint("^6Bridge^7: ^2Registering ^3TgiannInv ^2Stash^7:", name, label)
+        exports[TgiannInv]:RegisterStash(name, label, slots or 50, weight or 4000000)
     end
 end
 

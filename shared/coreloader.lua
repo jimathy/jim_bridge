@@ -27,14 +27,15 @@ OXLibExport, QBXExport, QBExport, ESXExport, OXCoreExport =
     Exports.ESXExport or "",
     Exports.OXCoreExport or ""
 
-OXInv, QBInv, PSInv, QSInv, CoreInv, CodeMInv, OrigenInv =
+OXInv, QBInv, PSInv, QSInv, CoreInv, CodeMInv, OrigenInv, TgiannInv =
     Exports.OXInv or "",
     Exports.QBInv or "",
     Exports.PSInv or "",
     Exports.QSInv or "",
     Exports.CoreInv or "",
     Exports.CodeMInv or "",
-    Exports.OrigenInv or ""
+    Exports.OrigenInv or "",
+    Exports.TgiannInv or ""
 
 RSGExport, RSGInv =
     Exports.RSGExport or "",

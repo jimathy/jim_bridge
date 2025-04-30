@@ -151,6 +151,14 @@ function openStash(data)
     elseif isStarted(OrigenInv) then
         exports[OrigenInv]:openInventory('stash', data.stash, { label = data.label })
 
+    elseif isStarted(TgiannInv) then
+        TriggerServerEvent(getScript()..':server:OpenStashTgiann', {
+            stashName = data.stash,
+            label = data.label,
+            maxweight = data.maxWeight or 600000,
+            slots = data.slots or 40
+        })
+
     elseif isStarted(QBInv) then
         if QBInvNew then
             TriggerServerEvent(getScript()..':server:OpenStashQB', {
@@ -181,7 +189,10 @@ function openStash(data)
     lookEnt(data.coords)
 end
 
--- Register an event for opening QB stashes.
+RegisterNetEvent(getScript()..':server:OpenStashTgiann', function(data)
+    exports[TgiannInv]:OpenInventory(source, 'stash', data.stashName, data)
+end)
+
 RegisterNetEvent(getScript()..':server:OpenStashQB', function(data)
     exports[QBInv]:OpenInventory(source, data.stashName, data)
 end)
@@ -233,6 +244,10 @@ function getStash(stashName)
     elseif isStarted(OrigenInv) then
         stashResource = OrigenInv
         stashItems = exports[OrigenInv]:getInventory(stashName)
+
+    elseif isStarted(TgiannInv) then
+        stashResource = TgiannInv
+        stashItems = exports[TgiannInv]:GetSecondaryInventoryItems("stash", stashName)
 
     elseif isStarted(PSInv) then
         stashResource = PSInv
@@ -330,7 +345,7 @@ function stashRemoveItem(stashItems, stashName, items)
 
     elseif isStarted(CoreInv) then
         for k, v in pairs(items) do
-            exports[CoreInv]:removeItemExact(stashName, k, v)
+            exports[CoreInv]:removeItemExact(stashName[1], k, v)
             debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..CoreInv, k, v)
         end
 
@@ -348,13 +363,20 @@ function stashRemoveItem(stashItems, stashName, items)
                 end
             end
         end
-        exports[CodeMInv]:UpdateStash(stashName, stashItems)
+        exports[CodeMInv]:UpdateStash(stashName[1], stashItems)
         debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3CodeM^2 stash ^7'^6"..stashName.."^7'")
 
     elseif isStarted(OrigenInv) then
         for k, v in pairs(items) do
-            exports[OrigenInv]:RemoveFromStash(stashName, k, v)
+            exports[OrigenInv]:RemoveFromStash(stashName[1], k, v)
             debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..OrigenInv, k, v)
+        end
+
+    elseif isStarted(TgiannInv) then
+        for k, v in pairs(items) do
+            local itemData = exports["tgiann-inventory"]:GetItemByNameFromSecondaryInventory("stash", stashName[1], k)
+            exports[TgiannInv]:RemoveItemFromSecondaryInventory("stash", stashName[1], k, v, itemData.slot, nil)
+            debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..TgiannInv, k, v)
         end
 
     elseif isStarted(PSInv) then
@@ -409,6 +431,16 @@ function stashRemoveItem(stashItems, stashName, items)
             })
         end
 
+    elseif isStarted(RSGInv) then
+        for k, v in pairs(items) do
+            exports[RSGInv]:RemoveItem(stashName[1], k, v, false, 'crafting')
+            debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..RSGInv, k, v)
+        end
+        debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName[1].."^7'")
+        MySQL.Async.insert('INSERT INTO inventories (identifier, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+            ['stash'] = stashName[1],
+            ['items'] = json.encode(stashItems)
+        })
     else
         print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3starter^1.^2lua^7")
     end
@@ -433,7 +465,7 @@ RegisterNetEvent(getScript()..":server:stashRemoveItem", stashRemoveItem)
 --- local hasAll, details = stashhasItem(currentStashItems, { iron = 2, wood = 5 })
 --- ```
 function stashhasItem(stashItems, items, amount)
-    local invs = { OXInv, QSInv, CoreInv, CodeMInv, OrigenInv, QBInv, PSInv }
+    local invs = { OXInv, QSInv, CoreInv, CodeMInv, OrigenInv, TgiannInv, QBInv, PSInv, RSGInv }
     local foundInv = ""
     for _, inv in ipairs(invs) do
         if isStarted(inv) then

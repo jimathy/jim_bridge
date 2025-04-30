@@ -13,6 +13,7 @@ Exports = {
     CoreInv = "core_inventory",
     CodeMInv = "codem-inventory",
     OrigenInv = "origen_inventory",
+    TgiannInv = "tgiann-inventory",
 
     OXLibExport = "ox_lib",
 

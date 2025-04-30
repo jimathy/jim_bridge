@@ -125,6 +125,14 @@ function getPlayerInv(src)
             grabInv = exports[CodeMInv]:getUserInventory()
         end
 
+    elseif isStarted(TgiannInv) then
+        foundInv = TgiannInv
+        if src then
+            grabInv = exports[TgiannInv]:GetPlayerItems(src)
+        else
+            grabInv = exports[TgiannInv]:GetPlayerItems()
+        end
+
     elseif isStarted(QBInv) then
         foundInv = QBInv
         if src then

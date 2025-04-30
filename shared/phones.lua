@@ -78,6 +78,11 @@ function sendPhoneMail(data)
                 TriggerServerEvent(getScript()..":jpr:SendMail", mailData)
             end,
         },
+        {   name = "ef-phone",
+            send = function(mailData)
+                TriggerServerEvent('qb-phone:server:sendNewMail', mailData)
+            end,
+        },
     }
 
     local activePhone = nil

@@ -64,18 +64,28 @@ function invImg(item)
     if item ~= "" and Items[item] then
         if isStarted(OXInv) then
             imgLink = "nui://"..OXInv.."/web/images/"..(Items[item].image or "")
+
         elseif isStarted(QSInv) then
             imgLink = "nui://"..QSInv.."/html/images/"..(Items[item].image or "")
+
         elseif isStarted(CoreInv) then
             imgLink = "nui://"..CoreInv.."/html/img/"..(Items[item].image or "")
+
         elseif isStarted(CodeMInv) then
             imgLink = "nui://"..CodeMInv.."/html/itemimages/"..(Items[item].image or "")
+
         elseif isStarted(OrigenInv) then
             imgLink = "nui://"..OrigenInv.."/html/img/"..(Items[item].image or "")
+
         elseif isStarted(QBInv) then
             imgLink = "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
+
+        elseif isStarted(TgiannInv) then
+            imgLink = "nui://inventory_images/images/"..(Items[item].image or "")
+
         elseif isStarted(RSGInv) then
             imgLink = "nui://"..RSGInv.."/html/images/"..(Items[item].image or "")
+
         else
             print("^4ERROR^7: ^2No Inventory detected for invImg - Check starter.lua")
         end
@@ -219,6 +229,9 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
             elseif isStarted(CodeMInv) then invName = CodeMInv
                 exports[CodeMInv]:RemoveItem(src, item, remamount)
 
+            elseif isStarted(TgiannInv) then invName = TgiannInv
+                exports[TgiannInv]:RemoveItem(src, item, remamount)
+
             elseif isStarted(QBInv) then invName = QBInv
                 while remamount > 0 do
                     if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1, slot) then
@@ -295,6 +308,9 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
 
         elseif isStarted(OrigenInv) then invName = OrigenInv
             exports[OrigenInv]:addItem(src, item, amountToAdd, info, slot)
+
+        elseif isStarted(TgiannInv) then invName = TgiannInv
+            exports[TgiannInv]:AddItem(src, item, amountToAdd, slot, info)
 
         elseif isStarted(QBInv) then invName = QBInv
             if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
@@ -467,6 +483,16 @@ function getDurability(item)
         end
     end
 
+    if isStarted(TgiannInv) then
+        local itemcheck = exports[TgiannInv]:GetPlayerItems()
+        for _, v in pairs(itemcheck) do
+            if v.name == item and v.slot <= lowestSlot then
+                lowestSlot = v.slot
+                durability = v.metadata.durability
+            end
+        end
+    end
+
     -- For ESX default inventory (es_extended)
     if ESX and isStarted(ESXExport) then
         local xPlayer = ESX.GetPlayerData() or {}
@@ -524,6 +550,9 @@ RegisterNetEvent(getScript()..":server:setMetaData", function(data)
 
     elseif isStarted(OrigenInv) then
         exports[OrigenInv]:setMetadata(src, data.slot, data.metadata)
+
+    elseif isStarted(TgiannInv) then
+        exports[TgiannInv]:UpdateItemMetadata(src, data.item, data.slot, data.metadata)
     end
 end)
 
@@ -631,6 +660,11 @@ function canCarry(itemTable, src)
         elseif isStarted(OrigenInv) then
             for k, v in pairs(itemTable) do
                 resultTable[k] = exports[OrigenInv]:canCarryItem(src, k, v)
+            end
+
+        elseif isStarted(TgiannInv) then
+            for k, v in pairs(itemTable) do
+                resultTable[k] = exports[TgiannInv]:CanCarryItem(source, k, v)
             end
 
         elseif isStarted(QBInv) then
