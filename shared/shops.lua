@@ -148,6 +148,7 @@ end)
 --- })
 --- ```
 function openShop(data)
+    jsonPrint(data)
     if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
 
     if Config.General.JimShops then
@@ -156,12 +157,16 @@ function openShop(data)
     elseif isStarted(OXInv) then
         exports[OXInv]:openInventory('shop', { type = data.shop })
 
+    elseif isStarted(QSInv) then
+        TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
+
     elseif isStarted(QBInv) then
         if QBInvNew then
             TriggerServerEvent(getScript()..':server:OpenShopNewQB', data.shop)
         else
             TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
         end
+
     elseif isStarted(RSGInv) then
         TriggerServerEvent(getScript()..':server:OpenShopNewRSG', data.shop)
     end
