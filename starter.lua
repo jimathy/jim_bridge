@@ -30,10 +30,7 @@ Exports = {
 -- Required variables
 debugMode = Config.System.Debug
 
--- Testing a new check for new inventory, otherwise it will use the old calls for qb-inv
--- It's messy, and doesn't take in to account if you have text in the version like "beta"
-local qbInvVer = GetResourceMetadata(Exports.QBInv, 'version', nil):gsub("%.", "")
-QBInvNew = tonumber(qbInvVer) >= 200 -- if your qb inv version is 2.0.0 or above, then its classed as "new"
+QBInvNew = true
 
 InventoryWeight = 120000
 
