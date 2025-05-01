@@ -371,8 +371,10 @@ function makeItem(data)
                             anim = anim,
                             flag = 49,
                             icon = data.item,
+                            request = true,
                         }) then
-                            TriggerServerEvent(getScript()..":Crafting:GetItem", data.item, data.craft, data.stashName, metadata)
+                            TriggerServerEvent(getScript()..":Crafting:GetItem", data.item, data.craft, data.stashName, metadata, currentToken)
+                            currentToken = nil -- clear client cached token
                             CreateThread(function()
                                 if data.craft["hasCrafted"] ~= nil then
                                     debugPrint("hasCrafted Found, marking '"..data.item.."' as crafted for player")
@@ -431,8 +433,28 @@ end
 --- @param stashName string|table The stash name(s) to remove ingredients from.
 --- @param metadata table (optional) Metadata for the crafted item.
 --- @usage
-RegisterNetEvent(getScript()..":Crafting:GetItem", function(ItemMake, craftable, stashName, metadata)
+RegisterNetEvent(getScript()..":Crafting:GetItem", function(ItemMake, craftable, stashName, metadata, token)
     local src = source
+    debugPrint(GetInvokingResource())
+	if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= "qb-core" then
+        debugPrint("^1Error^7: ^1Possible exploit^7, ^1vital function was called from an external resource^7")
+        return
+    end
+
+    if token == nil then
+        debugPrint("^1Auth^7: ^1No token recieved^7")
+        dupeWarn(src, item, "Auth: Player "..src.." attempted to spawn "..item.." without an auth token")
+    else
+        if token ~= validTokens[src] then
+            debugPrint("^1Auth^7: ^1Tokens don't match! ^7", token, validTokens[src])
+            dupeWarn(src, item, "Auth: "..src.." attempted to trigger server only events with an incorrect auth token")
+        else
+            debugPrint("^1Auth^7: ^2Client and Server Auth tokens match^7!", token, validTokens[src])
+            validTokens[src] = nil
+        end
+    end
+
+
     local hasItems, hasTable = hasItem(ItemMake, 1, src)
     if stashName then
         local itemRemove = {}
