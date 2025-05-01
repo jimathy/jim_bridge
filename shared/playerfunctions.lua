@@ -111,7 +111,13 @@ end)
 function setThirst(src, thirst)
     if isStarted(ESXExport) then
         TriggerClientEvent('esx_status:add', src, 'thirst', thirst)
+
     elseif isStarted(QBExport) or isStarted(QBXExport) then
+        local Player = Core.Functions.GetPlayer(src)
+        Player.Functions.SetMetaData('thirst', thirst)
+        TriggerClientEvent("hud:client:UpdateNeeds", src, thirst, Player.PlayerData.metadata.thirst)
+
+    elseif isStarted(RSGExport) then
         local Player = Core.Functions.GetPlayer(src)
         Player.Functions.SetMetaData('thirst', thirst)
         TriggerClientEvent("hud:client:UpdateNeeds", src, thirst, Player.PlayerData.metadata.thirst)
@@ -130,7 +136,13 @@ end
 function setHunger(src, hunger)
     if isStarted(ESXExport) then
         TriggerClientEvent('esx_status:add', src, 'hunger', hunger)
+
     elseif isStarted(QBExport) or isStarted(QBXExport) then
+        local Player = Core.Functions.GetPlayer(src)
+        Player.Functions.SetMetaData('hunger', hunger)
+        TriggerClientEvent("hud:client:UpdateNeeds", src, hunger, Player.PlayerData.metadata.hunger)
+
+    elseif isStarted(RSGExport) then
         local Player = Core.Functions.GetPlayer(src)
         Player.Functions.SetMetaData('hunger', hunger)
         TriggerClientEvent("hud:client:UpdateNeeds", src, hunger, Player.PlayerData.metadata.hunger)
@@ -161,20 +173,31 @@ function chargePlayer(cost, moneyType, newsrc)
     if moneyType == "cash" then
         if isStarted(OXInv) then fundResource = OXInv
             exports[OXInv]:RemoveItem(src, "money", cost)
+
         elseif isStarted(QBExport) or isStarted(QBXExport) then
             fundResource = QBExport
             Core.Functions.GetPlayer(src).Functions.RemoveMoney("cash", cost)
+
         elseif isStarted(RSGExport) then
-            fundResource = QBExport
+            fundResource = RSGExport
             Core.Functions.GetPlayer(src).Functions.RemoveMoney("cash", cost)
+
         elseif isStarted(ESXExport) then
             fundResource = ESXExport
             ESX.GetPlayerFromId(src).removeMoney(cost, "")
+
         end
     elseif moneyType == "bank" then
-        if isStarted(QBExport) or isStarted(QBXExport) then fundResource = QBExport
+        if isStarted(QBExport) or isStarted(QBXExport) then
+            fundResource = QBExport
             Core.Functions.GetPlayer(src).Functions.RemoveMoney("bank", cost)
-        elseif isStarted(ESXExport) then fundResource = ESXExport
+
+        elseif isStarted(RSGExport) then
+            fundResource = RSGExport
+            Core.Functions.GetPlayer(src).Functions.RemoveMoney("bank", cost)
+
+        elseif isStarted(ESXExport) then
+            fundResource = ESXExport
             ESX.GetPlayerFromId(src).removeMoney(cost, "")
         end
     end
@@ -212,17 +235,29 @@ function fundPlayer(fund, moneyType, newsrc)
         if isStarted(OXInv) then
             fundResource = OXInv
             exports[OXInv]:AddItem(src, "money", fund)
+
         elseif isStarted(QBExport) or isStarted(QBXExport) then
             fundResource = QBExport
             Core.Functions.GetPlayer(src).Functions.AddMoney("cash", fund)
+
+        elseif isStarted(RSGExport) then
+            fundResource = RSGExport
+            Core.Functions.GetPlayer(src).Functions.AddMoney("cash", fund)
+
         elseif isStarted(ESXExport) then
             fundResource = ESXExport
-            PlayESX.GetPlayerFromId(src).addMoney(fund, "")
+            ESX.GetPlayerFromId(src).addMoney(fund, "")
+
         end
     elseif moneyType == "bank" then
         if isStarted(QBExport) or isStarted(QBXExport) then
             fundResource = QBExport
             Core.Functions.GetPlayer(src).Functions.AddMoney("bank", fund)
+
+        elseif isStarted(RSGExport) then
+            fundResource = RSGExport
+            Core.Functions.GetPlayer(src).Functions.AddMoney("bank", fund)
+
         elseif isStarted(ESXExport) then
             fundResource = ESXExport
             ESX.GetPlayerFromId(src).addMoney(fund, "")
@@ -380,6 +415,35 @@ function hasJob(job, source, grade)
                     if grade and not (grade <= ganginfo.grade.level) then hasJobFlag = false end
                 end
             end
+
+        elseif isStarted(RSGExport) then
+            if Core.Functions.GetPlayer then
+                local player = Core.Functions.GetPlayer(src)
+                if not player then print("Player not found for src: "..src) end
+                local jobinfo = player.PlayerData.job
+                if jobinfo.name == job then
+                    hasJobFlag = true
+                    duty = player.PlayerData.job.onduty
+                    if grade and not (grade <= jobinfo.grade.level) then hasJobFlag = false end
+                end
+                local ganginfo = player.PlayerData.gang
+                if ganginfo.name == job then
+                    hasJobFlag = true
+                    if grade and not (grade <= ganginfo.grade.level) then hasJobFlag = false end
+                end
+            else
+                local jobinfo = exports[RSGExport]:GetPlayer(src).PlayerData.job
+                if jobinfo.name == job then
+                    hasJobFlag = true
+                    duty = exports[RSGExport]:GetPlayer(src).PlayerData.job.onduty
+                    if grade and not (grade <= jobinfo.grade.level) then hasJobFlag = false end
+                end
+                local ganginfo = exports[RSGExport]:GetPlayer(src).PlayerData.gang
+                if ganginfo.name == job then
+                    hasJobFlag = true
+                    if grade and not (grade <= ganginfo.grade.level) then hasJobFlag = false end
+                end
+            end
         else
             print("^4ERROR^7: ^2No Core detected for hasJob ^7- ^2Check ^3starter^1.^2lua^7")
         end
@@ -425,6 +489,22 @@ function hasJob(job, source, grade)
                 hasJobFlag = true
                 if grade and not (grade <= ganginfo.grade.level) then hasJobFlag = false end
             end
+
+        elseif isStarted(RSGExport) then
+            local info = nil
+            Core.Functions.GetPlayerData(function(PlayerData) info = PlayerData end)
+            local jobinfo = info.job
+            if jobinfo.name == job then
+                hasJobFlag = true
+                duty = jobinfo.onduty
+                if grade and not (grade <= jobinfo.grade.level) then hasJobFlag = false end
+            end
+            local ganginfo = info.gang
+            if ganginfo.name == job then
+                hasJobFlag = true
+                if grade and not (grade <= ganginfo.grade.level) then hasJobFlag = false end
+            end
+
         else
             print("^4ERROR^7: ^2No Core detected for hasJob() ^7- ^2Check ^3starter^1.^2lua^7")
         end

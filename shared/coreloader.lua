@@ -120,12 +120,10 @@ elseif isStarted(RSGExport) then
     itemResource = RSGExport
     Core = Core or exports[RSGExport]:GetCoreObject()
     Items = Core and Core.Shared.Items or nil
-    if isStarted(RSGExport) and not isStarted(QBXExport) then
-        RegisterNetEvent('QBCore:Client:UpdateObject', function()
-            Core = Core or exports[RSGExport]:GetCoreObject()
-            Items = Core and Core.Shared.Items or nil
-        end)
-    end
+    RegisterNetEvent('RSGCore:Client:UpdateObject', function()
+        Core = Core or exports[RSGExport]:GetCoreObject()
+        Items = Core and Core.Shared.Items or nil
+    end)
 
 end
 
@@ -190,12 +188,10 @@ elseif isStarted(ESXExport) then
 elseif isStarted(RSGExport) then
     Core = Core or exports[RSGExport]:GetCoreObject()
     Vehicles = Core and Core.Shared.Vehicles
-    if isStarted(RSGExport) then
-        RegisterNetEvent('RSGExport:Client:UpdateObject', function()
-            Core = Core or exports[RSGExport]:GetCoreObject()
-            Vehicles = Core and Core.Shared.Vehicles
-        end)
-    end
+    RegisterNetEvent('RSGCore:Client:UpdateObject', function()
+        Core = Core or exports[RSGExport]:GetCoreObject()
+        Vehicles = Core and Core.Shared.Vehicles
+    end)
     vehResource = RSGExport
 end
 if vehResource == nil then
@@ -276,12 +272,10 @@ elseif isStarted(RSGExport) then
     jobResource = RSGExport
     Core = Core or exports[RSGExport]:GetCoreObject()
     Jobs, Gangs = Core.Shared.Jobs, Core.Shared.Gangs
-    if isStarted(RSGExport) and not isStarted(QBXExport) then
-        RegisterNetEvent('QBCore:Client:UpdateObject', function()
-            Core = exports[RSGExport]:GetCoreObject()
-            Jobs, Gangs = Core.Shared.Jobs, Core.Shared.Gangs
-        end)
-    end
+    RegisterNetEvent('RSGCore:Client:UpdateObject', function()
+        Core = exports[RSGExport]:GetCoreObject()
+        Jobs, Gangs = Core.Shared.Jobs, Core.Shared.Gangs
+    end)
 end
 
 if jobResource == nil then

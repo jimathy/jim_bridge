@@ -32,6 +32,9 @@ function GetPlayer(source)
     elseif isStarted(OXCoreExport) then
         debugPrint("^6Bridge^7: ^3GetPlayer^7() OXCoreExport")
         return exports[OXCoreExport]:GetPlayer(source)
+    elseif isStarted(RSGExport) then
+        debugPrint("^6Bridge^7: ^3GetPlayer^7() RSGExport")
+        return exports[RSGExport]:GetCoreObject().Functions.GetPlayer(source)
     end
     return nil
 end
@@ -58,7 +61,7 @@ function GetMetadata(player, key)
         return triggerCallback(getScript()..":server:GetMetadata", key)
     else
         if isStarted(QBExport) or isStarted(QBXExport) then
-            debugPrint("^6Bridge^7: ^3GetMetadata^7() QBExport or QBXExport", key)
+            debugPrint("^6Bridge^7: ^3GetMetadata^7() QBExport/QBXExport", key)
             return player.PlayerData.metadata[key]
         elseif isStarted(ESXExport) then
             debugPrint("^6Bridge^7: ^3GetMetadata^7() ESXExport", key)
@@ -66,6 +69,9 @@ function GetMetadata(player, key)
         elseif isStarted(OXCoreExport) then
             debugPrint("^6Bridge^7: ^3GetMetadata^7() OXCoreExport", key)
             return player.get(key)
+        elseif isStarted(RSGExport) then
+            debugPrint("^6Bridge^7: ^3GetMetadata^7() RSGExport", key)
+            return player.PlayerData.metadata[key]
         end
     end
     return nil
@@ -118,6 +124,9 @@ function SetMetadata(player, key, value)
     elseif isStarted(OXCoreExport) then
         debugPrint("^6Bridge^7: ^3SetMetadata^7() using OXCoreExport")
         player.set(key, value)
+    elseif isStarted(RSGExport) then
+        debugPrint("^6Bridge^7: ^3SetMetadata^7() using RSGExport")
+        player.Functions.SetMetaData(key, value)
     end
 end
 

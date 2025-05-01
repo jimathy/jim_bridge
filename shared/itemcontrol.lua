@@ -31,15 +31,22 @@ validTokens = {}
 --- ```
 function createUseableItem(item, funct)
     if isStarted(ESXExport) then
-        debugPrint("^6Bridge^7: ^2Registering item as ^3Usable^2 with ^7es_extended", item)
+        debugPrint("^6Bridge^7: ^2Registering item as ^3Usable^2 with ^7es_extended^7", item)
         while not ESX do Wait(0) end
         ESX.RegisterUsableItem(item, funct)
+
     elseif isStarted(QBExport) and not isStarted(QBXExport) then
-        debugPrint("^6Bridge^7: ^2Registering item as ^3Usable^2 with ^7qb-core", item)
+        debugPrint("^6Bridge^7: ^2Registering item as ^3Usable^2 with ^7qb-core^7", item)
         Core.Functions.CreateUseableItem(item, funct)
+
     elseif isStarted(QBXExport) then
-        debugPrint("^6Bridge^7: ^2Registering item as ^3Usable^2 with ^7qbx_core", item)
+        debugPrint("^6Bridge^7: ^2Registering item as ^3Usable^2 with ^7qbx_core^7", item)
         exports[QBXExport]:CreateUseableItem(item, funct)
+
+    elseif isStarted(RSGExport) then
+        debugPrint("^6Bridge^7: ^2Registering item as ^3Usable^2 with ^1rsg-core^7", item)
+        Core.Functions.CreateUseableItem(item, funct)
+
     else
         print("^4ERROR^7: No supported framework detected for registering usable item: ^3"..item.."^7")
     end

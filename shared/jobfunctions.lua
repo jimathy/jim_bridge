@@ -95,6 +95,8 @@ function toggleDuty()
     onDuty = not onDuty
     if isStarted(QBExport) or isStarted(QBXExport) then
         TriggerServerEvent("QBCore:ToggleDuty")
+    elseif isStarted(RSGExport) then
+        TriggerServerEvent("RSGCore:ToggleDuty")
     else
         if onDuty then
             triggerNotify(nil, "Now on duty", "success")

@@ -21,17 +21,25 @@
 --- })
 --- ```
 function registerCommand(command, options)
+
     if isStarted(OXLibExport) then
         debugPrint("^6Bridge^7: ^2Registering ^3Command^2 with ^7"..OXLibExport, command)
         lib.addCommand(command, { help = options[1], restricted = options[5] and "group."..options[5] or nil }, options[4])
+
     elseif isStarted(QBExport) and not isStarted(QBXExport) then
         debugPrint("^6Bridge^7: ^2Registering ^3Command^2 with ^7"..QBExport, command)
         Core.Commands.Add(command, options[1], options[2], options[3], options[4], options[5] or nil)
+
+    elseif isStarted(RSGExport) then
+        debugPrint("^6Bridge^7: ^2Registering ^3Command^2 with ^7"..RSGExport, command)
+        Core.Commands.Add(command, options[1], options[2], options[3], options[4], options[5] or nil)
+
     elseif isStarted(ESXExport) then
         debugPrint("^6Bridge^7: ^2Registering ^3Command^2 with ^7ESX Legacy", command)
         ESX.RegisterCommand(command, options[5] or 'admin', function(xPlayer, args, showError)
             options[4](xPlayer.source, args, showError)
         end, false, { help = options[1] })
+
     end
 end
 
@@ -59,6 +67,7 @@ function registerStash(name, label, slots, weight, owner, coords)
     if isStarted(OXInv) then
         debugPrint("^6Bridge^7: ^2Registering ^3OX ^2Stash^7:", name, label, owner or nil)
         exports[OXInv]:RegisterStash(name, label, slots or 50, weight or 4000000, owner or nil)
+
     elseif isStarted(QSInv) then
         debugPrint("^6Bridge^7: ^2Registering ^3QS ^2Stash^7:", name, label)
         exports[QSInv]:RegisterStash(name, label, slots or 50, weight or 4000000)
@@ -74,6 +83,7 @@ function registerStash(name, label, slots, weight, owner, coords)
     elseif isStarted(TgiannInv) then
         debugPrint("^6Bridge^7: ^2Registering ^3TgiannInv ^2Stash^7:", name, label)
         exports[TgiannInv]:RegisterStash(name, label, slots or 50, weight or 4000000)
+
     end
 end
 

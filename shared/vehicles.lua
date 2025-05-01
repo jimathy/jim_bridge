@@ -108,6 +108,7 @@ function getVehicleProperties(vehicle)
     if isStarted(QBExport) and not isStarted(QBXExport) then
         properties = Core.Functions.GetVehicleProperties(vehicle)
         debugPrint("^6Bridge^7: ^2Getting Vehicle Properties ^7[^6"..QBExport.."^7] - [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7/^3"..properties.model.."^7] - [^3"..properties.plate.."^7]")
+
     elseif isStarted(OXLibExport) then
         properties = lib.getVehicleProperties(vehicle)
         debugPrint("^6Bridge^7: ^2Getting Vehicle Properties ^7[^6"..OXLibExport.."^7] - [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7/^3"..properties.model.."^7] - [^3"..properties.plate.."^7]")
@@ -134,6 +135,7 @@ function setVehicleProperties(vehicle, props)
         if isStarted(QBExport) and not isStarted(QBXExport) then
             Core.Functions.SetVehicleProperties(vehicle, props)
             debugPrint("^6Bridge^7: ^2Setting Vehicle Properties ^7[^6"..QBExport.."^7] - [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7/^3"..props.model.."^7] - [^3"..props.plate.."^7]")
+
         elseif isStarted(OXLibExport) then
             lib.setVehicleProperties(vehicle, props, false)
             debugPrint("^6Bridge^7: ^2Setting Vehicle Properties ^7[^6"..OXLibExport.."^7] - [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7/^3"..props.model.."^7] - [^3"..props.plate.."^7]")

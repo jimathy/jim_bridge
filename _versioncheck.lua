@@ -1,4 +1,4 @@
-function parseVersion(version)
+local function parseVersion(version)
     local parts = {}
     for num in version:gmatch("%d+") do
         table.insert(parts, tonumber(num))
@@ -6,7 +6,7 @@ function parseVersion(version)
     return parts
 end
 
-function compareVersions(current, newest)
+local function compareVersions(current, newest)
     local currentParts = parseVersion(current)
     local newestParts = parseVersion(newest)
     for i = 1, math.max(#currentParts, #newestParts) do
