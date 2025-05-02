@@ -121,7 +121,7 @@ function createEntityTarget(entity, opts, dist)
             options[i] = {
                 icon = opts[i].icon,
                 label = opts[i].label,
-                item = opts[i].item or nil,
+                items = opts[i].item or nil,
                 groups = opts[i].job or opts[i].gang,
                 onSelect = opts[i].action,
                 distance = dist,
@@ -230,7 +230,7 @@ function createBoxTarget(data, opts, dist)
             options[i] = {
                 icon = opts[i].icon,
                 label = opts[i].label,
-                item = opts[i].item or nil,
+                items = opts[i].item or nil,
                 groups = opts[i].job or opts[i].gang,
                 onSelect = opts[i].onSelect or opts[i].action,
                 distance = dist,
@@ -336,7 +336,7 @@ function createCircleTarget(data, opts, dist)
             options[i] = {
                 icon = opts[i].icon,
                 label = opts[i].label,
-                item = opts[i].item or nil,
+                items = opts[i].item or nil,
                 groups = opts[i].job or opts[i].gang,
                 onSelect = opts[i].onSelect or opts[i].action,
                 distance = dist,
@@ -418,7 +418,7 @@ function createModelTarget(models, opts, dist)
             options[i] = {
                 icon = opts[i].icon,
                 label = opts[i].label,
-                item = opts[i].item or nil,
+                items = opts[i].item or nil,
                 groups = opts[i].job or opts[i].gang,
                 onSelect = opts[i].action,
                 distance = dist,
