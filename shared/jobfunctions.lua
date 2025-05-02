@@ -12,7 +12,9 @@
 -------------------------------------------------------------
 -- Global Duty Status
 -------------------------------------------------------------
-onDuty = false
+-- This attempts to sync up with the players framework onDuty variable
+-- This stops the script getting confused when one is false and one is true
+onDuty = not isServer() and getPlayer().onDuty or false
 
 -------------------------------------------------------------
 -- Boss Role Detection
@@ -92,11 +94,14 @@ end
 --- toggleDuty()  -- Player receives a notification of their new duty status.
 --- ```
 function toggleDuty()
-    onDuty = not onDuty
     if isStarted(QBExport) or isStarted(QBXExport) then
         TriggerServerEvent("QBCore:ToggleDuty")
+        Wait(100)
+        onDuty = getPlayer().onDuty
     elseif isStarted(RSGExport) then
         TriggerServerEvent("RSGCore:ToggleDuty")
+        Wait(100)
+        onDuty = getPlayer().onDuty
     else
         if onDuty then
             triggerNotify(nil, "Now on duty", "success")
@@ -105,6 +110,15 @@ function toggleDuty()
         end
     end
 end
+
+-- Framework specific functions to keep duty status synced
+RegisterNetEvent("QBCore:Client:OnJobUpdate", function(JobInfo) onDuty = JobInfo.onduty end)
+RegisterNetEvent("QBCore:Client:SetDuty", function(duty) onDuty = duty end)
+
+RegisterNetEvent("qbx_core:client:onJobUpdate", function(JobInfo) onDuty = JobInfo.onduty end)
+
+RegisterNetEvent("RSGCore:Client:OnJobUpdate", function(JobInfo) onDuty = JobInfo.onduty end)
+RegisterNetEvent("RSGCore:Client:SetDuty", function(duty) onDuty = duty end)
 
 -------------------------------------------------------------
 -- Interaction Functions
