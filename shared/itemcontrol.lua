@@ -433,7 +433,7 @@ function getDurability(item)
             if v.name == item then
                 if v.slot <= lowestSlot then
                     lowestSlot = v.slot
-                    durability = itemcheck[k].info.durability
+                    durability = itemcheck[k].info and itemcheck[k].info.durability or nil
                 end
             end
         end
@@ -445,7 +445,7 @@ function getDurability(item)
             if v.slot <= lowestSlot then
                 debugPrint(v.slot, itemcheck[k].metadata.durability)
                 lowestSlot = v.slot
-                durability = v.metadata.durability
+                durability = v.metadata and v.metadata.durability or nil
             end
         end
     end
@@ -455,7 +455,7 @@ function getDurability(item)
         for _, v in pairs(itemcheck) do
             if v.name == item and v.slot <= lowestSlot then
                 lowestSlot = v.slot
-                durability = v.info.durability
+                durability = v.info and v.info.durability or nil
             end
         end
     end
@@ -465,7 +465,7 @@ function getDurability(item)
         for _, v in pairs(itemcheck) do
             if v.name == item and v.slot <= lowestSlot then
                 lowestSlot = v.slot
-                durability = v.metadata.durability
+                durability = v.metadata and v.metadata.durability or nil
             end
         end
     end
@@ -475,7 +475,7 @@ function getDurability(item)
         for _, v in pairs(itemcheck) do
             if v.name == item and v.slot <= lowestSlot then
                 lowestSlot = v.slot
-                durability = v.info.durability
+                durability = v.info and v.info.durability or nil
             end
         end
     end
@@ -485,7 +485,7 @@ function getDurability(item)
         for _, v in pairs(itemcheck) do
             if v.name == item and v.slot <= lowestSlot then
                 lowestSlot = v.slot
-                durability = v.metadata.durability
+                durability = v.metadata and v.metadata.durability or nil
             end
         end
     end
@@ -495,7 +495,7 @@ function getDurability(item)
         for _, v in pairs(itemcheck) do
             if v.name == item and v.slot <= lowestSlot then
                 lowestSlot = v.slot
-                durability = v.metadata.durability
+                durability = v.metadata and v.metadata.durability or nil
             end
         end
     end

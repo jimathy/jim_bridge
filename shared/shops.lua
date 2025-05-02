@@ -157,7 +157,7 @@ function openShop(data)
     elseif isStarted(OXInv) then
         exports[OXInv]:openInventory('shop', { type = data.shop })
 
-    elseif isStarted(QSInv) then
+    elseif isStarted(QSInv) or isStarted(CodeMInv) then
         TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
 
     elseif isStarted(TgiannInv) then
