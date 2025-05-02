@@ -473,8 +473,8 @@ function getDurability(item)
     if isStarted(CodeMInv) then
         local itemcheck = exports[CodeMInv]:GetClientPlayerInventory()
         for _, v in pairs(itemcheck) do
-            if v.name == item and v.slot <= lowestSlot then
-                lowestSlot = v.slot
+            if v.name == item and tonumber(v.slot) <= lowestSlot then
+                lowestSlot = tonumber(v.slot)
                 durability = v.info and v.info.durability or nil
             end
         end
