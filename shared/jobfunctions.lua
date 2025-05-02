@@ -14,7 +14,13 @@
 -------------------------------------------------------------
 -- This attempts to sync up with the players framework onDuty variable
 -- This stops the script getting confused when one is false and one is true
-onDuty = not isServer() and getPlayer().onDuty or false
+onDuty = false
+
+if not isServer() then
+    onPlayerLoaded(function()
+        onDuty = getPlayer().onDuty
+    end, true)
+end
 
 -------------------------------------------------------------
 -- Boss Role Detection
