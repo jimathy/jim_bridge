@@ -35,7 +35,14 @@ function CheckBridgeVersion()
 				if compareResult == 0 then
 					print("^7'^3jim_bridge^7' - ^2You are running the latest version^7. ^7(^3"..currentVersionRaw.."^7)")
 				elseif compareResult < 0 then
+					-- Made the check a bit more obvious
+					print("^1----------------------------------------------------------------------^7")
 					print("^7'^3jim_bridge^7' - ^1You are running an outdated version^7! ^7(^3"..currentVersionRaw.."^7 → ^3"..newestVersionRaw.."^7)")
+					print("^1----------------------------------------------------------------------^7")
+					SetTimeout(1200000, function()
+						-- Do a naughty repeat message every 20 minutes until the the script is updated
+						CheckBridgeVersion()
+					end)
 				else
 					print("^7'^3jim_bridge^7' - ^5You are running a newer version ^7(^3"..currentVersionRaw.."^7 ← ^3"..newestVersionRaw.."^7)")
 				end
