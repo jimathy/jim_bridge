@@ -149,8 +149,8 @@ function BigMessage:ShowColoredShard(msg, desc, textColor, bgColor, duration, ma
     BeginScaleformMovieMethod(self.scaleform, "SHOW_SHARD_CENTERED_MP_MESSAGE")
     ScaleformMovieMethodAddParamPlayerNameString(msg)
     ScaleformMovieMethodAddParamPlayerNameString(desc)
-    ScaleformMovieMethodAddParamInt(bgColor)
     ScaleformMovieMethodAddParamInt(textColor)
+    ScaleformMovieMethodAddParamInt(bgColor)
     EndScaleformMovieMethod()
 
     self.duration = duration
