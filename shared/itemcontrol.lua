@@ -194,13 +194,13 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
         if newsrc == nil then -- must be coming from client this would be blank
             if token == nil then
                 debugPrint("^1Auth^7: ^1No token recieved^7")
-                dupeWarn(src, item, "Auth: Player "..src.." attempted to spawn "..item.." without an auth token")
+                dupeWarn(src, item, "^1Auth Error^7: ^3"..src.." ^1attempted to spawn ^7"..item.." ^1without an auth token^7")
             else
                 if type(token) ~= "number" then -- checks if the newsrc is a source or token, if number its coming form the server itself
                     debugPrint("^1Auth^7: ^2Auth token received^7, ^2checking against server cache^7..")
                     if token ~= validTokens[src] then
                         debugPrint("^1Auth^7: ^1Tokens don't match! ^7", token, validTokens[src])
-                        dupeWarn(src, item, "Auth: "..src.." attempted to spawn "..item.." with an incorrect auth token")
+                        dupeWarn(src, item, "^1Auth Error^7: ^3"..src.." ^1attempted to spawn ^7"..item.." ^1with an incorrect auth token^7")
                     else
                         debugPrint("^1Auth^7: ^2Client and Server Auth tokens match^7!", token, validTokens[src])
                         validTokens[src] = nil
@@ -370,13 +370,13 @@ end)
 --- ```lua
 --- dupeWarn(playerId, "health_potion")
 --- ```
-function dupeWarn(src, item, amount)
+function dupeWarn(src, item, message)
     local name = getPlayer(src).name
-    print("^5DupeWarn^7: "..name.." (^1"..tostring(src).."^7) ^2Tried to remove item '^3"..item.."^7'^2 but it wasn't there^7")
+    print(message or "^5DupeWarn^7: "..name.." (^1"..tostring(src).."^7) ^2Tried to remove item '^3"..item.."^7'^2 but it wasn't there^7")
     if not debugMode then
-        DropPlayer(src, name.."("..tostring(src)..") Kicked for suspected duplicating items: "..item)
+        DropPlayer(src, name.."("..tostring(src)..") kicked by exploit protection")
     end
-    print("^5DupeWarn^7: "..name.."(^1"..tostring(src).."^7) ^2Dropped from server - exploit protection detected an item not being found in players inventory^7")
+    print("^5DupeWarn^7: "..name.."(^1"..tostring(src).."^7) ^2Dropped from server - exploit protection^7")
 end
 
 -------------------------------------------------------------
