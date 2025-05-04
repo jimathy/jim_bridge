@@ -227,7 +227,9 @@ function getStash(stashName)
     local stashItems, items = {}, {}
     if isStarted(OXInv) then
         stashResource = OXInv
-        stashItems = exports[OXInv]:Inventory(stashName).items
+        local stash = exports[OXInv]:Inventory(stashName)
+        -- Add fallback if ox can't find the stash and returns a boolean
+        stashItems = type(stash) == "table" and stash.items or {}
 
     elseif isStarted(QSInv) then
         stashResource = QSInv
