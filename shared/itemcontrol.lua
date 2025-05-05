@@ -742,12 +742,19 @@ if isServer() then
             return ""
         end
         debugPrint("^1Auth^7: ^2Player Source^7: "..src.." ^2requested ^3AuthEvent^7", AuthEvent)
-        if not receivedEvent[src] then receivedEvent[src] = true
+        if not receivedEvent[src] then
+            receivedEvent[src] = true
             return AuthEvent
         else
             print("^1Auth^7: ^1Player ^7"..src.." ^1tried to request auth token more than once^7")
             return ""
         end
+    end)
+
+    RegisterNetEvent(getScript()..":clearAuthEventRequest", function()
+        local src = source
+        debugPrint("^1Auth^7: ^2Manually clearing Auth Event for Player Source^7:", src, AuthEvent)
+        receivedEvent[src] = nil
     end)
 
     -- Multiuse function to check if the generated client token is valid
@@ -781,6 +788,11 @@ else
     onPlayerLoaded(function()
         debugPrint("^1Auth^7: ^2Requesting ^3Auth Event^7")
         AuthEvent = triggerCallback(getScript()..":callback:GetAuthEvent")
+    end, true)
+
+    onPlayerUnload(function()
+        debugPrint("^1Auth^7: ^2Clearing Auth Event^7")
+        TriggerServerEvent(getScript()..":clearAuthEventRequest")
     end, true)
 end
 
