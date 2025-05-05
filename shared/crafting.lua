@@ -80,11 +80,6 @@ function craftingMenu(data)
     -- Build a table of all required ingredients (default quantity is 1).
     for i = 1, #Recipes do
         for k in pairs(Recipes[i]) do
-            if k == "hasCrafted" and not data.craftable.craftedItems then
-                -- Retreive list of already crafted items from playermetadata to see if we should class this recipe as "new"
-                craftedItems = GetMetadata(nil, "craftedItems") or {}
-                data.craftable.craftedItems = craftedItems
-            end
             if k ~= "amount" and k ~= "metadata" and k ~= "job" and k ~= "gang" then
                 tempCarryTable[k] = Recipes[i].amount or 1
             end
@@ -114,7 +109,7 @@ function craftingMenu(data)
                         settext = settext..(settext ~= "" and br or "")..(Items[l] and Items[l].label or "error - "..l)..(b > 1 and " x"..b or "")
                         metaTable[Items[l] and Items[l].label or "error - "..l] = b
                         itemTable[l] = b
-                        Wait(0)
+                        --Wait(0)
                     end
 
                     while not canCarryTable do Wait(0) end
@@ -122,25 +117,16 @@ function craftingMenu(data)
                     setheader = ((metadata and metadata.label) or (Items[tostring(k)] and Items[tostring(k)].label) or "error - "..tostring(k))
                                ..(Recipes[i]["amount"] > 1 and " x"..Recipes[i]["amount"] or "")
 
-                    if not disable then
-                        if not canCarryTable[k] then
-                            setheader = setheader.." 📦"
-                        else
-                            setheader = setheader.." ✔️"
-                        end
-                    elseif not canCarryTable[k] then
-                        setheader = setheader.." 📦"
-                    end
-                    if Recipes[i]["hasCrafted"] ~= nil and craftedItems[k] == nil then
-                        setheader = "✨ "..setheader
-                    end
+                    local statusEmoji = disable and " ❌" or not canCarryTable[k] and " 📦" or " ✔️"
+                    local isNew = (Recipes[i]["hasCrafted"] ~= nil and craftedItems[k] == nil) and "✨ " or ""
+                    setheader = isNew .. setheader .. statusEmoji
 
                     Menu[#Menu + 1] = {
                         arrow = not disable and canCarryTable[k],
                         isMenuHeader = disable or not canCarryTable[k],
                         icon = invImg((metadata and metadata.image) or tostring(k)),
                         image = invImg((metadata and metadata.image) or tostring(k)),
-                        header = setheader..((disable or not canCarryTable[k]) and " ❌" or ""),
+                        header = setheader,
                         txt = (isStarted(QBMenuExport) or disable) and settext or nil,
                         metadata = metaTable,
                         onSelect = (not disable and canCarryTable[k]) and function()
@@ -162,7 +148,7 @@ function craftingMenu(data)
                     }
                 end
             end
-            Wait(0)
+            --Wait(0)
         end
     end
 
@@ -208,16 +194,23 @@ end
 function multiCraft(data)
     local max = 0
     local stashName = nil
-    for i = 1, 100 do
-        local itemTable = {}
-        for l, b in pairs(data.craft[data.item]) do
-            debugPrint("")
-            itemTable[l] = (b * i)
-        end
+    local maxCreation = 100
 
+    -- Generate item table to check against stash or inventory
+    -- takes into account the ingredients needed for multiple items
+    local multiItemTable = {}
+
+    for i = 1, maxCreation do
+        multiItemTable[i] = {}
+        for l, b in pairs(data.craft[data.item]) do
+            multiItemTable[i][l] = (b * i)
+        end
+    end
+
+    for i = 1, maxCreation do
+        -- if its received a stash name, check if the items are in the stash
         if data.stashName then
-            debugPrint("")
-            local hasItems, stashname = checkStashItem(data.stashName, itemTable)
+            local hasItems, stashname = checkStashItem(data.stashName, multiItemTable[i])
             if hasItems == true then
                 max += 1
                 stashName = stashname
@@ -225,15 +218,14 @@ function multiCraft(data)
                 break
             end
         else
-            debugPrint("")
-            local has, _ = hasItem(itemTable, nil, nil)
+            -- if not check the players inventory for the items
+            local has, _ = hasItem(multiItemTable[i], nil, nil)
             if has then
                 max += 1
             else
                 break
             end
         end
-        Wait(10)
     end
 
     local dialog = createInput(data.craftable.Header, {
