@@ -179,7 +179,7 @@ end
 --- TriggerServerEvent(getScript()..":server:toggleItem", true, "health_potion", 1)
 --- ```
 RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount, newsrc, info, slot, token)
-    debugPrint(GetInvokingResource())
+    --debugPrint(GetInvokingResource())
 	if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= "qb-core" then
         debugPrint("^1Error^7: ^1Possible exploit^7, ^1vital function was called from an external resource^7")
         return
@@ -191,21 +191,9 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
 
     local src = newsrc or source
     if (give == true or give == 1) then
-        if newsrc == nil then -- must be coming from client this would be blank
-            if token == nil then
-                debugPrint("^1Auth^7: ^1No token recieved^7")
-                dupeWarn(src, item, "^1Auth Error^7: ^3"..src.." ^1attempted to spawn ^7"..item.." ^1without an auth token^7")
-            else
-                if type(token) ~= "number" then -- checks if the newsrc is a source or token, if number its coming form the server itself
-                    debugPrint("^1Auth^7: ^2Auth token received^7, ^2checking against server cache^7..")
-                    if token ~= validTokens[src] then
-                        debugPrint("^1Auth^7: ^1Tokens don't match! ^7", token, validTokens[src])
-                        dupeWarn(src, item, "^1Auth Error^7: ^3"..src.." ^1attempted to spawn ^7"..item.." ^1with an incorrect auth token^7")
-                    else
-                        debugPrint("^1Auth^7: ^2Client and Server Auth tokens match^7!", token, validTokens[src])
-                        validTokens[src] = nil
-                    end
-                end
+        if newsrc == nil then -- this must be coming from client this would be blank
+            if not checkToken(src, token, "item", item) then
+                return
             end
         end
     end
@@ -716,7 +704,7 @@ if isServer() then
     createCallback(AuthEvent, function(source)
         local src = source
         local token = keyGen()..keyGen()..keyGen()..keyGen()  -- Use a secure random generator here
-        debugPrint(GetInvokingResource())
+        --debugPrint(GetInvokingResource())
         if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= "qb-core" then
             debugPrint("^1Error^7: ^1Possible exploit^7, ^1vital function was called from an external resource^7")
             return  ""
@@ -748,7 +736,7 @@ if isServer() then
     receivedEvent = {}
     createCallback(getScript()..":callback:GetAuthEvent", function(source)
         local src = source
-        debugPrint(GetInvokingResource())
+        --debugPrint(GetInvokingResource())
         if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= "qb-core" then
             debugPrint("^1Error^7: ^1Possible exploit^7, ^1vital callback was called from an external resource^7")
             return ""
@@ -761,9 +749,38 @@ if isServer() then
             return ""
         end
     end)
+
+    -- Multiuse function to check if the generated client token is valid
+    function checkToken(src, token, genType, name)
+        if token == nil then
+            debugPrint("^1Auth^7: ^1No token recieved^7")
+            if genType == "stash" then
+                dupeWarn(src, name, "^1Auth Error^7: ^3"..src.." ^1create a stash ^7"..name.." ^1without an auth token^7")
+            elseif genType == "item" then
+                dupeWarn(src, name, "^1Auth Error^7: ^3"..src.." ^1attempted to spawn an item ^7"..name.." ^1without an auth token^7")
+            end
+            return false
+        else
+            debugPrint("^1Auth^7: ^2Auth token received^7, ^2checking against server cache^7..")
+            if token ~= validTokens[src] then
+                debugPrint("^1Auth^7: ^1Tokens don't match! ^7", token, validTokens[src])
+                if genType == "stash" then
+                    dupeWarn(src, name, "^1Auth Error^7: ^3"..src.." ^1create a stash ^7"..name.." ^1with an incorrect auth token^7")
+                elseif genType == "item" then
+                    dupeWarn(src, name, "^1Auth Error^7: ^3"..src.." ^1attempted to spawn an item ^7"..name.." ^1with an incorrect auth token^7")
+                end
+                return false
+            else
+                debugPrint("^1Auth^7: ^2Client and Server Auth tokens match^7!", token, validTokens[src])
+                validTokens[src] = nil
+                return true
+            end
+        end
+    end
 else
     onPlayerLoaded(function()
         debugPrint("^1Auth^7: ^2Requesting ^3Auth Event^7")
         AuthEvent = triggerCallback(getScript()..":callback:GetAuthEvent")
     end, true)
 end
+

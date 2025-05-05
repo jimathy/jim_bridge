@@ -441,17 +441,8 @@ RegisterNetEvent(getScript()..":Crafting:GetItem", function(ItemMake, craftable,
         return
     end
 
-    if token == nil then
-        debugPrint("^1Auth^7: ^1No token recieved^7")
-        dupeWarn(src, item, "Auth: Player "..src.." attempted to spawn "..item.." without an auth token")
-    else
-        if token ~= validTokens[src] then
-            debugPrint("^1Auth^7: ^1Tokens don't match! ^7", token, validTokens[src])
-            dupeWarn(src, item, "Auth: "..src.." attempted to trigger server only events with an incorrect auth token")
-        else
-            debugPrint("^1Auth^7: ^2Client and Server Auth tokens match^7!", token, validTokens[src])
-            validTokens[src] = nil
-        end
+    if not checkToken(src, token, "item", ItemMake) then
+        return
     end
 
 
