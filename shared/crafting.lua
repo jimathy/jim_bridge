@@ -251,6 +251,10 @@ function multiCraft(data)
 
         end
         if Config.System.Menu == "qb" then
+            if dialog["amount"] == nil or dialog["amount"] == "" then
+                dialog["amount"] = 1
+            end
+            dialog["amount"] = tonumber(dialog["amount"])
             if dialog["amount"] > max or dialog["amount"] < 1 or dialog["amount"] == nil or dialog["amount"] == "" then
                 triggerNotify(nil, "Invalid Amount", "error")
                 craftingMenu(data)
