@@ -15,6 +15,7 @@
 function lockInv(toggle)
     FreezeEntityPosition(PlayerPedId(), toggle)
     LocalPlayer.state:set("inv_busy", toggle, true)
+    LocalPlayer.state:set("invBusy", toggle, true)
     TriggerEvent('inventory:client:busy:status', toggle)
     TriggerEvent('canUseInventoryAndHotbar:toggle', not toggle)
 end
@@ -168,4 +169,39 @@ function getPlayerInv(src)
         print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3starter^1.^2lua^7")
     end
     return grabInv, foundInv
+end
+
+
+function isInventoryOpen()
+    if isStarted(OXInv) then
+        return LocalPlayer.state.invBusy
+
+    elseif isStarted(QSInv) then
+        return exports[QSInv]:inInventory()
+
+    elseif isStarted(OrigenInv) then
+        return exports[OrigenInv]:IsInventoryOpen()
+
+    elseif isStarted(CoreInv) then
+        return exports[CoreInv]:isInventoryOpen()
+
+    elseif isStarted(CodeMInv) then
+        return false -- CodeM doesn't have a function to check if the inventory is open
+
+    elseif isStarted(TgiannInv) then
+        return exports["tgiann-inventory"]:IsInventoryActive()
+
+    elseif isStarted(QBInv) then
+        return LocalPlayer.state.inv_busy
+
+    elseif isStarted(PSInv) then
+        return LocalPlayer.state.inv_busy
+
+    elseif ESX and isStarted(ESXExport) then
+        return false
+
+    elseif isStarted(RSGInv) then
+        return LocalPlayer.state.inv_busy
+
+    end
 end

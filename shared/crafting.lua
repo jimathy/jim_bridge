@@ -228,20 +228,24 @@ function multiCraft(data)
         end
     end
 
-    local dialog = createInput(data.craftable.Header, {
+    local carryMax = triggerCallback(getScript()..":server:getMaxCarryCraft", {
+        item = data.item,
+        max = max
+    })
+
+    local dialog = createInput(data.craftable.Header..(Config.System.Menu == "qb" and ": "..br.."How many to craft? "..br.."Max: "..carryMax or ""), {
         ((Config.System.Menu == "ox") and {
             type = "slider",
-            label = "How many to craft?",
+            label = "How many to craft? "..br.."Max: "..carryMax,
             required = true,
             default = 1,
             min = 1,
-            max = max
+            max = carryMax
         }) or nil,
         ((Config.System.Menu == "qb") and {
             type = "number",
-            label = "How many to craft?"..br.."Max: "..max,
             name = "amount",
-            isRecuired = true,
+            isRequired = true,
             default = 1,
         }) or nil,
     })
@@ -251,17 +255,13 @@ function multiCraft(data)
 
         end
         if Config.System.Menu == "qb" then
-            if dialog["amount"] == nil or dialog["amount"] == "" then
-                dialog["amount"] = 1
-            end
             dialog["amount"] = tonumber(dialog["amount"])
-            if dialog["amount"] > max or dialog["amount"] < 1 or dialog["amount"] == nil or dialog["amount"] == "" then
+            if dialog["amount"] > carryMax or dialog["amount"] < 1 or dialog["amount"] == nil or dialog["amount"] == "" then
                 triggerNotify(nil, "Invalid Amount", "error")
                 craftingMenu(data)
                 return
             end
         end
-
 
         makeItem({
             item = data.item,
@@ -270,7 +270,6 @@ function multiCraft(data)
             amount = dialog["amount"] or dialog[1],
             coords = data.coords,
             stashName = stashName or nil,
-            --stashTable = data.stashName,
             onBack = data.onBack,
             metadata = data.metadata,
         })
@@ -327,19 +326,23 @@ function makeItem(data)
     local crafted, crafting = true, true
     local cam = createTempCam(PlayerPedId(), data.coords)
     startTempCam(cam)
-
     for i = 1, craftAmount do
         for k, v in pairs(data.craft) do
             if not excludeKeys[k] then
                 if type(v) == "table" then
                     for l, b in pairs(v) do
+                        if isInventoryOpen() then
+                            print("^1Error^7: ^2Inventory is open, you tried to break things")
+                            crafted, crafting = false, false
+                            return
+                        end
                         if crafting and progressBar({
                             label = "Using "..b.." "..Items[l].label,
                             time = 1000,
                             cancel = true,
                             dict = 'pickup_object',
                             anim = "putdown_low",
-                            flag = 48,
+                            flag = 49,
                             icon = l,
                         }) then
                             TriggerEvent((isStarted(QBInv) and QBInvNew and "qb-" or "")..'inventory:client:ItemBox', Items[l], "use", b)
@@ -348,6 +351,11 @@ function makeItem(data)
                             break
                         end
                         Wait(200)
+                    end
+                    if isInventoryOpen() then
+                        print("^1Error^7: ^2Inventory is open, you tried to break things")
+                        crafted, crafting = false, false
+                        return
                     end
                     if crafted then
                         local craftProp = nil
@@ -358,6 +366,11 @@ function makeItem(data)
                         if data.sound then
                             local s = data.sound
                             PlaySoundFromEntity(s.soundId, s.audioName, PlayerPedId(), s.audioRef, true, 0)
+                        end
+                        if isInventoryOpen() then
+                            print("^1Error^7: ^2Inventory is open, you tried to break things")
+                            crafted, crafting = false, false
+                            return
                         end
                         if crafting and progressBar({
                             label = bartext..((metadata and metadata.label) or Items[data.item].label),
@@ -410,7 +423,6 @@ function makeItem(data)
     end
     stopTempCam()
     CraftLock = false
-    lockInv(false)
     if canReturn then craftingMenu(data) end
     ClearPedTasks(PlayerPedId())
 end

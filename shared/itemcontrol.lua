@@ -698,6 +698,26 @@ if isServer() then
         return result
     end)
 
+    createCallback(getScript()..":server:getMaxCarryCraft", function(source, data)
+        local src = source
+        local item = data.item
+        local max = data.max or 100
+
+        local maxCanCarry = 0
+        for i = 1, max do
+            local checkTable = {
+                [item] = i
+            }
+            local result = canCarry(checkTable, src)
+            if result[item] == true then
+                maxCanCarry = i
+            else
+                break
+            end
+        end
+        return maxCanCarry
+    end)
+
     local AuthEvent = getScript()..":"..keyGen()..keyGen()..keyGen()..keyGen()..":"..keyGen()..keyGen()..keyGen()..keyGen()
     validTokens = validTokens or {}
 
