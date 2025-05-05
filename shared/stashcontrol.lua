@@ -47,12 +47,12 @@ function GetStashTimeout(stashName, stop)
         stashCache[stashName] = { items = {}, timeout = 0 }
         stash = stashCache[stashName]
     else
-        debugPrint("^6Bridge^7: ^2Local Stash ^7'^3"..stashName.."^7'^2 cache found^7")
+        debugPrint("^6Bridge^7: ^2Local Stash for ^7'^3"..stashName.."^7'^2 cache found^7")
     end
 
     -- If there are already items in cache, skip recheck.
     if countTable(stashCache[stashName].items) > 0 then
-        debugPrint("^6Bridge^7: '^3"..stashName.." ^2Items found in cache, skipping recheck")
+        debugPrint("^6Bridge^7: '^3"..stashName.."^7' ^2Items found in local cache, skipping server recheck")
         return true
     end
 
@@ -90,20 +90,12 @@ function checkStashItem(stashes, itemTable)
     end
 
     if type(stashes) == "table" then
-        local successes = 0
-        local itemCount = countTable(itemTable)
+        debugPrint("^6Bridge^7: ^2Checking multiple stashes for ingredients^7")
         -- Iterate over each provided stash name.
         for _, name in pairs(stashes) do
-            Wait(10)  -- Delay to avoid multiple callbacks issues.
             GetStashTimeout(name)
-            for item, amount in pairs(itemTable) do
-                debugPrint("^6Bridge^7: ^2Checking "..(name and " '^3"..name.."^7'" or "").." ingredients - ^6"..item.."^7")
-                if stashhasItem(stashCache[name].items, item, amount) then
-                    successes += 1
-                    if successes == itemCount then
-                        return true, name
-                    end
-                end
+            if stashhasItem(stashCache[name].items, itemTable, nil) then
+                return true, name
             end
         end
     else
