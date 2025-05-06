@@ -186,10 +186,12 @@ function isInventoryOpen()
         return exports[CoreInv]:isInventoryOpen()
 
     elseif isStarted(CodeMInv) then
-        return false -- CodeM doesn't have a function to check if the inventory is open
+        return false
+        -- CodeM doesn't have a function to check if the inventory is open
+        -- No idea what it uses, so it just skips the check
 
     elseif isStarted(TgiannInv) then
-        return exports["tgiann-inventory"]:IsInventoryActive()
+        return exports[TgiannInv]:IsInventoryActive()
 
     elseif isStarted(QBInv) then
         return LocalPlayer.state.inv_busy
