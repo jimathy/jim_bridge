@@ -174,7 +174,7 @@ function openStash(data)
             })
         else
             TriggerEvent("inventory:client:SetCurrentStash", data.stash)
-            TriggerServerEvent("ps-inventory:server:OpenInventory", "stash", data.stash, data.stashOptions)
+            TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, data.stashOptions)
         end
 
     elseif isStarted(RSGInv) then
