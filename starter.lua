@@ -47,10 +47,10 @@ if Config and Config.System then
     end
 
     Config.System.Menu = GetConvar("jim_menuScript", Config.System.Menu)
-    Config.System.Notify = GetConvar("jim_notifyScript", Config.System.Notify)
-    Config.System.ProgressBar = GetConvar("jim_progressBarScript", Config.System.ProgressBar)
-    Config.System.drawText = GetConvar("jim_drawTextScript", Config.System.drawText)
-    Config.System.skillCheck = GetConvar("jim_skillCheckScript", Config.System.skillCheck)
+    Config.System.Notify = GetConvar("jim_notifyScript", Config.System.Notify or "gta")
+    Config.System.ProgressBar = GetConvar("jim_progressBarScript", Config.System.ProgressBar or "gta")
+    Config.System.drawText = GetConvar("jim_drawTextScript", Config.System.drawText or "gta")
+    Config.System.skillCheck = GetConvar("jim_skillCheckScript", Config.System.skillCheck or "gta")
 
     if GetConvar("jim_dontUseTarget", "false") == "true" then
         Config.System.DontUseTarget = true
