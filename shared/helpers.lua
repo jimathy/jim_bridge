@@ -21,6 +21,10 @@
 --- end
 --- ```
 function isStarted(script)
+    if not script then
+        print("^1Error^7: ^1Tried to check if ^3nil^2 was started^7, ^1returning ^4false^7")
+        return false
+    end
     return GetResourceState(script):find("start") ~= nil
 end
 
