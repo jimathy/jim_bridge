@@ -626,8 +626,25 @@ function canCarry(itemTable, src)
             end
 
         elseif isStarted(QBInv) then
-            for k, v in pairs(itemTable) do
-                resultTable[k] = exports[QBInv]:CanAddItem(src, k, v)
+            if QBInvNew then
+                for k, v in pairs(itemTable) do
+                    resultTable[k] = exports[QBInv]:CanAddItem(src, k, v)
+                end
+            else
+                local items = getPlayerInv(src)
+                local totalWeight = 0
+                if not items then return false end
+                for _, item in pairs(items) do
+                    totalWeight += (item.weight * item.amount)
+                end
+                for k, v in pairs(itemTable) do
+                    local itemInfo = Items[k]
+                    if not itemInfo and not Player.Offline then
+                        resultTable[k] = true
+                    else
+                        resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight
+                    end
+                end
             end
 
         elseif isStarted(PSInv) then
