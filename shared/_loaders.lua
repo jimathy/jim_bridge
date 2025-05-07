@@ -99,7 +99,7 @@ end
 --- end, true)
 --- ```
 function onResourceStart(func, thisScript)
-    debugPrint("^6Bridge^7: Registering ^3onResourceStart^7()")
+    debugPrint("^6Bridge^7: ^2Registering ^3onResourceStart^7()")
     AddEventHandler('onResourceStart', function(resourceName)
         if getScript() == resourceName and (thisScript or true) then
             func()
