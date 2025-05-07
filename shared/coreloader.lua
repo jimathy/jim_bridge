@@ -9,7 +9,7 @@
 -------------------------------------------------------------
 -- Global Variable Initialization
 -------------------------------------------------------------
-Items, Vehicles, Jobs, Gangs, Core, ESX = {}, nil, nil, nil, nil, nil
+Items, Vehicles, Jobs, Gangs, Core = {}, nil, nil, nil, nil
 
 -------------------------------------------------------------
 -- Correct QB Inventory Export
@@ -96,13 +96,7 @@ elseif isStarted(QBExport) then
 
 elseif isStarted(ESXExport) then
     itemResource = ESXExport
-    ESX = exports[ESXExport]:getSharedObject()
-    while ESX == nil do
-        print("Waiting for ESX")
-        Wait(0)
-    end
     CreateThread(function()
-        while not ESX do Wait(0) end
         if isServer() then
             Items = ESX.GetItems()
             while not createCallback do Wait(100) end
@@ -140,6 +134,7 @@ end
 -------------------------------------------------------------
 -- Compile vehicles from the detected frameworks into a unified table.
 if isStarted(QBXExport) or isStarted(QBExport) then
+    vehResource = QBExport
     Core = Core or exports[QBExport]:GetCoreObject()
     Vehicles = Core and Core.Shared.Vehicles
     if isStarted(QBExport) and not isStarted(QBXExport) then
@@ -148,26 +143,23 @@ if isStarted(QBXExport) or isStarted(QBExport) then
             Vehicles = Core and Core.Shared.Vehicles
         end)
     end
-    vehResource = QBExport
 
 elseif isStarted(OXCoreExport) then
+    vehResource = OXCoreExport
     Vehicles = {}
     for k, v in pairs(Ox.GetVehicleData()) do
         Vehicles[k] = { model = k, hash = GetHashKey(k), price = v.price, name = v.name, brand = v.make }
     end
-    vehResource = OXCoreExport
 
 elseif isStarted(ESXExport) then
+    vehResource = ESXExport
     CreateThread(function()
         if isServer() then
-            vehResource = ESXExport
             createCallback(getScript()..":getVehiclesPrices", function(source)
                 return Vehicles
             end)
             while not MySQL do Wait(2000) print("^1Waiting for MySQL to exist") end
             Vehicles = MySQL.query.await('SELECT model, price, name FROM vehicles')
-            --jsonPrint(Vehicles)
-            --while not createCallback do print("waiting") Wait(100) end
         end
         if not isServer() then
             --while not triggerCallback do print("waiting") Wait(100) end
@@ -186,19 +178,19 @@ elseif isStarted(ESXExport) then
     end)
 
 elseif isStarted(RSGExport) then
+    vehResource = RSGExport
     Core = Core or exports[RSGExport]:GetCoreObject()
     Vehicles = Core and Core.Shared.Vehicles
     RegisterNetEvent('RSGCore:Client:UpdateObject', function()
         Core = Core or exports[RSGExport]:GetCoreObject()
         Vehicles = Core and Core.Shared.Vehicles
     end)
-    vehResource = RSGExport
 end
 if vehResource == nil then
     print("^4ERROR^7: ^2No Vehicle info detected ^7- ^2Check ^3starter^1.^2lua^7")
 else
     CreateThread(function()
-        while not Vehicles do Wait(1000) print("Waiting") end
+        while not Vehicles do Wait(1000) end
         debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Vehicles).." ^3Vehicles^2 from ^7"..vehResource)
     end)
 end
@@ -246,7 +238,7 @@ elseif isStarted(QBExport) then
     end
 
 elseif isStarted(ESXExport) then
-    ESX = exports[ESXExport]:getSharedObject()
+    jobResource = ESXExport
     if isServer() then
         Jobs = ESX.GetJobs()
         for k, v in pairs(Jobs) do
@@ -256,7 +248,6 @@ elseif isStarted(ESXExport) then
         Gangs = Jobs
     end
     CreateThread(function()
-        while not ESX do Wait(0) end
         if isServer() then
             createCallback(getScript()..":getJobs", function(source)
                 return Jobs
