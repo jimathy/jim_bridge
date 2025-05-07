@@ -59,7 +59,7 @@ function GetStashTimeout(stashName, stop)
     -- If timeout has expired, update the stash items from the server.
     if stashCache[stashName].timeout <= 0 then
         stashCache[stashName].items = triggerCallback(getScript()..':server:GetStashItems', stashName)
-        stashCache[stashName].timeout = 15000  -- Timeout in milliseconds.
+        stashCache[stashName].timeout = 10000  -- Timeout in milliseconds.
         CreateThread(function()
             while stashCache[stashName] and stashCache[stashName].timeout > 0 do
                 stashCache[stashName].timeout -= 1000
@@ -270,13 +270,13 @@ function getStash(stashName)
 
     elseif isStarted(QBInv) then
         stashResource = QBInv
-        local result = MySQL.scalar.await("SELECT items FROM "..(QBInvNew and "inventories" or "stashitems").." WHERE identifier = ?", { stashName })
-        if result then stashItems = json.decode(result) end
-
-    elseif isStarted(PSInv) then
-        stashResource = PSInv
-        local result = MySQL.scalar.await("SELECT items FROM stashitems WHERE identifier = ?", { stashName })
-        if result then stashItems = json.decode(result) end
+        if QBInvNew then
+            local result = exports[QBInv]:GetInventory(stashName) or {}
+            stashItems = result.items or {}
+        else
+            local result = MySQL.scalar.await("SELECT items FROM stashitems WHERE stash = ?", { stashName })
+            if result then stashItems = json.decode(result) end
+        end
 
     elseif isStarted(RSGInv) then
         stashResource = RSGInv
