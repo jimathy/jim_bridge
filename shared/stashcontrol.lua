@@ -144,7 +144,7 @@ function openStash(data)
         exports[OrigenInv]:openInventory('stash', data.stash, { label = data.label })
 
     elseif isStarted(TgiannInv) then
-        TriggerServerEvent(getScript()..':server:OpenStashTgiann', {
+        TriggerServerEvent(getScript()..':server:openServerStash', {
             stashName = data.stash,
             label = data.label,
             maxweight = data.maxWeight or 600000,
@@ -153,7 +153,7 @@ function openStash(data)
 
     elseif isStarted(QBInv) then
         if QBInvNew then
-            TriggerServerEvent(getScript()..':server:OpenStashQB', {
+            TriggerServerEvent(getScript()..':server:openServerStash', {
                 stashName = data.stash,
                 label = data.label,
                 maxweight = data.maxWeight or 600000,
@@ -164,8 +164,21 @@ function openStash(data)
             TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, data.stashOptions)
         end
 
+    elseif isStarted(PSInv) then
+        if QBInvNew then
+            TriggerServerEvent(getScript()..':server:openServerStash', {
+                stashName = data.stash,
+                label = data.label,
+                maxweight = data.maxWeight or 600000,
+                slots = data.slots or 40
+            })
+        else
+            TriggerEvent("inventory:client:SetCurrentStash", data.stash)
+            TriggerServerEvent("ps-inventory:server:OpenInventory", "stash", data.stash, data.stashOptions)
+        end
+
     elseif isStarted(RSGInv) then
-        TriggerServerEvent(getScript()..':server:OpenStashRSG', {
+        TriggerServerEvent(getScript()..':server:openServerStash', {
             stashName = data.stash,
             label = data.label,
             maxweight = data.maxWeight or 600000,
@@ -181,16 +194,23 @@ function openStash(data)
     lookEnt(data.coords)
 end
 
-RegisterNetEvent(getScript()..':server:OpenStashTgiann', function(data)
-    exports[TgiannInv]:OpenInventory(source, 'stash', data.stashName, data)
-end)
 
-RegisterNetEvent(getScript()..':server:OpenStashQB', function(data)
-    exports[QBInv]:OpenInventory(source, data.stashName, data)
-end)
-
-RegisterNetEvent(getScript()..':server:OpenStashRSG', function(data)
-    exports[RSGInv]:OpenInventory(source, data.stashName, data)
+-- Wrapper function for opening stash from the server.
+-- Messy but not much else I can do about it.
+RegisterNetEvent(getScript()..":server:openServerStash", function(data)
+    local src = source
+    if isStarted(TgiannInv) then
+        exports[TgiannInv]:OpenInventory(source, 'stash', data.stashName, data)
+    end
+    if isStarted(QBInv) then
+        exports[QBInv]:OpenInventory(source, data.stashName, data)
+    end
+    if isStarted(PSInv) then
+        exports[PSInv]:OpenInventory(source, data.stashName, data)
+    end
+    if isStarted(RSGInv) then
+        exports[RSGInv]:OpenInventory(source, data.stashName, data)
+    end
 end)
 
 
@@ -250,7 +270,12 @@ function getStash(stashName)
 
     elseif isStarted(QBInv) then
         stashResource = QBInv
-        local result = MySQL.scalar.await("SELECT items FROM "..(QBInvNew and "inventories" or "stashitem").." WHERE identifier = ?", { stashName })
+        local result = MySQL.scalar.await("SELECT items FROM "..(QBInvNew and "inventories" or "stashitems").." WHERE identifier = ?", { stashName })
+        if result then stashItems = json.decode(result) end
+
+    elseif isStarted(PSInv) then
+        stashResource = PSInv
+        local result = MySQL.scalar.await("SELECT items FROM stashitems WHERE identifier = ?", { stashName })
         if result then stashItems = json.decode(result) end
 
     elseif isStarted(RSGInv) then
@@ -330,7 +355,7 @@ function stashRemoveItem(stashItems, stashName, items)
                         debugPrint("^6Bridge^7: ^2None of this item left in stash ^3Stash^7", k, v)
                         stashItems[l] = nil
                     else
-                        debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QBInv, k, v)
+                        debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QSInv, k, v)
                         exports[QSInv]:RemoveItemIntoStash(stashName[1], k, v, l)
                     end
                 end
@@ -373,26 +398,6 @@ function stashRemoveItem(stashItems, stashName, items)
             debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..TgiannInv, k, v)
         end
 
-    elseif isStarted(PSInv) then
-        for k, v in pairs(items) do
-            for l in pairs(stashItems) do
-                if stashItems[l].name == k then
-                    if (stashItems[l].amount - v) <= 0 then
-                        debugPrint("^6Bridge^7: ^2None of this item left in stash ^3Stash^7", k, v)
-                        stashItems[l] = nil
-                    else
-                        debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QBInv, k, v)
-                        stashItems[l].amount -= v
-                    end
-                end
-            end
-        end
-        debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName.."^7'")
-        MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
-            ['stash'] = stashName,
-            ['items'] = json.encode(stashItems)
-        })
-
     elseif isStarted(QBInv) then
         if QBInvNew then
             for k, v in pairs(items) do
@@ -424,6 +429,27 @@ function stashRemoveItem(stashItems, stashName, items)
                 ['items'] = json.encode(stashItems)
             })
         end
+
+
+    elseif isStarted(PSInv) then
+        for k, v in pairs(items) do
+            for l in pairs(stashItems) do
+                if stashItems[l].name == k then
+                    if (stashItems[l].amount - v) <= 0 then
+                        debugPrint("^6Bridge^7: ^2None of this item left in stash ^3Stash^7", k, v)
+                        stashItems[l] = nil
+                    else
+                        debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..PSInv, k, v)
+                        stashItems[l].amount -= v
+                    end
+                end
+            end
+        end
+        debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName.."^7'")
+        MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+            ['stash'] = stashName,
+            ['items'] = json.encode(stashItems)
+        })
 
     elseif isStarted(RSGInv) then
         for k, v in pairs(items) do
@@ -489,4 +515,76 @@ function stashhasItem(stashItems, items, amount)
     for k, v in pairs(hasTable) do if v.hasItem == false then return false, hasTable end end
 
     return true, hasTable
+end
+
+
+--- Registers a stash with the active inventory system.
+--- Supports either OXInv or QSInv.
+---
+--- @param name string Unique stash identifier.
+--- @param label string Display name for the stash.
+--- @param slots number|nil (Optional) Number of slots (default 50).
+--- @param weight number|nil (Optional) Maximum weight (default 4000000).
+--- @param owner string|nil (Optional) Owner identifier for personal stashes.
+--- @param coords table|nil (Optional) Coordinates for the stash location.
+--- @usage
+--- ```lua
+--- registerStash(
+---     "playerStash",
+---     "Player Stash",
+---     100,
+---     8000000,
+---     "player123",
+---     { x = 100.0, y = 200.0, z = 30.0 }
+--- )
+--- ```
+function registerStash(name, label, slots, weight, owner, coords)
+    if isStarted(OXInv) then
+        debugPrint("^6Bridge^7: ^2Registering ^3OX ^2Stash^7:", name, label, owner or nil)
+        exports[OXInv]:RegisterStash(name, label, slots or 50, weight or 4000000, owner or nil)
+
+    elseif isStarted(QSInv) then
+        debugPrint("^6Bridge^7: ^2Registering ^3QS ^2Stash^7:", name, label)
+        exports[QSInv]:RegisterStash(name, label, slots or 50, weight or 4000000)
+
+    --elseif isStarted(CoreInv) then
+    --    debugPrint("^6Bridge^7: ^2Registering ^3CoreInv ^2Stash^7:", name, label)
+    --    exports[CoreInv]:openHolder(nil, name, 'stash', nil, nil, false, nil)
+
+    elseif isStarted(OrigenInv) then
+        debugPrint("^6Bridge^7: ^2Registering ^3OrigenInv ^2Stash^7:", name, label)
+        exports["origen_inventory"]:registerStash(name, label, slots or 50, weight or 4000000)
+
+    elseif isStarted(TgiannInv) then
+        debugPrint("^6Bridge^7: ^2Registering ^3TgiannInv ^2Stash^7:", name, label)
+        exports[TgiannInv]:RegisterStash(name, label, slots or 50, weight or 4000000)
+
+    end
+end
+
+if isServer() then
+    --- Registers an event to create an OX stash from the server.
+    --- When triggered, it calls registerStash with the provided parameters.
+    ---
+    --- @event server:makeOXStash
+    --- @param name string Unique stash identifier.
+    --- @param label string Display name for the stash.
+    --- @param slots number|nil (Optional) Number of slots.
+    --- @param weight number|nil (Optional) Maximum weight.
+    --- @param owner string|nil (Optional) Owner identifier.
+    --- @param coords table|nil (Optional) Stash coordinates.
+    --- @usage
+    --- ```lua
+    --- TriggerEvent(getScript()..":server:makeOXStash", name, label, slots, weight, owner, coords, token)
+    --- ```
+    RegisterNetEvent(getScript()..":server:makeOXStash", function(name, label, slots, weight, owner, coords, token)
+        local src = source or nil
+        if src then
+            if not checkToken(src, token, "stash", name) then
+                return
+            end
+        end
+
+        registerStash(name, label, slots, weight, owner, coords)
+    end)
 end

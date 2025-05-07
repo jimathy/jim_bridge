@@ -15,7 +15,7 @@ Items, Vehicles, Jobs, Gangs, Core, ESX = {}, nil, nil, nil, nil, nil
 -- Correct QB Inventory Export
 -------------------------------------------------------------
 -- Ensure that the QB inventory export is corrected from 'qb-inventory' to 'ps-inventory' or 'lj-inventory' if needed.
-Exports.QBInv = (isStarted("ps-inventory") and "ps-inventory") or (isStarted("lj-inventory") and "lj-inventory") or Exports.QBInv
+Exports.PSInv = (isStarted("ps-inventory") and "ps-inventory") or (isStarted("lj-inventory") and "lj-inventory")
 
 -------------------------------------------------------------
 -- Framework Exports and Inventory Identifiers

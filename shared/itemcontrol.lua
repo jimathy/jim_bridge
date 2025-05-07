@@ -52,53 +52,6 @@ function createUseableItem(item, funct)
     end
 end
 
--------------------------------------------------------------
--- Item Image Retrieval
--------------------------------------------------------------
-
---- Retrieves the NUI link for an item's image from the active inventory system.
----
---- @param item string The item name.
---- @return string string A `nui://` link to the item's image, or an empty string if not found.
----
---- @usage
---- ```lua
---- local imageLink = invImg("health_potion")
---- if imageLink ~= "" then print(imageLink) end
---- ```
-function invImg(item)
-    local imgLink = ""
-    if item ~= "" and Items[item] then
-        if isStarted(OXInv) then
-            imgLink = "nui://"..OXInv.."/web/images/"..(Items[item].image or "")
-
-        elseif isStarted(QSInv) then
-            imgLink = "nui://"..QSInv.."/html/images/"..(Items[item].image or "")
-
-        elseif isStarted(CoreInv) then
-            imgLink = "nui://"..CoreInv.."/html/img/"..(Items[item].image or "")
-
-        elseif isStarted(CodeMInv) then
-            imgLink = "nui://"..CodeMInv.."/html/itemimages/"..(Items[item].image or "")
-
-        elseif isStarted(OrigenInv) then
-            imgLink = "nui://"..OrigenInv.."/html/img/"..(Items[item].image or "")
-
-        elseif isStarted(QBInv) then
-            imgLink = "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
-
-        elseif isStarted(TgiannInv) then
-            imgLink = "nui://inventory_images/images/"..(Items[item].image or "")
-
-        elseif isStarted(RSGInv) then
-            imgLink = "nui://"..RSGInv.."/html/images/"..(Items[item].image or "")
-
-        else
-            print("^4ERROR^7: ^2No Inventory detected for invImg - Check starter.lua")
-        end
-    end
-    return imgLink
-end
 
 -------------------------------------------------------------
 -- Adding and Removing Items
@@ -209,25 +162,32 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
             dupeWarn(src, item, amount)
 
         else
-            if isStarted(OXInv) then invName = OXInv
+            if isStarted(OXInv) then
+                invName = OXInv
                 exports[OXInv]:RemoveItem(src, item, remamount, nil)
 
-            elseif isStarted(QSInv) then invName = QSInv
+            elseif isStarted(QSInv) then
+                invName = QSInv
                 exports[QSInv]:RemoveItem(src, item, remamount)
 
-            elseif isStarted(CoreInv) then invName = CoreInv
+            elseif isStarted(CoreInv) then
+                invName = CoreInv
                 exports[CoreInv]:removeItem(src, item, remamount)
 
-            elseif isStarted(OrigenInv) then invName = OrigenInv
+            elseif isStarted(OrigenInv) then
+                invName = OrigenInv
                 exports[OrigenInv]:removeItem(src, item, remamount)
 
-            elseif isStarted(CodeMInv) then invName = CodeMInv
+            elseif isStarted(CodeMInv) then
+                invName = CodeMInv
                 exports[CodeMInv]:RemoveItem(src, item, remamount)
 
-            elseif isStarted(TgiannInv) then invName = TgiannInv
+            elseif isStarted(TgiannInv) then
+                invName = TgiannInv
                 exports[TgiannInv]:RemoveItem(src, item, remamount)
 
-            elseif isStarted(QBInv) then invName = QBInv
+            elseif isStarted(QBInv) then
+                invName = QBInv
                 while remamount > 0 do
                     if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1, slot) then
                         remamount -= 1
@@ -239,7 +199,9 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
                 if Config.Crafting.showItemBox then
                     TriggerClientEvent((isStarted(QBInv) and QBInvNew and "qb-" or "").."inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
                 end
-            elseif isStarted(PSInv) then invName = PSInv
+
+            elseif isStarted(PSInv) then
+                invName = PSInv
                 while remamount > 0 do
                     if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1, slot) then
                         remamount -= 1
@@ -312,17 +274,18 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
                 TriggerClientEvent((isStarted(QBInv) and QBInvNew and "qb-" or "").."inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
             end
 
+        elseif isStarted(PSInv) then invName = PSInv
+            if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
+                if Config.Crafting.showItemBox then
+                    TriggerClientEvent("ps-inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
+                end
+            end
+
         elseif isStarted(RSGInv) then invName = RSGInv
             if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
                 TriggerClientEvent("rsg-inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
             end
 
-        elseif isStarted(PSInv) then invName = PSInv
-            if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
-                if Config.Crafting.showItemBox then
-                    TriggerClientEvent("inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
-                end
-            end
         end
 
         if invName == "" then

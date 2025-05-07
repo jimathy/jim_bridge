@@ -207,3 +207,54 @@ function isInventoryOpen()
 
     end
 end
+
+-------------------------------------------------------------
+-- Item Image Retrieval
+-------------------------------------------------------------
+
+--- Retrieves the NUI link for an item's image from the active inventory system.
+---
+--- @param item string The item name.
+--- @return string string A `nui://` link to the item's image, or an empty string if not found.
+---
+--- @usage
+--- ```lua
+--- local imageLink = invImg("health_potion")
+--- if imageLink ~= "" then print(imageLink) end
+--- ```
+function invImg(item)
+    local imgLink = ""
+    if item ~= "" and Items[item] then
+        if isStarted(OXInv) then
+            imgLink = "nui://"..OXInv.."/web/images/"..(Items[item].image or "")
+
+        elseif isStarted(QSInv) then
+            imgLink = "nui://"..QSInv.."/html/images/"..(Items[item].image or "")
+
+        elseif isStarted(CoreInv) then
+            imgLink = "nui://"..CoreInv.."/html/img/"..(Items[item].image or "")
+
+        elseif isStarted(CodeMInv) then
+            imgLink = "nui://"..CodeMInv.."/html/itemimages/"..(Items[item].image or "")
+
+        elseif isStarted(OrigenInv) then
+            imgLink = "nui://"..OrigenInv.."/html/img/"..(Items[item].image or "")
+
+        elseif isStarted(QBInv) then
+            imgLink = "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
+
+        elseif isStarted(PSInv) then
+            imgLink = "nui://"..PSInv.."/html/images/"..(Items[item].image or "")
+
+        elseif isStarted(TgiannInv) then
+            imgLink = "nui://inventory_images/images/"..(Items[item].image or "")
+
+        elseif isStarted(RSGInv) then
+            imgLink = "nui://"..RSGInv.."/html/images/"..(Items[item].image or "")
+
+        else
+            print("^4ERROR^7: ^2No Inventory detected for invImg - Check starter.lua")
+        end
+    end
+    return imgLink
+end
