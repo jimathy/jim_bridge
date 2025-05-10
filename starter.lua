@@ -57,78 +57,58 @@ if Config and Config.System then
     end
 end
 
--- Testing loading the core files here instead of in fxmanifests
+-- Load the core files here instead of in fxmanifests
 -- Forcefully loads the files and quietly, compared to fxmanifest complaining if they don't exist when you don't need them all
-
---[[
--- Shared framework file loader
-for k, v in pairs({ -- This is a specific load order
-    [Exports.OXLibExport] = "init.lua",
-    [Exports.OXCoreExport] = "lib/init.lua",
-    [Exports.ESXExport] = "imports.lua",
-    [Exports.QBXExport] = "modules/playerdata.lua",
-}) do
-    local state = GetResourceState(k)
-    -- if the resource is started, load the file
-    if state == "started" then
-        if type(v) == "string" then
-            v = { v }
-        end
-        for _, file in pairs(v) do
-            --print("^5CoreLoader^7: '"..k.."/"..file.."' ^2into ^7'"..GetCurrentResourceName().."' ...")
-            local fileLoader = assert(load(LoadResourceFile(k, (file)), ('@@'..k..'/'..file)))
-            fileLoader()
-            print("^5CoreLoader^7: ^2loaded ^1Core ^2file^7: ^3"..k.."^7/^3"..(file):gsub("/", "^7/^3"):gsub("%.lua", "^7.lua").."^7")
-        end
-    end
-
-    -- if script is in server, but not started warn the user
-    if state == "uninitialized" or state == "stopped" then
-        print("^5CoreLoader^7: ^3"..k.." ^1 found but it wasn't started^7. ^1Check your ^3server^7.^3cfg ^1load order^7")
-    end
-
-    -- debugging only, if the script is missing, warn the user
-    if state == "missing" then
-        if debugMode then
-            print("^5CoreLoader^7: ^3"..k.." ^2not found^7, ^2skipping")
-        end
-    end
-end
-
--- Client only file loader
-if not IsDuplicityVersion() then
-    for k, v in pairs({ -- This is a specific load order
+local filesToLoad = {
+    Shared = {
+        [Exports.OXLibExport] = { "init.lua" },
+        [Exports.OXCoreExport] = { "lib/init.lua" },
+        [Exports.ESXExport] = { "imports.lua" },
+        [Exports.QBXExport] = { "modules/playerdata.lua" },
+    },
+    Client = {
         ["PolyZone"] = { "client.lua", "BoxZone.lua", "EntityZone.lua", "CircleZone.lua", "ComboZone.lua" },
         ["warmenu"] = { "warmenu.lua", },
-    }) do
-        local state = GetResourceState(k)
-        -- if the resource is started, load the file
-        if state == "started" then
-            if type(v) == "string" then
-                v = { v }
-            end
-            for _, file in pairs(v) do
-                --print("^5CoreLoader^7: '"..k.."/"..file.."' ^2into ^7'"..GetCurrentResourceName().."' ...")
-                local fileLoader = assert(load(LoadResourceFile(k, (file)), ('@@'..k..'/'..file)))
-                fileLoader()
-                print("^5CoreLoader^7: ^2loaded ^1Core ^2file^7: ^3"..k.."^7/^3"..(file):gsub("/", "^7/^3"):gsub("%.lua", "^7.lua").."^7")
-            end
-        end
+    },
+}
 
-        -- if script is in server, but not started warn the user
-        if state == "uninitialized" or state == "stopped" then
-            print("^5CoreLoader^7: ^3"..k.." ^1 found but it wasn't started^7. ^1Check your ^3server^7.^3cfg ^1load order^7")
-        end
+-- Shared framework file loader
+for Type, ScriptTable in pairs(filesToLoad) do
+    if Type == "Client" and IsDuplicityVersion() then
+        goto continue
+    else
+        for scriptName, files in pairs(ScriptTable) do
+            local state = GetResourceState(scriptName)
+            -- if the resource is started, load the file
+            if state == "started" then
+                -- Force items into a table if they are not
+                if type(files) == "string" then
+                    files = { files }
+                end
+                for _, file in pairs(files) do
+                    --print("^5CoreLoader^7: '"..k.."/"..file.."' ^2into ^7'"..GetCurrentResourceName().."' ...")
+                    local fileLoader = assert(load(LoadResourceFile(scriptName, (file)), ('@@'..scriptName..'/'..file)))
+                    fileLoader()
+                    print("^5CoreLoader^7: ^2loaded ^1Core ^2file^7: ^3"..scriptName.."^7/^3"..(file):gsub("/", "^7/^3"):gsub("%.lua", "^7.lua").." ^2into ^7'"..GetCurrentResourceName().."'")
+                end
+            end
 
-        -- debugging only, if the script is missing, warn the user
-        if state == "missing" then
-            if debugMode then
-                print("^3Warning^7: ^3"..k.." ^2not found^7, ^2skipping")
+            -- if script is in server, but not started warn the user
+            if state == "uninitialized" or state == "stopped" then
+                print("^5CoreLoader^7: ^3"..scriptName.." ^1 found but it wasn't started^7.")
+                print("^1Check your ^3server^7.^3cfg ^1load order^7")
+            end
+
+            -- debugging only, if the script is missing, warn the user
+            if state == "missing" then
+                if debugMode then
+                    print("^5CoreLoader^7: ^3"..scriptName.." ^2not found^7, ^2skipping")
+                end
             end
         end
     end
+    ::continue::
 end
-]]
 
 -- Load files here into the invoking script
 for _, v in pairs({ -- This is a specific load order
