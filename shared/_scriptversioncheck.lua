@@ -30,7 +30,7 @@ local scriptAuthor = ("^2by ^4"..GetResourceMetadata(getScript(), 'author', nil)
 print(scriptName.." ^7v"..scriptVersion.."^7 - "..scriptDescription.." "..scriptAuthor.."^7")
 
 function CheckVersion()
-    if isServer() then
+    if isServer() and GetResourceMetadata(getScript(), 'author', nil) == "Jimathy" then
         CreateThread(function()
             Wait(4000)
 
