@@ -301,17 +301,17 @@ function ConsumeSuccess(itemName, type, data)
 
     if isStarted(ESXExport) then
         if hunger then
-            TriggerServerEvent(getScript()..":server:setNeed", "hunger", hunger * 10000)
+            TriggerServerEvent(getScript()..":server:setNeed", "hunger", tonumber(hunger) * 10000)
         end
         if thirst then
-            TriggerServerEvent(getScript()..":server:setNeed", "thirst", thirst * 10000)
+            TriggerServerEvent(getScript()..":server:setNeed", "thirst", tonumber(thirst) * 10000)
         end
     else
         if hunger then
-            TriggerServerEvent(getScript()..":server:setNeed", "hunger", Core.Functions.GetPlayerData().metadata["hunger"] + hunger)
+            TriggerServerEvent(getScript()..":server:setNeed", "hunger", Core.Functions.GetPlayerData().metadata["hunger"] + tonumber(hunger))
         end
         if thirst then
-            TriggerServerEvent(getScript()..":server:setNeed", "thirst", Core.Functions.GetPlayerData().metadata["thirst"] + thirst)
+            TriggerServerEvent(getScript()..":server:setNeed", "thirst", Core.Functions.GetPlayerData().metadata["thirst"] + tonumber(thirst))
         end
     end
 
@@ -325,7 +325,9 @@ function ConsumeSuccess(itemName, type, data)
         end
     end
 
-    getRandomReward(itemName)
+    if Config.Reward then
+        getRandomReward(itemName)
+    end
 end
 
 -------------------------------------------------------------
