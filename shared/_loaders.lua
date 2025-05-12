@@ -50,7 +50,13 @@ function onPlayerLoaded(func, onStart)
             AddEventHandler('QBCore:Client:OnPlayerLoaded', tempFunc)
         elseif isStarted(ESXExport) then
             onPlayerFramework = ESXExport
-            AddEventHandler('esx:playerLoaded', tempFunc)
+            AddEventHandler('esx:playerLoaded', function()
+                if waitForSharedLoad() then
+                    if isStarted(ESXExport) then Wait(11000) end
+                    tempFunc()
+                end
+            end
+        )
         elseif isStarted(OXCoreExport) then
             onPlayerFramework = OXCoreExport
             AddEventHandler('ox:playerLoaded', tempFunc)
@@ -103,7 +109,11 @@ function onResourceStart(func, thisScript)
     debugPrint("^6Bridge^7: ^2Registering ^3onResourceStart^7()")
     AddEventHandler('onResourceStart', function(resourceName)
         if getScript() == resourceName and (thisScript or true) then
-            func()
+            if waitForSharedLoad() then
+                print("^6Bridge^7: ^2Shared Load Detected^7.")
+                if isStarted(ESXExport) then Wait(10000) end
+                func()
+            end
         end
     end)
 end
@@ -172,6 +182,28 @@ function waitForLogin()
         return false
     else
         debugPrint("^6Bridge^7: ^2Player Login Detected^7.")
+        return true
+    end
+end
+
+function waitForSharedLoad()
+    local timeout = 100000  -- 10 seconds in milliseconds
+    local startTime = GetGameTimer()
+    local loaded = true
+    while ((not Jobs or not next(Jobs)) and (not Items or not next(Items)) and (not Vehicles or not next(Vehicles))) and (GetGameTimer() - startTime) < timeout do
+        print((GetGameTimer() - startTime) < timeout)
+        Wait(1000)
+        debugPrint("Waiting for Jobs, Items, and Vehicles to be loaded")
+        if Jobs and Items and Vehicles then
+            print("^6Bridge^7: ^2Jobs, Items, and Vehicles Loaded^7.")
+            loaded = true
+            break
+        end
+    end
+    if not loaded then
+        print("^4Error^7: ^2Timeout reached while waiting for shared load^7.")
+        return false
+    else
         return true
     end
 end
