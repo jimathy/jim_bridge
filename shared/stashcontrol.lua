@@ -332,34 +332,22 @@ function stashRemoveItem(stashItems, stashName, items)
     if type(stashName) ~= "table" then
         stashName = { stashName }
     end
+
     if isStarted(OXInv) then
         for k, v in pairs(items) do
-            if type(stashName) == "table" then
-                for _, name in pairs(stashName) do
-                    local success = exports[OXInv]:RemoveItem(name, k, v)
-                    if success then
-                        debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..OXInv, k, v)
-                        break
-                    end
+            for _, name in pairs(stashName) do
+                local success = exports[OXInv]:RemoveItem(name, k, v)
+                if success then
+                    debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..OXInv, k, v)
+                    break
                 end
-            else
-                exports[OXInv]:RemoveItem(stashName, k, v)
             end
         end
 
     elseif isStarted(QSInv) then
         for k, v in pairs(items) do
-            for l in pairs(stashItems) do
-                if stashItems[l].name == k then
-                    if (stashItems[l].amount - v) <= 0 then
-                        debugPrint("^6Bridge^7: ^2None of this item left in stash ^3Stash^7", k, v)
-                        stashItems[l] = nil
-                    else
-                        debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QSInv, k, v)
-                        exports[QSInv]:RemoveItemIntoStash(stashName[1], k, v, l)
-                    end
-                end
-            end
+            exports[QSInv]:RemoveItemIntoStash(stashName[1], k, v)
+            debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QSInv, k, v)
         end
 
     elseif isStarted(CoreInv) then
@@ -393,7 +381,7 @@ function stashRemoveItem(stashItems, stashName, items)
 
     elseif isStarted(TgiannInv) then
         for k, v in pairs(items) do
-            local itemData = exports["tgiann-inventory"]:GetItemByNameFromSecondaryInventory("stash", stashName[1], k)
+            local itemData = exports[TgiannInv]:GetItemByNameFromSecondaryInventory("stash", stashName[1], k)
             exports[TgiannInv]:RemoveItemFromSecondaryInventory("stash", stashName[1], k, v, itemData.slot, nil)
             debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..TgiannInv, k, v)
         end
@@ -404,11 +392,6 @@ function stashRemoveItem(stashItems, stashName, items)
                 exports[QBInv]:RemoveItem(stashName[1], k, v, false, 'crafting')
                 debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QBInv, k, v)
             end
-            debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName[1].."^7'")
-            MySQL.Async.insert('INSERT INTO inventories (identifier, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
-                ['stash'] = stashName[1],
-                ['items'] = json.encode(stashItems)
-            })
         else
             for k, v in pairs(items) do
                 for l in pairs(stashItems) do
@@ -423,13 +406,12 @@ function stashRemoveItem(stashItems, stashName, items)
                     end
                 end
             end
-            debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash '^6"..stashName.."^7'")
+            debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash '^6"..stashName[1].."^7'")
             MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
-                ['stash'] = stashName,
+                ['stash'] = stashName[1],
                 ['items'] = json.encode(stashItems)
             })
         end
-
 
     elseif isStarted(PSInv) then
         for k, v in pairs(items) do
@@ -445,9 +427,9 @@ function stashRemoveItem(stashItems, stashName, items)
                 end
             end
         end
-        debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName.."^7'")
+        debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3PS^2 stash ^7'^6"..stashName[1].."^7'")
         MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
-            ['stash'] = stashName,
+            ['stash'] = stashName[1],
             ['items'] = json.encode(stashItems)
         })
 
@@ -456,11 +438,6 @@ function stashRemoveItem(stashItems, stashName, items)
             exports[RSGInv]:RemoveItem(stashName[1], k, v, false, 'crafting')
             debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..RSGInv, k, v)
         end
-        debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash ^7'^6"..stashName[1].."^7'")
-        MySQL.Async.insert('INSERT INTO inventories (identifier, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
-            ['stash'] = stashName[1],
-            ['items'] = json.encode(stashItems)
-        })
     else
         print("^4ERROR^7: ^2No Inventory detected ^7- ^2Check ^3starter^1.^2lua^7")
     end

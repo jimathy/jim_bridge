@@ -462,7 +462,9 @@ RegisterNetEvent(getScript()..":Crafting:GetItem", function(ItemMake, craftable,
                 stashItems = getStash(name)
                 for k, v in pairs(craftable[ItemMake] or {}) do
                     for _, b in pairs(stashItems or {}) do
-                        if k == b.name then itemRemove[k] = v end
+                        if k == b.name then
+                            itemRemove[k] = v
+                        end
                     end
                 end
             end
@@ -470,7 +472,9 @@ RegisterNetEvent(getScript()..":Crafting:GetItem", function(ItemMake, craftable,
             stashItems = getStash(stashName)
             for k, v in pairs(craftable[ItemMake] or {}) do
                 for _, b in pairs(stashItems or {}) do
-                    if k == b.name then itemRemove[k] = v end
+                    if k == b.name then
+                        itemRemove[k] = v
+                    end
                 end
             end
         end
