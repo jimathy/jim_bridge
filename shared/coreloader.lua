@@ -240,24 +240,30 @@ elseif isStarted(QBExport) then
 elseif isStarted(ESXExport) then
     jobResource = ESXExport
     if isServer() then
+        -- If server, create callback to get jobs
+        createCallback(getScript()..":getESXJobs", function(source)
+            return Jobs
+        end)
+        -- Populate jobs table with ESX.GetJobs()
         Jobs = ESX.GetJobs()
+        --If retreived jobs is empty, wait for ESX to load
+        while countTable(Jobs) == 0 do
+            Jobs = ESX.GetJobs()
+            Wait(100)
+        end
+        -- Organise into a table the script can use
         for k, v in pairs(Jobs) do
             local count = countTable(Jobs[k].grades) - 1
             Jobs[k].grades[tostring(count)].isBoss = true
         end
+        -- ESX Default doesn't have gangs, so copy jobs to gangs
         Gangs = Jobs
     end
-    CreateThread(function()
-        if isServer() then
-            createCallback(getScript()..":getJobs", function(source)
-                return Jobs
-            end)
-        end
-        if not isServer() then
-            Jobs = triggerCallback(getScript()..":getJobs")
-            Gangs = Jobs
-        end
-    end)
+    -- If client side, trigger callback to get jobs
+    if not isServer() then
+        Jobs = triggerCallback(getScript()..":getESXJobs")
+        Gangs = Jobs
+    end
 
 elseif isStarted(RSGExport) then
     jobResource = RSGExport
@@ -272,7 +278,7 @@ end
 if jobResource == nil then
     print("^4ERROR^7: ^2No Vehicle info detected ^7- ^2Check ^3starter^1.^2lua^7")
 else
-    while not Jobs do Wait(100) end
+    while not Jobs do Wait(1000) end
     debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Jobs).." ^3Jobs^2 from ^7"..jobResource)
     debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Gangs).." ^3Gangs^2 from ^7"..jobResource)
 end
