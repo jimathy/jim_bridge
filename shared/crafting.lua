@@ -353,8 +353,8 @@ function makeItem(data)
                         Wait(200)
                     end
                     if isInventoryOpen() then
-                        print("^1Error^7: ^2Inventory is open, you tried to break things")
-                        crafted, crafting = false, false
+                        --print("^1Error^7: ^2Inventory is open, you tried to break things")
+                        crafted, crafting, CraftLock = false, false, false
                         return
                     end
                     if crafted then
@@ -368,8 +368,9 @@ function makeItem(data)
                             PlaySoundFromEntity(s.soundId, s.audioName, PlayerPedId(), s.audioRef, true, 0)
                         end
                         if isInventoryOpen() then
-                            print("^1Error^7: ^2Inventory is open, you tried to break things")
+                            --print("^1Error^7: ^2Inventory is open, you tried to break things")
                             crafted, crafting = false, false
+                            crafted, crafting, CraftLock = false, false, false
                             return
                         end
                         if crafting and progressBar({
