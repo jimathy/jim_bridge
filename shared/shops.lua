@@ -48,7 +48,9 @@ function sellMenu(data)
                     header = k,
                     txt = "Amount of items: "..countTable(v.Items),
                     onSelect = function()
-                        v.onBack = function() sellMenu(origData) end
+                        v.onBack = function()
+                            sellMenu(origData)
+                        end
                         v.sellTable = data.sellTable[k]
                         sellMenu(v)
                     end,
@@ -57,8 +59,8 @@ function sellMenu(data)
         end
     end
     openMenu(Menu, {
-        header = data.sellTable.Header or "Amount of items: "..countTable(data.sellTable.Items),
-        headertxt = data.sellTable.Header and "Amount of items: "..countTable(data.sellTable.Items) or "",
+        header = data.sellTable.Header or "Amount of items: "..countTable(data.sellTable.Items or data.sellTable),
+        headertxt = data.sellTable.Header and "Amount of items: "..countTable(data.sellTable.Items or data.sellTable),
         canClose = true,
         onBack = data.onBack,
     })
@@ -105,12 +107,14 @@ function sellAnim(data)
     TriggerServerEvent(getScript().."Sellitems", data)
     lookEnt(data.ped)
     local dict = "mp_common"
-    playAnim(dict, "givetake2_a", 0.3, 2)
-    playAnim(dict, "givetake2_b", 0.3, 2, data.ped)
+    playAnim(dict, "givetake2_a", 0.3, 48)
+    playAnim(dict, "givetake2_b", 0.3, 48, data.ped)
     Wait(2000)
     StopAnimTask(PlayerPedId(), dict, "givetake2_a", 0.5)
     StopAnimTask(data.ped, dict, "givetake2_b", 0.5)
-    if data.onBack then data.onBack() end
+    if data.onBack then
+        data.onBack()
+    end
 end
 
 --- Server event handler for processing item sales.
