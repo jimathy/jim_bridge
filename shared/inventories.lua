@@ -67,6 +67,9 @@ function hasItem(items, amount, src)
         end
         return true, hasTable
     end
+    -- if can't find inventory, return false
+    print("^1Error^7: ^1Can't find players inventory for some reason")
+    return false, {}
 end
 
 --- Retrieves a player's inventory based on the active inventory system.
