@@ -30,15 +30,17 @@ function sellMenu(data)
         for k, v in pairs(data.sellTable.Items) do itemList[k] = 1 end
         local _, hasTable = hasItem(itemList)
         for k, v in pairsByKeys(data.sellTable.Items) do
-            Menu[#Menu + 1] = {
-                isMenuHeader = not hasTable[k].hasItem,
-                icon = invImg(k),
-                header = Items[k].label..(hasTable[k].hasItem and "💰 (x"..hasTable[k].count..")" or ""),
-                txt = Loc[Config.Lan].info["sell_all"]..v.." "..Loc[Config.Lan].info["sell_each"],
-                onSelect = function()
-                    sellAnim({ item = k, price = v, ped = data.ped, onBack = function() sellMenu(data) end })
-                end,
-            }
+            if Items[k] then
+                Menu[#Menu + 1] = {
+                    isMenuHeader = not hasTable[k].hasItem,
+                    icon = invImg(k),
+                    header = Items[k].label..(hasTable[k].hasItem and "💰 (x"..hasTable[k].count..")" or ""),
+                    txt = Loc[Config.Lan].info["sell_all"]..v.." "..Loc[Config.Lan].info["sell_each"],
+                    onSelect = function()
+                        sellAnim({ item = k, price = v, ped = data.ped, onBack = function() sellMenu(data) end })
+                    end,
+                }
+            end
         end
     else
         for k, v in pairsByKeys(data.sellTable) do
