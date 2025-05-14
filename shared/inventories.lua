@@ -100,7 +100,7 @@ function getPlayerInv(src)
             grabInv = exports[QSInv]:GetInventory(src)
         else
             --grabInv = exports[QSInv]:getUserInventory()
-            grabInv = triggerCallback(getScript().."getServerInvData", GetPlayerServerId(PlayerId()))
+            grabInv = triggerCallback(getScript()..":getServerInvData", GetPlayerServerId(PlayerId()))
         end
 
     elseif isStarted(OrigenInv) then
