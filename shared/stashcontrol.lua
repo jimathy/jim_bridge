@@ -565,3 +565,19 @@ if isServer() then
         registerStash(name, label, slots, weight, owner, coords)
     end)
 end
+
+RegisterNetEvent(getScript()..":openGrabBox", function(data)
+	if isStarted(OXInv) then
+		return
+	end
+	local id = ""
+	if data.metadata then
+		id = data.metadata.id
+	elseif data.info then
+		id = data.info.id
+	end
+	openStash({
+		stash = id,
+		coords = GetEntityCoords(PlayerPedId())
+	})
+end)
