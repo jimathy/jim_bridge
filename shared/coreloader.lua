@@ -87,6 +87,12 @@ elseif isStarted(QBExport) then
     itemResource = QBExport
     Core = Core or exports[QBExport]:GetCoreObject()
     Items = Core and Core.Shared.Items or nil
+    CreateThread(function()
+        while not Items or not next(Items) do
+            Items = exports[QBExport]:GetCoreObject().Shared.Items
+            Wait(1000)
+        end
+    end)
     if isStarted(QBExport) and not isStarted(QBXExport) then
         RegisterNetEvent('QBCore:Client:UpdateObject', function()
             Core = Core or exports[QBExport]:GetCoreObject()
