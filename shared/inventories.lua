@@ -50,8 +50,9 @@ function hasItem(items, amount, src)
 
             local count = 0
             for _, itemData in pairs(grabInv) do
+                jsonPrint(itemData)
                 if itemData and itemData.name == item then
-                    count += (itemData.count or itemData.amount or 1)
+                    count += (itemData.amount or itemData.count or 1)
                 end
             end
             foundInv = foundInv:gsub("%-", "^7-^6"):gsub("%_", "^7_^6")
