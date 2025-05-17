@@ -195,10 +195,8 @@ end
 if vehResource == nil then
     print("^4ERROR^7: ^2No Vehicle info detected ^7- ^2Check ^3starter^1.^2lua^7")
 else
-    CreateThread(function()
-        while not Vehicles do Wait(1000) end
-        debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Vehicles).." ^3Vehicles^2 from ^7"..vehResource)
-    end)
+    while not Vehicles do Wait(1000) end
+    debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Vehicles).." ^3Vehicles^2 from ^7"..vehResource)
 end
 
 -------------------------------------------------------------
@@ -252,15 +250,37 @@ elseif isStarted(ESXExport) then
         end)
         -- Populate jobs table with ESX.GetJobs()
         Jobs = ESX.GetJobs()
+        --jsonPrint(Jobs)
         --If retreived jobs is empty, wait for ESX to load
         while countTable(Jobs) == 0 do
             Jobs = ESX.GetJobs()
             Wait(100)
         end
         -- Organise into a table the script can use
-        for k, v in pairs(Jobs) do
-            local count = countTable(Jobs[k].grades) - 1
-            Jobs[k].grades[tostring(count)].isBoss = true
+        for Role, Grades in pairs(Jobs) do
+
+            -- Check for "Boss" in name of grades
+            for grade, info in pairs(Grades.grades) do
+                --print(grade)
+                --jsonPrint(info)
+
+                if info.label then
+                    --print(info)
+                    if info.label:find("boss") or info.label:find("Boss") then
+                        --print("Found Boss label for:", Grades.label)
+                        Jobs[Role].grades[grade].isBoss = true
+                        goto continue
+                    end
+                end
+            end
+
+            -- If no roles with "boss" in the name, revert to max grade
+
+            -- Count grades
+            local count = countTable(Grades.grades)
+            Jobs[Role].grades[tostring(count-1)].isBoss = true
+            --print(Grades.label.." Grade: "..count.." is Boss")
+            ::continue::
         end
         -- ESX Default doesn't have gangs, so copy jobs to gangs
         Gangs = Jobs
