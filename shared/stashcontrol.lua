@@ -578,6 +578,5 @@ RegisterNetEvent(getScript()..":openGrabBox", function(data)
 	end
 	openStash({
 		stash = id,
-		coords = GetEntityCoords(PlayerPedId())
 	})
 end)
