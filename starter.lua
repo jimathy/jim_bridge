@@ -118,7 +118,7 @@ for _, v in pairs({ -- This is a specific load order
 
     '_eventDebug.lua',
     'callback.lua',
-    'coreloader.lua',   -- needs to be second to load all core related stuff before everything else
+    'coreloader.lua',
 
     'duifunctions.lua',
 
