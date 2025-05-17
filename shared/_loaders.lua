@@ -110,7 +110,7 @@ function onResourceStart(func, thisScript)
     AddEventHandler('onResourceStart', function(resourceName)
         if getScript() == resourceName and (thisScript or true) then
             if waitForSharedLoad() then
-                print("^6Bridge^7: ^2Shared Load Detected^7.")
+                debugPrint("^6Bridge^7: ^2Shared Load Detected^7.")
                 if isStarted(ESXExport) then Wait(10000) end
                 func()
             end
