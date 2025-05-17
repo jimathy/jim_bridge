@@ -86,10 +86,10 @@ for Type, ScriptTable in pairs(filesToLoad) do
                     files = { files }
                 end
                 for _, file in pairs(files) do
-                    --print("^5CoreLoader^7: '"..k.."/"..file.."' ^2into ^7'"..GetCurrentResourceName().."' ...")
+                    --print("^5CoreLoader^7: '"..scriptName.."/"..file.."' ^2into ^7'"..GetCurrentResourceName().."' ...")
                     local fileLoader = assert(load(LoadResourceFile(scriptName, (file)), ('@@'..scriptName..'/'..file)))
                     fileLoader()
-                    print("^5CoreLoader^7: ^2loaded ^1Core ^2file^7: ^3"..scriptName.."^7/^3"..(file):gsub("/", "^7/^3"):gsub("%.lua", "^7.lua").." ^2into ^7'"..GetCurrentResourceName().."'")
+                    debugPrint("^5CoreLoader^7: ^2loaded ^1Core ^2file^7: ^3"..scriptName.."^7/^3"..(file):gsub("/", "^7/^3"):gsub("%.lua", "^7.lua").." ^2into ^7'"..GetCurrentResourceName().."'")
                 end
             end
 
