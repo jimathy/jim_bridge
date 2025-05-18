@@ -161,7 +161,10 @@ function openStash(data)
             })
         else
             TriggerEvent("inventory:client:SetCurrentStash", data.stash)
-            TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, data.stashOptions)
+            TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, {
+                slots = data.slots or 50,
+                maxWeight = data.maxWeight or 600000
+            })
         end
 
     elseif isStarted(PSInv) then
@@ -174,7 +177,10 @@ function openStash(data)
             })
         else
             TriggerEvent("inventory:client:SetCurrentStash", data.stash)
-            TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, data.stashOptions)
+            TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, {
+                slots = data.slots or 50,
+                maxWeight = data.maxWeight or 600000
+            })
         end
 
     elseif isStarted(RSGInv) then
@@ -188,7 +194,10 @@ function openStash(data)
     else
         --Fallback to these commands
         TriggerEvent("inventory:client:SetCurrentStash", data.stash)
-        TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, data.stashOptions)
+            TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, {
+                slots = data.slots or 50,
+                maxWeight = data.maxWeight or 600000
+            })
     end
 
     lookEnt(data.coords)
