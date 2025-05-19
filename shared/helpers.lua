@@ -550,6 +550,24 @@ end
 
 RegisterNetEvent(getScript()..":server:sendlog", sendServerLog)
 
+
+-- This function was created to help create random numbers
+-- When you create a table of items with a random hunger value for example
+-- `hunger = math.random(10, 20)` this will be set at script start and never change
+-- using `hunger = {10, 20}` and then calling this function will make it generate a random number every time
+-- It also fallsback if it simply recieved a number instead of a table
+-- For example:
+-- local hunger = {10, 20}
+-- local hungerAmount = GetRandomTiming(hunger)
+-- print(hungerAmount) -- number between 10, 20
+function GetRandomTiming(tbl)
+	if type(tbl) == "table" then
+		return math.random(tbl[1], tbl[2])
+	else
+		return tbl
+	end
+end
+
 -------------------------------------------------------------
 -- Material and Prop Functions
 -------------------------------------------------------------
