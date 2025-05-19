@@ -15,7 +15,7 @@ function compareVersions(current, newest)
         if c < n then return -1
         elseif c > n then return 1 end
     end
-    return 0 -- equal
+    return 0
 end
 
 function capitalize(str)
@@ -33,51 +33,63 @@ function CheckVersion()
     if isServer() and GetResourceMetadata(getScript(), 'author', nil) == "Jimathy" then
         CreateThread(function()
             Wait(4000)
-
             local script = getScript()
             local currentVersionRaw = GetResourceMetadata(script, 'version')
 
             PerformHttpRequest('https://raw.githubusercontent.com/jimathy/UpdateVersions/master/'..script..'.txt', function(err, newestVersionRaw, headers)
                 if not newestVersionRaw then
+                    -- fallback
                     PerformHttpRequest('https://raw.githubusercontent.com/jimathy/'..script..'/master/version.txt', function(err, fallbackVersionRaw, headers)
                         if not fallbackVersionRaw then
                             print("^1Currently unable to run a version check for ^7'^3"..script.."^7' (^3"..currentVersionRaw.."^7)")
                             return
                         end
 
-                        fallbackVersionRaw = fallbackVersionRaw:match("[^\r\n]+"):gsub("v", "")
+                        local lines = {}
+                        for line in fallbackVersionRaw:gmatch("[^\r\n]+") do table.insert(lines, line) end
+                        local fallbackVersion = (lines[1] or "0.0.0"):gsub("v", "")
+                        local changelog = {}
+                        for i = 2, #lines do table.insert(changelog, lines[i]) end
 
-                        local compareResult = compareVersions(currentVersionRaw, fallbackVersionRaw)
+                        local compareResult = compareVersions(currentVersionRaw, fallbackVersion)
                         if compareResult == 0 then
                             print("^7'^3"..script.."^7' - ^2You are running the latest version^7. (^3"..currentVersionRaw.."^7)")
                         elseif compareResult < 0 then
                             print("^1----------------------------------------------------------------------^7")
-                            print("^7'^3"..script.."^7' - ^1You are currently running an outdated version^7! (^3"..currentVersionRaw.."^7 → ^3"..fallbackVersionRaw.."^7)")
+                            print("^7'^3"..script.."^7' - ^1You are currently running an outdated version^7! (^3"..currentVersionRaw.."^7 → ^3"..fallbackVersion.."^7)")
+                            if #changelog > 0 then
+                                for _, line in ipairs(changelog) do
+                                    print((line:find("http") and "^7" or "^5")..line)
+                                end
+                            end
                             print("^1----------------------------------------------------------------------^7")
-                            SetTimeout(1200000, function()
-                                -- Do a naughty repeat message every 20 minutes until the the script is updated
-                                CheckVersion()
-                            end)
+                            SetTimeout(1200000, function() CheckVersion() end)
                         else
-							print("^7'^3"..script.."^7' - ^5You are running a newer version ^7(^3"..currentVersionRaw.."^7 ← ^3"..fallbackVersionRaw.."^7)")
+                            print("^7'^3"..script.."^7' - ^5You are running a newer version ^7(^3"..currentVersionRaw.."^7 ← ^3"..fallbackVersion.."^7)")
                         end
                     end)
                 else
-                    newestVersionRaw = newestVersionRaw:match("[^\r\n]+"):gsub("v", "")
+                    local lines = {}
+                    for line in newestVersionRaw:gmatch("[^\r\n]+") do table.insert(lines, line) end
+                    local newestVersion = (lines[1] or "0.0.0"):gsub("v", "")
+                    local changelog = {}
+                    for i = 2, #lines do table.insert(changelog, lines[i]) end
 
-					local compareResult = compareVersions(currentVersionRaw, newestVersionRaw)
-					if compareResult == 0 then
+                    local compareResult = compareVersions(currentVersionRaw, newestVersion)
+                    if compareResult == 0 then
                         print("^7'^3"..script.."^7' - ^2You are running the latest version^7. (^3"..currentVersionRaw.."^7)")
                     elseif compareResult < 0 then
                         print("^1----------------------------------------------------------------------^7")
-                        print("^7'^3"..script.."^7' - ^1You are currently running an outdated version^7! (^3"..currentVersionRaw.."^7 → ^3"..newestVersionRaw.."^7)")
+                        print("^7'^3"..script.."^7' - ^1You are currently running an outdated version^7! (^3"..currentVersionRaw.."^7 → ^3"..newestVersion.."^7)")
+                        if #changelog > 0 then
+                            for _, line in ipairs(changelog) do
+                                print((line:find("http") and "^7" or "^5")..line)
+                            end
+                        end
                         print("^1----------------------------------------------------------------------^7")
-                        SetTimeout(1200000, function()
-                            -- Do a naughty repeat message every 20 minutes until the the script is updated
-                            CheckVersion()
-                        end)
+                        SetTimeout(1200000, function() CheckVersion() end)
                     else
-                        print("^7'^3"..script.."^7' - ^5You are running a newer version ^7(^3"..currentVersionRaw.."^7 ← ^3"..newestVersionRaw.."^7)")
+                        print("^7'^3"..script.."^7' - ^5You are running a newer version ^7(^3"..currentVersionRaw.."^7 ← ^3"..newestVersion.."^7)")
                     end
                 end
             end)

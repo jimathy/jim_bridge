@@ -20,35 +20,48 @@ end
 
 function CheckBridgeVersion()
     if IsDuplicityVersion() then
-		CreateThread(function()
-			Wait(4000)
-			local currentVersionRaw = GetResourceMetadata("jim_bridge", 'version')
-			PerformHttpRequest('https://raw.githubusercontent.com/jimathy/jim_bridge/master/version.txt', function(err, newestVersionRaw, headers)
-				if not newestVersionRaw then
-					print("^1Unable to run version check for ^7'^3jim_bridge^7' (^3"..currentVersionRaw.."^7)")
-					return
-				end
+        CreateThread(function()
+            Wait(4000)
+            local currentVersionRaw = GetResourceMetadata("jim_bridge", 'version')
+			--PerformHttpRequest('https://raw.githubusercontent.com/jimathy/UpdateVersions/master/test.txt', function(err, body, headers)
+			PerformHttpRequest('https://raw.githubusercontent.com/jimathy/jim_bridge/master/version.txt', function(err, body, headers)
+                if not body then
+                    print("^1Unable to run version check for ^7'^3jim_bridge^7' (^3"..currentVersionRaw.."^7)")
+                    return
+                end
 
-				newestVersionRaw = newestVersionRaw:match("[^\r\n]+")
-				local compareResult = compareVersions(currentVersionRaw, newestVersionRaw)
+                local lines = {}
+                for line in body:gmatch("[^\r\n]+") do
+                    table.insert(lines, line)
+                end
 
-				if compareResult == 0 then
-					print("^7'^3jim_bridge^7' - ^2You are running the latest version^7. ^7(^3"..currentVersionRaw.."^7)")
-				elseif compareResult < 0 then
-					-- Made the check a bit more obvious
-					print("^1----------------------------------------------------------------------^7")
-					print("^7'^3jim_bridge^7' - ^1You are running an outdated version^7! ^7(^3"..currentVersionRaw.."^7 → ^3"..newestVersionRaw.."^7)")
-					print("^1----------------------------------------------------------------------^7")
-					SetTimeout(1200000, function()
-						-- Do a naughty repeat message every 20 minutes until the the script is updated
-						CheckBridgeVersion()
-					end)
-				else
-					print("^7'^3jim_bridge^7' - ^5You are running a newer version ^7(^3"..currentVersionRaw.."^7 ← ^3"..newestVersionRaw.."^7)")
-				end
-			end)
-		end)
-	end
+                local newestVersionRaw = lines[1] or "0.0.0"
+                local changelog = {}
+                for i = 2, #lines do
+                    table.insert(changelog, lines[i])
+                end
+
+                local compareResult = compareVersions(currentVersionRaw, newestVersionRaw)
+
+                if compareResult == 0 then
+                    print("^7'^3jim_bridge^7' - ^2You are running the latest version^7. ^7(^3"..currentVersionRaw.."^7)")
+                elseif compareResult < 0 then
+                    print("^1----------------------------------------------------------------------^7")
+                    print("^7'^3jim_bridge^7' - ^1You are running an outdated version^7! ^7(^3"..currentVersionRaw.."^7 → ^3"..newestVersionRaw.."^7)")
+                    for _, line in ipairs(changelog) do
+                        print((line:find("http") and "^7" or "^5")..line)
+                    end
+                    print("^1----------------------------------------------------------------------^7")
+                    SetTimeout(1200000, function()
+                        CheckBridgeVersion()
+                    end)
+                else
+                    print("^7'^3jim_bridge^7' - ^5You are running a newer version ^7(^3"..currentVersionRaw.."^7 ← ^3"..newestVersionRaw.."^7)")
+                end
+            end)
+        end)
+    end
 end
+
 
 CheckBridgeVersion()
