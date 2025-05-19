@@ -1,7 +1,5 @@
-2.0.12
+2.0.13
 
-- Changes "success" prints to debugmode only
-- Improve ESX Job caching logic
-- Fix stash creation logic for older inventories
+- Add `GetRandomTiming()` function needed for restaurant scripts without jim-consuambles
 
 https://github.com/jimathy/jim_bridge
