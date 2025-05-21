@@ -539,6 +539,7 @@ function getPlayer(source)
         local src = tonumber(source)
         if isStarted(ESXExport) then
             local info = ESX.GetPlayerFromId(src)
+            if not info then return {} end
             Player = {
                 name = info.getName(),
                 cash = info.getMoney(),
@@ -563,9 +564,10 @@ function getPlayer(source)
             local chunk = assert(load(import, ('@@ox_core/%s'):format(file)))
             chunk()
             local player = Ox.GetPlayer(src)
+            if not player then return {} end
             Player = {
                 firstname = player.firstName,
-                lastname = player.lastName  ,
+                lastname = player.lastName,
                 name = ('%s %s'):format(player.firstName, player.lastName),
                 cash = exports[OXInv]:Search(src, 'count', "money"),
                 bank = 0,
@@ -581,6 +583,7 @@ function getPlayer(source)
             }
         elseif isStarted(QBXExport) then
             local info = exports[QBXExport]:GetPlayer(src)
+            if not info then return {} end
             Player = {
                 firstname = info.PlayerData.charinfo.firstname,
                 lastname = info.PlayerData.charinfo.lastname,
@@ -602,8 +605,9 @@ function getPlayer(source)
                 charInfo = info.charinfo,
             }
         elseif isStarted(QBExport) and not isStarted(QBXExport) then
-            if Core.Functions.GetPlayer then
+            if Core.Functions.GetPlayer(src) then
                 local info = Core.Functions.GetPlayer(src).PlayerData
+                if not info then return {} end
                 Player = {
                     firstname = info.charinfo.firstname,
                     lastname = info.charinfo.lastname,
@@ -626,8 +630,9 @@ function getPlayer(source)
                 }
             end
         elseif isStarted(RSGExport) then
-            if Core.Functions.GetPlayer then
+            if Core.Functions.GetPlayer(src) then
                 local info = Core.Functions.GetPlayer(src).PlayerData
+                if not info then return {} end
                 Player = {
                     firstname = info.charinfo.firstname,
                     lastname = info.charinfo.lastname,
