@@ -35,7 +35,8 @@ function sellMenu(data)
                     isMenuHeader = not hasTable[k].hasItem,
                     icon = invImg(k),
                     header = Items[k].label..(hasTable[k].hasItem and "💰 (x"..hasTable[k].count..")" or ""),
-                    txt = Loc[Config.Lan].info["sell_all"]..v.." "..Loc[Config.Lan].info["sell_each"],
+                    txt = (Loc and Loc[Config.Lan]) and Loc[Config.Lan].info["sell_all"]..v.." "..Loc[Config.Lan].info["sell_each"]
+                    or "Sell ALL at $"..v.." each",
                     onSelect = function()
                         sellAnim({ item = k, price = v, ped = data.ped, onBack = function() sellMenu(data) end })
                     end,
