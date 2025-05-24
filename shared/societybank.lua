@@ -8,6 +8,7 @@
       • Renewed-Banking
       • fd_banking
       • okokBanking
+      • Tgiann-bank
 ]]
 
 --- Retrieves the current balance of a society's bank account.
@@ -54,6 +55,14 @@ function getSocietyAccount(society)
     elseif isStarted("okokBanking") then
         bankScript = "okokBanking"
         amount = exports['okokBanking']:GetAccount(society)
+
+    elseif isStarted("tgiann-bank") then
+        bankScript = "tgiann-bank"
+        if Jobs[society] then
+            amount = exports["tgiann-bank"]:GetJobAccountBalance(society)
+        else
+            amount = exports["tgiann-bank"]:GetGangAccountBalance(society)
+        end
     end
 
     if bankScript == "" then
@@ -104,6 +113,13 @@ function chargeSociety(society, amount)
         bankScript = "okokBanking"
         exports['okokBanking']:RemoveMoney(society, amount)
 
+    elseif isStarted("tgiann-bank") then
+        bankScript = "tgiann-bank"
+        if Jobs[society] then
+            exports["tgiann-bank"]:RemoveJobMoney(society, amount)
+        else
+            exports["tgiann-bank"]:RemoveGangMoney(society, amount)
+        end
     end
 
     if bankScript == "" then
@@ -122,7 +138,7 @@ end
 --- fundSociety("police", 500)
 --- ```
 function fundSociety(society, amount)
-    local bankScript, newAmount = "", 0
+    local bankScript, newAmount, success = "", 0, false
 
 
     if isStarted("qb-banking") then
@@ -159,6 +175,13 @@ function fundSociety(society, amount)
         bankScript = "okokBanking"
         exports['okokBanking']:AddMoney(society, amount)
 
+    elseif isStarted("tgiann-bank") then
+        bankScript = "tgiann-bank"
+        if Jobs[society] then
+            exports["tgiann-bank"]:AddJobMoney(society, amount)
+        else
+            exports["tgiann-bank"]:AddGangMoney(society, amount)
+        end
     end
 
     if bankScript == "" then
