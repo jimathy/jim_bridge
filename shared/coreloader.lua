@@ -73,6 +73,29 @@ local itemResource, jobResource, vehResource = "", "", ""
 if isStarted(OXInv) then
     itemResource = OXInv
     Items = exports[OXInv]:Items()
+
+    -- Add weapons to Items from QBXCore if available
+    if isStarted(QBXExport) then
+        local tempWeapons = exports[QBExport]:GetCoreObject().Shared.Weapons
+        for k, v in pairs(tempWeapons) do
+            local tempWeaponInfo = exports[OXInv]:Items(v.name)
+            local weight = 0
+            if tempWeaponInfo then
+                weight = tempWeaponInfo.weight
+            end
+            if not Items[v.name] then
+                Items[v.name] = {
+                    name = v.name,
+                    label = v.label,
+                    type = "weapon",
+                    ammotype = v.ammotype or "AMMO_PISTOL",
+                    weight = weight,
+                    image = v.image or (v.name..".png"),
+                    description = v.label or "",
+                }
+            end
+        end
+    end
     for k, v in pairs(Items) do
         if v.client and v.client.image then
             Items[k].image = (v.client.image):gsub("nui://"..OXInv.."/web/images/", "")
