@@ -209,23 +209,36 @@ if isStarted(QBXExport) then
     Jobs, Gangs = exports[QBXExport]:GetJobs(), exports[QBXExport]:GetGangs()
 
 elseif isStarted(OXCoreExport) then
-    jobResource = OXExport
+    jobResource = OXCoreExport
     CreateThread(function()
         if isServer() then
+            Jobs = {}
             createCallback(getScript()..":getOxGroups", function(source)
-                Jobs = MySQL.query.await('SELECT * FROM `ox_groups`')
                 return Jobs
             end)
-        else
-            local TempJobs = triggerCallback(getScript()..":getOxGroups")
-            Jobs = {}
-            for k, v in pairs(TempJobs) do
-                local grades = {}
-                --for i = 1, #v.grades do
-                --    grades[i] = { name = v.grades[i], isboss = (i == #v.grades) }
-                --end
-                Jobs[v.name] = { label = v.label, grades = grades }
+            local tempJobs = MySQL.query.await('SELECT * FROM `ox_groups`')
+            local tempGrades = MySQL.query.await('SELECT * FROM `ox_group_grades`')
+            -- Index all grades by group
+            local gradeMap = {}
+            for _, grade in pairs(tempGrades) do
+                gradeMap[grade.group] = gradeMap[grade.group] or {}
+                gradeMap[grade.group][grade.grade] = {
+                    name = grade.label
+                }
             end
+
+            -- Process jobs and attach grades
+            for _, job in pairs(tempJobs) do
+                Jobs[job.name] = {
+                    label = job.label,
+                    grades = gradeMap[job.name] or {}
+                }
+            end
+
+            -- Copy to Gangs
+            Gangs = Jobs
+        else
+            Jobs = triggerCallback(getScript()..":getOxGroups")
             Gangs = Jobs
         end
     end)
@@ -302,7 +315,7 @@ elseif isStarted(RSGExport) then
 end
 
 if jobResource == nil then
-    print("^4ERROR^7: ^2No Vehicle info detected ^7- ^2Check ^3starter^1.^2lua^7")
+    print("^4ERROR^7: ^2No Job info detected ^7- ^2Check ^3starter^1.^2lua^7")
 else
     while not Jobs do Wait(1000) end
     debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Jobs).." ^3Jobs^2 from ^7"..jobResource)
