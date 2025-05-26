@@ -81,6 +81,10 @@ for Type, ScriptTable in pairs(filesToLoad) do
             local state = GetResourceState(scriptName)
             -- if the resource is started, load the file
             if state == "started" then
+                if scriptName == Exports.OXLibExport and GetResourceState(Exports.OXCoreExport):find("start") then
+                    if debugMode then print("OX_Core found, skipping OX_Lib loading") end
+                    goto skip
+                end
                 -- Force items into a table if they are not
                 if type(files) == "string" then
                     files = { files }
@@ -93,6 +97,7 @@ for Type, ScriptTable in pairs(filesToLoad) do
                         print("^5CoreLoader^7: ^2loaded ^1Core ^2file^7: ^3"..scriptName.."^7/^3"..(file):gsub("/", "^7/^3"):gsub("%.lua", "^7.lua").." ^2into ^7'"..GetCurrentResourceName().."'")
                     end
                 end
+                ::skip::
             end
 
             -- if script is in server, but not started warn the user
