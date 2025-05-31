@@ -1,5 +1,12 @@
-2.0.13
+2.0.14
 
-- Add `GetRandomTiming()` function needed for restaurant scripts without jim-consuambles
+- Add getPlayer() fallbacks for if player isn't loaded
+- Add fallback for sellMenu missing locales
+- Change blip preview export to "jim-blipcontroller"
+- Support for tgiann-bank
+- Fixes for OX_Core COX version
+- Fix QBOX weapons not being added to "Items" cache
+- Remove Player.Offline from canCarry() as it was erroring
+- Possible fix for QS_Inv stashes wiping on script start
 
 https://github.com/jimathy/jim_bridge
