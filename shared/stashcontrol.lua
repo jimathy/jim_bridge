@@ -194,10 +194,10 @@ function openStash(data)
     else
         --Fallback to these commands
         TriggerEvent("inventory:client:SetCurrentStash", data.stash)
-            TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, {
-                slots = data.slots or 50,
-                maxWeight = data.maxWeight or 600000
-            })
+        TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, {
+            slots = data.slots or 50,
+            maxWeight = data.maxWeight or 600000
+        })
     end
 
     lookEnt(data.coords)
@@ -529,9 +529,9 @@ function registerStash(name, label, slots, weight, owner, coords)
         debugPrint("^6Bridge^7: ^2Registering ^3OX ^2Stash^7:", name, label, owner or nil)
         exports[OXInv]:RegisterStash(name, label, slots or 50, weight or 4000000, owner or nil)
 
-    elseif isStarted(QSInv) then
-        debugPrint("^6Bridge^7: ^2Registering ^3QS ^2Stash^7:", name, label)
-        exports[QSInv]:RegisterStash(name, label, slots or 50, weight or 4000000)
+    --elseif isStarted(QSInv) then
+    --    debugPrint("^6Bridge^7: ^2Registering ^3QS ^2Stash^7:", name, label)
+    --    exports[QSInv]:RegisterStash(name, label, slots or 50, weight or 4000000)
 
     --elseif isStarted(CoreInv) then
     --    debugPrint("^6Bridge^7: ^2Registering ^3CoreInv ^2Stash^7:", name, label)
