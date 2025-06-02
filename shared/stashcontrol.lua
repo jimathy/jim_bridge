@@ -402,6 +402,9 @@ function stashRemoveItem(stashItems, stashName, items)
                 debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..QBInv, k, v)
             end
         else
+            if not stashItems or not next(stashItems) then
+                stashItems = getStash(stashName[1])
+            end
             for k, v in pairs(items) do
                 for l in pairs(stashItems) do
                     if stashItems[l].name == k then
@@ -423,6 +426,9 @@ function stashRemoveItem(stashItems, stashName, items)
         end
 
     elseif isStarted(PSInv) then
+        if not stashItems or not next(stashItems) then
+            stashItems = getStash(stashName[1])
+        end
         for k, v in pairs(items) do
             for l in pairs(stashItems) do
                 if stashItems[l].name == k then
