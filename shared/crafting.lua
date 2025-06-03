@@ -334,6 +334,10 @@ function makeItem(data)
                         if isInventoryOpen() then
                             print("^1Error^7: ^2Inventory is open, you tried to break things")
                             crafted, crafting = false, false
+                            stopTempCam()
+                            ClearPedTasks(PlayerPedId())
+                            if canReturn then craftingMenu(data) end
+                            CraftLock = false
                             return
                         end
                         if crafting and progressBar({
@@ -353,10 +357,15 @@ function makeItem(data)
                         Wait(200)
                     end
                     if isInventoryOpen() then
-                        --print("^1Error^7: ^2Inventory is open, you tried to break things")
-                        crafted, crafting, CraftLock = false, false, false
+                        print("^1Error^7: ^2Inventory is open, you tried to break things")
+                        crafted, crafting = false, false
+                        stopTempCam()
+                        ClearPedTasks(PlayerPedId())
+                        if canReturn then craftingMenu(data) end
+                        CraftLock = false
                         return
                     end
+
                     if crafted then
                         local craftProp = nil
                         if prop then
