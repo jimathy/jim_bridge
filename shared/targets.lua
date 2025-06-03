@@ -21,7 +21,7 @@
 -- Utility Data & Tables
 -------------------------------------------------------------
 ---
-local KEY_TABLE = { 38, 29, 47, 23, 45, }
+local KEY_TABLE = { 38, 29, 47, 23, 45, 159, 162, 163 }
 
 -- Mapping of key codes to human-readable key names.
 local Keys = {
@@ -504,68 +504,104 @@ end
 -- If no targeting system is detected and this is a client script, use DrawText3D for targets.
 if (Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport))) and not isServer() then
     CreateThread(function()
-        local wait = 1000
         while true do
-            local pedCoords = GetEntityCoords(PlayerPedId())
+            local ped = PlayerPedId()
+            local pedCoords = GetEntityCoords(ped)
             local camCoords = GetGameplayCamCoord()
             local camRot = GetGameplayCamRot(2)
             local camForward = RotationToDirection(camRot)
-            local closestTarget, closestDist = nil, math.huge
-            local notificationShown = false
+
+            local closestTarget = nil
+            local closestDist = math.huge
             local targetEntity = nil
-            -- Update model targets and determine the closest target.
-            for _, target in pairs(TextTargets) do
+
+            -- Shallow copy for safety
+            local targetsCopy = {}
+            for k, v in pairs(TextTargets) do
+                targetsCopy[k] = v
+            end
+
+            -- Detect models and update coords
+            for _, target in pairs(targetsCopy) do
                 if target.models then
-                    for _, model in ipairs(target.models) do
-                        local entity = GetClosestObjectOfType(pedCoords.x, pedCoords.y, pedCoords.z, target.dist, model, false, false, false)
-                        if entity and entity ~= 0 then
-                            target.coords = GetEntityCoords(entity)
-                            targetEntity = entity
-                            break
+                    if not target.entity or not DoesEntityExist(target.entity) then
+                        for _, model in ipairs(target.models) do
+                            local entity = GetClosestObjectOfType(pedCoords.x, pedCoords.y, pedCoords.z, target.dist, model, false, false, false)
+                            if entity and entity ~= 0 then
+                                target.entity = entity
+                                target.coords = GetEntityCoords(entity)
+                                break
+                            end
                         end
+                    else
+                        target.coords = GetEntityCoords(target.entity)
                     end
                 end
+            end
 
-                local dist = #(pedCoords - target.coords)
-                if dist <= target.dist then
+            -- Identify closest visible target
+            for _, target in pairs(targetsCopy) do
+                if target.coords then
+                    local dist = #(pedCoords - target.coords)
                     local vecToTarget = target.coords - camCoords
                     local normVec = normalizeVector(vecToTarget)
                     local dot = camForward.x * normVec.x + camForward.y * normVec.y + camForward.z * normVec.z
-                    if dot > 0.5 and dist < closestDist then
-                        closestDist = dist
-                        closestTarget = target
+                    local isFacing = dot > 0.5
+
+                    if dist <= target.dist and isFacing then
+                        if dist < closestDist then
+                            closestDist = dist
+                            closestTarget = target
+                            targetEntity = target.entity
+                        end
                     end
                 end
             end
 
-            -- Render targets, listen for key presses and display the help notification.
-            for key, target in pairs(TextTargets) do
-                if #(pedCoords - target.coords) <= target.dist then
+            -- Render + handle input
+            for _, target in pairs(targetsCopy) do
+                if target.coords and #(pedCoords - target.coords) <= target.dist then
                     local isClosest = (target == closestTarget)
-                    for i, opt in ipairs(target.options) do
+
+                    for _, opt in ipairs(target.options) do
                         if IsControlJustPressed(0, opt.key) and isClosest then
-                            if opt.onSelect then opt.onSelect(targetEntity) end
-                            if opt.action then opt.action(targetEntity) end
+                            local canInteract = (not target.canInteract or target.canInteract())
+                            local hasItem = (not opt.item or hasItem(opt.item))
+                            local hasJob = (not opt.job or hasJob(opt.job, nil))
+
+                            if canInteract and hasItem and hasJob then
+                                if opt.onSelect then opt.onSelect(targetEntity) end
+                                if opt.action then opt.action(targetEntity) end
+                            end
                         end
                     end
 
-                    notificationShown = true
-                    ShowFloatingHelpNotification(vec3(target.coords.x, target.coords.y, target.coords.z + 0.7), target.text)
+                    -- Draw each eligible text line
+                    local baseZ = target.coords.z + 1.0
+                    local lineHeight = -0.16
+                    local lineOffset = 0
+
+                    for i, opt in ipairs(target.options) do
+                        local canInteract = (not target.canInteract or target.canInteract())
+                        local hasItem = (not opt.item or hasItem(opt.item))
+                        local hasJob = (not opt.job or hasJob(opt.job, nil))
+
+                        if canInteract and hasItem and hasJob then
+                            local text = target.buttontext[i]
+                            local zOffset = lineOffset * lineHeight
+                            DrawText3D(vec3(target.coords.x, target.coords.y, baseZ + zOffset), text, isClosest)
+                            lineOffset += 1
+                        end
+                    end
                 end
             end
 
-            -- If no notification was drawn this frame, clear help messages.
-            if notificationShown then
-                wait = 0
-            else
-                ClearAllHelpMessages()
-                wait = 1000
-            end
 
-            Wait(wait)
+            Wait(0)
         end
     end)
 end
+
 
 function ShowFloatingHelpNotification(coord, text, highlight)
     AddTextEntry("FloatingText", text)
