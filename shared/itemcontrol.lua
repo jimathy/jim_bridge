@@ -797,3 +797,23 @@ else
     end, true)
 end
 
+-------------------------------------------------------------
+-- Check Item Existance - return boolean(true,false)
+-------------------------------------------------------------
+
+--- checks whether an item exists in your item database
+---
+--- @param item string The item name.
+---
+--- @usage
+--- ```lua
+--- local item = "apple"
+--- if doesItemExist(item) then print("item exists") end
+--- ```
+function doesItemExist(item)
+    if not item or item == "" then return false end
+    if Items[item] ~= nil then
+        return true
+    end
+    return false
+end
