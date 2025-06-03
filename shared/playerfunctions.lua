@@ -539,6 +539,7 @@ function getPlayer(source)
         local src = tonumber(source)
         if isStarted(ESXExport) then
             local info = ESX.GetPlayerFromId(src)
+            if not info then return {} end
             Player = {
                 name = info.getName(),
                 cash = info.getMoney(),
@@ -563,9 +564,10 @@ function getPlayer(source)
             local chunk = assert(load(import, ('@@ox_core/%s'):format(file)))
             chunk()
             local player = Ox.GetPlayer(src)
+            if not player then return {} end
             Player = {
                 firstname = player.firstName,
-                lastname = player.lastName  ,
+                lastname = player.lastName,
                 name = ('%s %s'):format(player.firstName, player.lastName),
                 cash = exports[OXInv]:Search(src, 'count', "money"),
                 bank = 0,
@@ -577,10 +579,11 @@ function getPlayer(source)
                 --onDuty = info.job.onduty,
                 --account = info.charinfo.account,
                 citizenId = player.stateId,
-
             }
+
         elseif isStarted(QBXExport) then
             local info = exports[QBXExport]:GetPlayer(src)
+            if not info then return {} end
             Player = {
                 firstname = info.PlayerData.charinfo.firstname,
                 lastname = info.PlayerData.charinfo.lastname,
@@ -601,9 +604,11 @@ function getPlayer(source)
                 isDown = info.PlayerData.metadata["inlaststand"],
                 charInfo = info.charinfo,
             }
+
         elseif isStarted(QBExport) and not isStarted(QBXExport) then
-            if Core.Functions.GetPlayer then
+            if Core.Functions.GetPlayer(src) then
                 local info = Core.Functions.GetPlayer(src).PlayerData
+                if not info then return {} end
                 Player = {
                     firstname = info.charinfo.firstname,
                     lastname = info.charinfo.lastname,
@@ -625,9 +630,11 @@ function getPlayer(source)
                     charInfo = info.charinfo,
                 }
             end
+
         elseif isStarted(RSGExport) then
-            if Core.Functions.GetPlayer then
+            if Core.Functions.GetPlayer(src) then
                 local info = Core.Functions.GetPlayer(src).PlayerData
+                if not info then return {} end
                 Player = {
                     firstname = info.charinfo.firstname,
                     lastname = info.charinfo.lastname,
@@ -648,6 +655,7 @@ function getPlayer(source)
                     isDown = info.metadata["inlaststand"],
                     charInfo = info.charinfo,
                 }
+
             end
         else
             print("^4ERROR^7: ^2No Core detected for getPlayer() - Check starter.lua")
@@ -656,6 +664,8 @@ function getPlayer(source)
         -- Client-side: Get current player info.
         if isStarted(ESXExport) and ESX ~= nil then
             local info = ESX.GetPlayerData()
+            if not info.firstName then return {} end
+
             local cash, bank = 0, 0
             for k, v in pairs(info.accounts) do
                 if v.name == "money" then cash = v.money end
@@ -678,7 +688,9 @@ function getPlayer(source)
                 isDead = IsEntityDead(PlayerPedId()),
                 isDown = IsPedDeadOrDying(PlayerPedId(), true)
             }
+
         elseif isStarted(OXCoreExport) then
+            if not OxPlayer.userId then return {} end
             Player = {
                 firstname = OxPlayer.get("firstName"),
                 lastname = OxPlayer.get("lastName"),
@@ -696,8 +708,10 @@ function getPlayer(source)
                 isDead = IsEntityDead(PlayerPedId()),
                 isDown = IsPedDeadOrDying(PlayerPedId(), true)
             }
+
         elseif isStarted(QBXExport) then
             local info = exports[QBXExport]:GetPlayerData()
+            if not info.charinfo then return {} end
             Player = {
                 firstname = info.charinfo.firstname,
                 lastname = info.charinfo.lastname,
@@ -718,9 +732,12 @@ function getPlayer(source)
                 isDown = info.metadata["inlaststand"],
                 charInfo = info.charinfo,
             }
+
         elseif isStarted(QBExport) and not isStarted(QBXExport) then
             local info = nil
             Core.Functions.GetPlayerData(function(PlayerData) info = PlayerData end)
+            if not info.charinfo then return {} end
+
             Player = {
                 firstname = info.charinfo.firstname,
                 lastname = info.charinfo.lastname,
@@ -741,9 +758,12 @@ function getPlayer(source)
                 isDown = info.metadata["inlaststand"],
                 charInfo = info.charinfo,
             }
+
         elseif isStarted(RSGExport) then
             local info = nil
             Core.Functions.GetPlayerData(function(PlayerData) info = PlayerData end)
+            if not info.charinfo then return {} end
+
             Player = {
                 firstname = info.charinfo.firstname,
                 lastname = info.charinfo.lastname,
@@ -764,6 +784,7 @@ function getPlayer(source)
                 isDown = info.metadata["inlaststand"],
                 charInfo = info.charinfo,
             }
+
         else
             print("^4ERROR^7: ^2No Core detected for hasJob ^7- ^2Check ^3starter^1.^2lua^7")
         end

@@ -73,6 +73,29 @@ local itemResource, jobResource, vehResource = "", "", ""
 if isStarted(OXInv) then
     itemResource = OXInv
     Items = exports[OXInv]:Items()
+
+    -- Add weapons to Items from QBXCore if available
+    if isStarted(QBXExport) then
+        local tempWeapons = exports[QBExport]:GetCoreObject().Shared.Weapons
+        for k, v in pairs(tempWeapons) do
+            local tempWeaponInfo = exports[OXInv]:Items(v.name)
+            local weight = 0
+            if tempWeaponInfo then
+                weight = tempWeaponInfo.weight
+            end
+            if not Items[v.name] then
+                Items[v.name] = {
+                    name = v.name,
+                    label = v.label,
+                    type = "weapon",
+                    ammotype = v.ammotype or "AMMO_PISTOL",
+                    weight = weight,
+                    image = v.image or (v.name..".png"),
+                    description = v.label or "",
+                }
+            end
+        end
+    end
     for k, v in pairs(Items) do
         if v.client and v.client.image then
             Items[k].image = (v.client.image):gsub("nui://"..OXInv.."/web/images/", "")
@@ -195,10 +218,8 @@ end
 if vehResource == nil then
     print("^4ERROR^7: ^2No Vehicle info detected ^7- ^2Check ^3starter^1.^2lua^7")
 else
-    CreateThread(function()
-        while not Vehicles do Wait(1000) end
-        debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Vehicles).." ^3Vehicles^2 from ^7"..vehResource)
-    end)
+    while not Vehicles do Wait(1000) end
+    debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Vehicles).." ^3Vehicles^2 from ^7"..vehResource)
 end
 
 -------------------------------------------------------------
@@ -211,23 +232,36 @@ if isStarted(QBXExport) then
     Jobs, Gangs = exports[QBXExport]:GetJobs(), exports[QBXExport]:GetGangs()
 
 elseif isStarted(OXCoreExport) then
-    jobResource = OXExport
+    jobResource = OXCoreExport
     CreateThread(function()
         if isServer() then
+            Jobs = {}
             createCallback(getScript()..":getOxGroups", function(source)
-                Jobs = MySQL.query.await('SELECT * FROM `ox_groups`')
                 return Jobs
             end)
-        else
-            local TempJobs = triggerCallback(getScript()..":getOxGroups")
-            Jobs = {}
-            for k, v in pairs(TempJobs) do
-                local grades = {}
-                --for i = 1, #v.grades do
-                --    grades[i] = { name = v.grades[i], isboss = (i == #v.grades) }
-                --end
-                Jobs[v.name] = { label = v.label, grades = grades }
+            local tempJobs = MySQL.query.await('SELECT * FROM `ox_groups`')
+            local tempGrades = MySQL.query.await('SELECT * FROM `ox_group_grades`')
+            -- Index all grades by group
+            local gradeMap = {}
+            for _, grade in pairs(tempGrades) do
+                gradeMap[grade.group] = gradeMap[grade.group] or {}
+                gradeMap[grade.group][grade.grade] = {
+                    name = grade.label
+                }
             end
+
+            -- Process jobs and attach grades
+            for _, job in pairs(tempJobs) do
+                Jobs[job.name] = {
+                    label = job.label,
+                    grades = gradeMap[job.name] or {}
+                }
+            end
+
+            -- Copy to Gangs
+            Gangs = Jobs
+        else
+            Jobs = triggerCallback(getScript()..":getOxGroups")
             Gangs = Jobs
         end
     end)
@@ -252,15 +286,37 @@ elseif isStarted(ESXExport) then
         end)
         -- Populate jobs table with ESX.GetJobs()
         Jobs = ESX.GetJobs()
+        --jsonPrint(Jobs)
         --If retreived jobs is empty, wait for ESX to load
         while countTable(Jobs) == 0 do
             Jobs = ESX.GetJobs()
             Wait(100)
         end
         -- Organise into a table the script can use
-        for k, v in pairs(Jobs) do
-            local count = countTable(Jobs[k].grades) - 1
-            Jobs[k].grades[tostring(count)].isBoss = true
+        for Role, Grades in pairs(Jobs) do
+
+            -- Check for "Boss" in name of grades
+            for grade, info in pairs(Grades.grades) do
+                --print(grade)
+                --jsonPrint(info)
+
+                if info.label then
+                    --print(info)
+                    if info.label:find("boss") or info.label:find("Boss") then
+                        --print("Found Boss label for:", Grades.label)
+                        Jobs[Role].grades[grade].isBoss = true
+                        goto continue
+                    end
+                end
+            end
+
+            -- If no roles with "boss" in the name, revert to max grade
+
+            -- Count grades
+            local count = countTable(Grades.grades)
+            Jobs[Role].grades[tostring(count-1)].isBoss = true
+            --print(Grades.label.." Grade: "..count.." is Boss")
+            ::continue::
         end
         -- ESX Default doesn't have gangs, so copy jobs to gangs
         Gangs = Jobs
@@ -282,7 +338,7 @@ elseif isStarted(RSGExport) then
 end
 
 if jobResource == nil then
-    print("^4ERROR^7: ^2No Vehicle info detected ^7- ^2Check ^3starter^1.^2lua^7")
+    print("^4ERROR^7: ^2No Job info detected ^7- ^2Check ^3starter^1.^2lua^7")
 else
     while not Jobs do Wait(1000) end
     debugPrint("^6Bridge^7: ^2Loading ^6"..countTable(Jobs).." ^3Jobs^2 from ^7"..jobResource)

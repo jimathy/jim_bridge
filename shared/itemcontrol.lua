@@ -640,7 +640,7 @@ function canCarry(itemTable, src)
                 end
                 for k, v in pairs(itemTable) do
                     local itemInfo = Items[k]
-                    if not itemInfo and not Player.Offline then
+                    if not itemInfo then
                         resultTable[k] = true
                     else
                         resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight
@@ -657,7 +657,7 @@ function canCarry(itemTable, src)
             end
             for k, v in pairs(itemTable) do
                 local itemInfo = Items[k]
-                if not itemInfo and not Player.Offline then
+                if not itemInfo then
                     resultTable[k] = true
                 else
                     resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight

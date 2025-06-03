@@ -46,7 +46,7 @@ function makeBossRoles(role)
     local data = (Jobs and Jobs[role]) or (Gangs and Gangs[role])
     if data then
         for grade, info in pairs(data.grades) do
-            if info.isboss or info.bankAuth then
+            if info.isboss or info.bankAuth or info.isBoss then
                 boss[role] = boss[role] and math.min(boss[role], tonumber(grade)) or tonumber(grade)
             end
         end

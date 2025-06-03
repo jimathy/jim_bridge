@@ -54,7 +54,7 @@ function makeBlip(data)
         AddTextComponentString(tostring(data.name))
         EndTextCommandSetBlipName(blip)
         -- Handle preview image if certain resources are running
-        if isStarted("fs_smallresources") or isStarted("blip_info") or isStarted("blipinfo") then
+        if isStarted("jim-blipcontroller") then
             if data.preview then
                 local txname = string.gsub(tostring(data.name..'preview'..string.gsub(data.coords.z, "%.", "")), "[ ()~]", "")
                 if data.preview:find("http") or data.preview:find("nui") then
@@ -62,8 +62,11 @@ function makeBlip(data)
                 else
                     CreateRuntimeTextureFromImage(scriptTxd, txname, data.preview)
                 end
-                exports["fs_smallresources"]:SetBlipInfoImage(blip, getScript()..'scriptTxd', txname)
-                exports["fs_smallresources"]:SetBlipInfoTitle(blip, data.name, false)
+                exports["jim-blipcontroller"]:ShowBlipInfo(blip, {
+                    title = data.name,
+                    dict = getScript()..'scriptTxd',
+                    tex = txname,
+                })
             end
         end
     end
