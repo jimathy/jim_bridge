@@ -52,7 +52,7 @@ function onPlayerLoaded(func, onStart)
             onPlayerFramework = ESXExport
             AddEventHandler('esx:playerLoaded', function()
                 if waitForSharedLoad() then
-                    if isStarted(ESXExport) then Wait(11000) end
+                    if isStarted(ESXExport) then Wait(1000) end
                     tempFunc()
                 end
             end
@@ -105,12 +105,16 @@ end
 ---     -- Initialization code on resource start.
 --- end, true)
 --- ```
+local hasPrinted = false
 function onResourceStart(func, thisScript)
     debugPrint("^6Bridge^7: ^2Registering ^3onResourceStart^7()")
     AddEventHandler('onResourceStart', function(resourceName)
         if getScript() == resourceName and (thisScript or true) then
             if waitForSharedLoad() then
-                debugPrint("^6Bridge^7: ^2Shared Load Detected^7.")
+                if not hasPrinted then
+                    debugPrint("^6Bridge^7: ^2Shared Load Detected^7.")
+                    hasPrinted = true
+                end
                 if isStarted(ESXExport) then Wait(10000) end
                 func()
             end
@@ -186,22 +190,38 @@ function waitForLogin()
     end
 end
 
+local messageShown = false
 function waitForSharedLoad()
     local timeout = 100000  -- 10 seconds in milliseconds
     local startTime = GetGameTimer()
     local loaded = true
+    --Wait(1000)
+    local count = {}
+    local loop = 0
     while ((not Jobs or not next(Jobs)) and (not Items or not next(Items)) and (not Vehicles or not next(Vehicles))) and (GetGameTimer() - startTime) < timeout do
-        print((GetGameTimer() - startTime) < timeout)
+        if not messageShown then
+            if (not Jobs or not next(Jobs)) then
+                debugPrint("^4Debug^7: ^2Waiting for Jobs to be loaded")
+            end
+            if (not Items or not next(Items)) then
+                debugPrint("^4Debug^7: ^2Waiting for Items to be loaded")
+            end
+            if (not Vehicles or not next(Vehicles)) then
+                debugPrint("^4Debug^7: ^2Waiting for Vehicles to be loaded")
+            end
+        end
+        messageShown = true
+        --print((GetGameTimer() - startTime) < timeout)
         Wait(1000)
-        debugPrint("Waiting for Jobs, Items, and Vehicles to be loaded")
         if Jobs and Items and Vehicles then
-            print("^6Bridge^7: ^2Jobs, Items, and Vehicles Loaded^7.")
+            --print("^6Bridge^7: ^2Jobs, Items, and Vehicles Loaded^7.")
             loaded = true
             break
         end
+        loop += 1
     end
     if not loaded then
-        print("^4Error^7: ^2Timeout reached while waiting for shared load^7.")
+        print("^4Error^7: ^1Timeout reached while waiting for shared load^7.")
         return false
     else
         return true
