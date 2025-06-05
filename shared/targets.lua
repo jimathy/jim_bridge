@@ -20,24 +20,7 @@
 -------------------------------------------------------------
 -- Utility Data & Tables
 -------------------------------------------------------------
----
-local KEY_TABLE = { 38, 29, 47, 23, 45, 159, 162, 163 }
 
--- Mapping of key codes to human-readable key names.
-local Keys = {
-    [322] = "ESC", [288] = "F1", [289] = "F2", [170] = "F3", [166] = "F5",
-    [167] = "F6", [168] = "F7", [169] = "F8", [56] = "F9", [57] = "F10",
-    [243] = "~", [157] = "1", [158] = "2", [160] = "3", [164] = "4", [165] = "5",
-    [159] = "6", [161] = "7", [162] = "8", [163] = "9", [84] = "-", [83] = "=",
-    [177] = "BACKSPACE", [37] = "TAB",
-    [44] = "Q", [32] = "W", [38] = "E", [45] = "R", [245] = "T", [246] = "Y",
-    [303] = "U", [199] = "P",
-    [39] = "[",  [40] = "]", [18] = "ENTER", [137] = "CAPS",
-    [34] = "A", [8] = "S", [9] = "D", [23] = "F", [47] = "G",
-    [74] = "H", [311] = "K", [182] = "L", [21] = "LEFTSHIFT",
-    [20] = "Z", [73] = "X", [26] = "C", [0] = "V",  [29] = "B", [249] = "N",
-    [244] = "M", [82] = ",", [81] = "."
-}
 
 -- Tables for storing created targets for the fallback system and zone management.
 local TextTargets    = {}   -- For fallback DrawText3D targets.
@@ -82,38 +65,9 @@ function createEntityTarget(entity, opts, dist)
 
     -- Fallback: Use DrawText3D if targeting systems are disabled or unavailable.
     if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
-        local entityCoords = GetEntityCoords(entity)
-        debugPrint("^6Bridge^7: ^2Creating new ^3Entity^2 target with DrawText for entity ^7"..entity)
-        local existingTarget = nil
-        for _, target in pairs(TextTargets) do
-            if #(target.coords - entityCoords) < 0.01 then
-                existingTarget = target
-                break
-            end
-        end
+        debugPrint("^6Bridge^7: ^2Creating new ^3Entity ^2target with ^6"..OXTargetExport.." ^2for entity ^7"..entity)
+        exports.jim_bridge:createEntityTarget(entity, opts, dist)
 
-        if existingTarget then
-            for i = 1, #opts do
-                local key = KEY_TABLE[#existingTarget.options + i]
-                opts[i].key = key
-                existingTarget.buttontext[#existingTarget.buttontext + 1] = " ~b~[~w~" .. Keys[key] .. "~b~] ~w~" .. opts[i].label
-                existingTarget.options[#existingTarget.options + 1] = opts[i]
-            end
-            updateCachedText(existingTarget)
-        else
-            local tempText = {}
-            for i = 1, #opts do
-                opts[i].key = KEY_TABLE[i]
-                tempText[#tempText + 1] = " ~b~[~w~" .. Keys[opts[i].key] .. "~b~] ~w~" .. opts[i].label
-            end
-            TextTargets[entity] = {
-                coords = vec3(entityCoords.x, entityCoords.y, entityCoords.z),
-                buttontext = tempText,
-                options = opts,
-                dist = dist,
-                text = table.concat(tempText, "\n")
-            }
-        end
     elseif isStarted(OXTargetExport) then
         debugPrint("^6Bridge^7: ^2Creating new ^3Entity ^2target with ^6"..OXTargetExport.." ^2for entity ^7"..entity)
         local options = {}
@@ -129,10 +83,12 @@ function createEntityTarget(entity, opts, dist)
             }
         end
         exports[OXTargetExport]:addLocalEntity(entity, options)
+
     elseif isStarted(QBTargetExport) then
         debugPrint("^6Bridge^7: ^2Creating new ^3Entity ^2target with ^6"..QBTargetExport.." ^2for entity ^7"..entity)
         local options = { options = opts, distance = dist }
         exports[QBTargetExport]:AddTargetEntity(entity, options)
+
     end
 end
 
@@ -192,37 +148,8 @@ end
 function createBoxTarget(data, opts, dist)
     if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
         debugPrint("^6Bridge^7: ^2Creating new ^3Box^2 target with ^6DrawText ^2 for zone ^7"..data[1])
-        local existingTarget = nil
-        for _, target in pairs(TextTargets) do
-            if #(target.coords - data[2]) < 0.01 then
-                existingTarget = target
-                break
-            end
-        end
+        return exports.jim_bridge:createZoneTarget(data, opts, dist)
 
-        if existingTarget then
-            for i = 1, #opts do
-                local key = KEY_TABLE[#existingTarget.options + i]
-                opts[i].key = key
-                existingTarget.buttontext[#existingTarget.buttontext + 1] = " ~b~[~w~" .. Keys[key] .. "~b~] ~w~" .. opts[i].label
-                existingTarget.options[#existingTarget.options + 1] = opts[i]
-            end
-            updateCachedText(existingTarget)
-        else
-            local tempText = {}
-            for i = 1, #opts do
-                opts[i].key = KEY_TABLE[i]
-                tempText[#tempText + 1] = " ~b~[~w~" .. Keys[opts[i].key] .. "~b~] ~w~" .. opts[i].label
-            end
-            TextTargets[data[1]] = {
-                coords = data[2],
-                buttontext = tempText,
-                options = opts,
-                dist = dist,
-                text = table.concat(tempText, "\n")
-            }
-        end
-        return data[1]
     elseif isStarted(OXTargetExport) then
         debugPrint("^6Bridge^7: ^2Creating new ^3Box^2 target with ^6"..OXTargetExport.." ^2for zone ^7"..data[1])
         local options = {}
@@ -250,12 +177,14 @@ function createBoxTarget(data, opts, dist)
         })
         boxTargets[#boxTargets + 1] = target
         return target
+
     elseif isStarted(QBTargetExport) then
         debugPrint("^6Bridge^7: ^2Creating new ^3Box^2 target with ^6"..QBTargetExport.." ^2for zone ^7"..data[1])
         local options = { options = opts, distance = dist }
         local target = exports[QBTargetExport]:AddBoxZone(data[1], data[2], data[3], data[4], data[5], options)
         boxTargets[#boxTargets + 1] = target
         return data[1]
+
     end
 end
 
@@ -298,37 +227,8 @@ end
 function createCircleTarget(data, opts, dist)
     if Config.System.DontUseTarget then
         debugPrint("^6Bridge^7: ^2Creating new ^3Circle ^2target with ^6DrawText ^2for zone ^7"..data[1])
-    local existingTarget = nil
-    for _, target in pairs(TextTargets) do
-        if #(target.coords - data[2]) < 0.01 then
-            existingTarget = target
-            break
-        end
-    end
+        return exports.jim_bridge:createZoneTarget(data, opts, dist)
 
-    if existingTarget then
-        for i = 1, #opts do
-            local key = KEY_TABLE[#existingTarget.options + i]
-            opts[i].key = key
-            existingTarget.buttontext[#existingTarget.buttontext + 1] = " ~b~[~w~" .. Keys[key] .. "~b~] ~w~" .. opts[i].label
-            existingTarget.options[#existingTarget.options + 1] = opts[i]
-        end
-        updateCachedText(existingTarget)
-    else
-        local tempText = {}
-        for i = 1, #opts do
-            opts[i].key = KEY_TABLE[i]
-            tempText[#tempText + 1] = " ~b~[~w~" .. Keys[opts[i].key] .. "~b~] ~w~" .. opts[i].label
-        end
-        TextTargets[data[1]] = {
-            coords = data[2],
-            buttontext = tempText,
-            options = opts,
-            dist = dist,
-            text = table.concat(tempText, "\n")
-        }
-    end
-    return data[1]
     elseif isStarted(OXTargetExport) then
         debugPrint("^6Bridge^7: ^2Creating new ^3Circle ^2target with ^6"..OXTargetExport.." ^2for zone ^7"..data[1])
         local options = {}
@@ -387,30 +287,8 @@ end
 ---```
 function createModelTarget(models, opts, dist)
     if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
-        if type(models) ~= "table" then
-            models = { models }
-        end
+        return exports.jim_bridge:createModelTarget(models, opts, dist)
 
-        local tempText = {}
-        for i = 1, #opts do
-            opts[i].key = KEY_TABLE[i]
-            tempText[#tempText + 1] = " ~b~[~w~" .. Keys[opts[i].key] .. "~b~] ~w~" .. opts[i].label
-        end
-
-        local keyStr = ""
-        for i, m in ipairs(models) do
-            keyStr = keyStr .. tostring(m) .. (i < #models and "_" or "")
-        end
-        local targetKey = "model_" .. keyStr
-
-        TextTargets[targetKey] = {
-            models = models,
-            buttontext = tempText,
-            options = opts,
-            dist = dist,
-            coords = vec3(0, 0, 0),
-            text = table.concat(tempText, "\n")
-        }
     elseif isStarted(OXTargetExport) then
         debugPrint("^6Bridge^7: ^2Creating new ^3Model^2 target with ^6"..OXTargetExport)
         local options = {}
@@ -453,7 +331,7 @@ function removeEntityTarget(entity)
         exports[OXTargetExport]:removeLocalEntity(entity, nil)
     end
     if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
-        TextTargets[entity] = nil
+        exports.jim_bridge:removeEntityTarget(entity)
     end
 end
 
@@ -474,7 +352,7 @@ function removeZoneTarget(target)
         exports[OXTargetExport]:removeZone(target, true)
     end
     if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
-        TextTargets[target] = nil
+        exports.jim_bridge:removeZoneTarget(target)
     end
 end
 
@@ -494,7 +372,7 @@ function removeModelTarget(model)
         exports[OXTargetExport]:removeModel(model, nil)
     end
     if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
-        TextTargets[entity] = nil
+        exports.jim_bridge:removeZoneTarget(target)
     end
 end
 -------------------------------------------------------------

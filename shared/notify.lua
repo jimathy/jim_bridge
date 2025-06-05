@@ -50,18 +50,10 @@ function triggerNotify(title, message, type, src)
             TriggerClientEvent('ox_lib:notify', src, { title = title, description = message, type = type or "success" })
         end
     elseif Config.System.Notify == "gta" then
-        if isStarted("jim-gtaui") then
-            if not src then
-                TriggerEvent("jim-gtaui:Notify", title, message, type)
-            else
-                TriggerClientEvent("jim-gtaui:Notify", src, title, message, type)
-            end
+        if not src then
+            exports.jim_bridge:Notify(title, message, type)
         else
-            if not src then
-                TriggerEvent(getScript()..":DisplayGTANotify", title, message)
-            else
-                TriggerClientEvent(getScript()..":DisplayGTANotify", src, title, message)
-            end
+            TriggerClientEvent("jim-bridge:Notify", src, title, message, type)
         end
     elseif Config.System.Notify == "esx" then
         if not src then
@@ -116,25 +108,25 @@ end)
 --- ```lua
 --- TriggerEvent(getScript()..":DisplayGTANotify", "taxiname", "Taxi service has arrived.")
 --- ```
-RegisterNetEvent(getScript()..":DisplayGTANotify", function(title, text)
-    local iconTable = {}
-    if getScript() == "jim-npcservice" then
-        iconTable = {
-            [Loc[Config.Lan].notify["taxiname"]] = "CHAR_TAXI",
-            [Loc[Config.Lan].notify["limoname"]] = "CHAR_CASINO",
-            [Loc[Config.Lan].notify["ambiname"]] = "CHAR_CALL911",
-            [Loc[Config.Lan].notify["pilotname"]] = "CHAR_DEFAULT",
-            [Loc[Config.Lan].notify["planename"]] = "CHAR_BOATSITE2",
-            [Loc[Config.Lan].notify["heliname"]] = "CHAR_BOATSITE2",
-        }
-    end
-
-    BeginTextCommandThefeedPost("STRING")
-    AddTextComponentSubstringKeyboardDisplay(text)
-    EndTextCommandThefeedPostMessagetext(
-        iconTable[title] or "CHAR_DEFAULT",
-        iconTable[title] or "CHAR_DEFAULT",
-        true, 1, title, nil, text
-    )
-    EndTextCommandThefeedPostTicker(true, false)
-end)
+--RegisterNetEvent(getScript()..":DisplayGTANotify", function(title, text)
+--    local iconTable = {}
+--    if getScript() == "jim-npcservice" then
+--        iconTable = {
+--            [Loc[Config.Lan].notify["taxiname"]] = "CHAR_TAXI",
+--            [Loc[Config.Lan].notify["limoname"]] = "CHAR_CASINO",
+--            [Loc[Config.Lan].notify["ambiname"]] = "CHAR_CALL911",
+--            [Loc[Config.Lan].notify["pilotname"]] = "CHAR_DEFAULT",
+--            [Loc[Config.Lan].notify["planename"]] = "CHAR_BOATSITE2",
+--            [Loc[Config.Lan].notify["heliname"]] = "CHAR_BOATSITE2",
+--        }
+--    end
+--
+--    BeginTextCommandThefeedPost("STRING")
+--    AddTextComponentSubstringKeyboardDisplay(text)
+--    EndTextCommandThefeedPostMessagetext(
+--        iconTable[title] or "CHAR_DEFAULT",
+--        iconTable[title] or "CHAR_DEFAULT",
+--        true, 1, title, nil, text
+--    )
+--    EndTextCommandThefeedPostTicker(true, false)
+--end)

@@ -194,7 +194,7 @@ function openMenu(Menu, data)
         exports[QBMenuExport]:openMenu(Menu)
 
     elseif Config.System.Menu == "gta" then
-        WarMenu.CreateMenu(tostring(Menu), data.header, data.headertxt or " ", {
+        WarMenu.CreateMenu(tostring(Menu), data.header, " ", {
             titleColor = { 222, 255, 255 },
             maxOptionCountOnScreen = 15,
             width = 0.25,
@@ -232,6 +232,7 @@ function openMenu(Menu, data)
                         if pressed and not Menu[k].isMenuHeader then
                             WarMenu.CloseMenu()
                             close = false
+                            Wait(10)
                             Menu[k].onSelect()
                         end
                     end
