@@ -175,6 +175,8 @@ for _, v in pairs({ -- This is a specific load order
     'vehicles.lua',
     'effects.lua',
 
+    --'warmenu.lua',
+
     -- Do version check last
     '_scriptversioncheck.lua'
 }) do
@@ -184,6 +186,6 @@ for _, v in pairs({ -- This is a specific load order
     local fileLoader = assert(load(LoadResourceFile('jim_bridge', ('shared/'..v)), ('@@jim_bridge/shared/'..v)))
     fileLoader()
     if debugMode then
-        print("^5Success^7: ^2loaded file^7: ^3"..(v):gsub("/", "^7/^3"):gsub("%.lua", "^7.lua").."^7")
+        print("^5CoreLoader^7: ^2loaded file^7: ^3"..(v):gsub("/", "^7/^3"):gsub("%.lua", "^7.lua").."^7")
     end
 end
