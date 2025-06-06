@@ -75,27 +75,14 @@ if checkExists(Exports.OXInv) then
     while GetResourceState(Exports.OXInv) ~= "started" do Wait(100) end
     itemResource = Exports.OXInv
     Items = exports[Exports.OXInv]:Items()
-    -- IF QBX-Core is running, merge items from there
-    if checkExists(Exports.QBExport)then
-        local tempWeapons = exports[Exports.QBExport]:GetCoreObject().Shared.Weapons
-        for k, v in pairs(tempWeapons) do
-            local info = exports[Exports.OXInv]:Items(v.name)
-            local weight = info and info.weight or 0
-            if not Items[v.name] then
-                Items[v.name] = {
-                    name = v.name,
-                    label = v.label,
-                    type = "weapon",
-                    ammotype = v.ammotype or "AMMO_PISTOL",
-                    weight = weight,
-                    image = v.image or (v.name..".png"),
-                    description = v.label or "",
-                }
-            end
-        end
-    end
-    -- tidy info into something jim_bridge can use
+
+    -- Get Weapon info and duplicate them if they are uppercase
+    -- (duplicate incase anything checks for the uppercase version)
     for k, v in pairs(Items) do
+        if k:find("WEAPON") then
+            Items[k:lower()] = Items[k]
+            Items[k:lower()].image = k..".png"
+        end
         Items[k].image = (v.client and v.client.image) and v.client.image:gsub("nui://"..Exports.OXInv.."/web/images/", "") or k..".png"
         Items[k].hunger = v.client and v.client.hunger
         Items[k].thirst = v.client and v.client.thirst
@@ -225,7 +212,6 @@ elseif checkExists(Exports.ESXExport) then
         end
 
         if highestGrade then
-            print("found boss for", Role)
             Jobs[Role].grades[tostring(highestGrade)].isBoss = true
         end
         ::continue::
