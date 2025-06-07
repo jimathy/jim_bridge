@@ -73,6 +73,11 @@ function sendPhoneMail(data)
                 TriggerServerEvent('qb-phone:server:sendNewMail', mailData)
             end,
         },
+        {   name = "npwd_qbx_mail",
+            send = function(mailData)
+                TriggerServerEvent('qb-phone:server:sendNewMail', mailData)
+            end,
+        },
         {   name = "jpr-phonesystem",
             send = function(mailData)
                 TriggerServerEvent(getScript()..":jpr:SendMail", mailData)
@@ -85,23 +90,125 @@ function sendPhoneMail(data)
         },
     }
 
-    local activePhone = nil
     -- Check each phone system in order and use the first active one.
     for _, phone in ipairs(phoneSystems) do
         if isStarted(phone.name) then
-            activePhone = phone.name
+            debugPrint("^6Bridge^7[^3"..phone.name.."^7]: ^2Sending mail to player")
             phone.send(data)
-            break
+            return true
         end
     end
-
-    if activePhone then
-        debugPrint("^6Bridge^7[^3"..activePhone.."^7]: ^2Sending mail to player")
-    else
-        print("^6Bridge^7: ^1ERROR ^2Sending mail to player ^7- ^2No supported phone found")
-    end
+    print("^6Bridge^7: ^1ERROR ^2Sending mail to player ^7- ^2No supported phone found")
+    return false
 end
 
+function sendPhoneInvoice(data)
+    if not data.src then return end
+    -- Define each supported phone system and its corresponding mail-sending function.
+    local phoneSystems = {
+        {
+            name = "qb-phone",
+            send = function(mailData)
+                -- Defensive check for required fields
+                local required = { "billedCitizenid", "amount", "job", "name", "billerCitizenid", "src" }
+                for _, field in ipairs(required) do
+                    if mailData[field] == nil then
+                        print("^1[jim-payments] ERROR:^0 Missing field '" .. field .. "' in mailData")
+                        return
+                    end
+                end
+
+                -- Safe insert with all parameters present
+                MySQL.Async.insert(
+                    'INSERT INTO phone_invoices (citizenid, amount, society, sender, sendercitizenid) VALUES (?, ?, ?, ?, ?)',
+                    {
+                        mailData.billedCitizenid,
+                        mailData.amount,
+                        mailData.job,
+                        mailData.name,
+                        mailData.billerCitizenid
+                    },
+                    function(id)
+                        if id then
+                            TriggerClientEvent('qb-phone:client:AcceptorDenyInvoice', mailData.src, id, mailData.name, mailData.job, mailData.billerCitizenid, mailData.amount, GetInvokingResource())
+                        end
+                    end
+                )
+
+                TriggerClientEvent('qb-phone:RefreshPhone', mailData.src)
+            end
+        },
+        {
+            name = "codem-phone",
+            send = function(mailData)
+                -- Defensive check for required fields
+                local required = { "billedCitizenid", "amount", "job", "name", "billerCitizenid", "src" }
+                for _, field in ipairs(required) do
+                    if mailData[field] == nil then
+                        print("^1[jim-payments] ERROR:^0 Missing field '" .. field .. "' in mailData")
+                        return
+                    end
+                end
+
+                -- Safe insert with all parameters present
+                MySQL.Async.insert(
+                    'INSERT INTO phone_invoices (citizenid, amount, society, sender, sendercitizenid) VALUES (?, ?, ?, ?, ?)',
+                    {
+                        mailData.billedCitizenid,
+                        mailData.amount,
+                        mailData.job,
+                        mailData.name,
+                        mailData.billerCitizenid
+                    },
+                    function(id)
+                    --    if id then
+                    --        TriggerClientEvent('qb-phone:client:AcceptorDenyInvoice', mailData.src, id, mailData.name, mailData.job, mailData.billerCitizenid, mailData.amount, GetInvokingResource())
+                    --    end
+                    end
+                )
+
+
+            end
+        },
+        {
+            name = "gks-phone",
+            send = function(mailData)
+                -- Defensive check for required fields
+                local required = { "billedCitizenid", "amount", "job", "name", "billerCitizenid", "label" }
+                for _, field in ipairs(required) do
+                    if mailData[field] == nil then
+                        print("^1[jim-payments] ERROR:^0 Missing field '" .. field .. "' in mailData")
+                        return
+                    end
+                end
+
+                MySQL.Async.execute(
+                    'INSERT INTO gksphone_invoices (citizenid, amount, society, sender, sendercitizenid, label) VALUES (@citizenid, @amount, @society, @sender, @sendercitizenid, @label)',
+                    {
+                        ['@citizenid'] = mailData.billedCitizenid,
+                        ['@amount'] = mailData.amount,
+                        ['@society'] = mailData.job,
+                        ['@sender'] = mailData.name,
+                        ['@sendercitizenid'] = mailData.billerCitizenid,
+                        ['@label'] = mailData.label
+                    }
+                )
+            end
+        }
+    }
+
+
+    -- Check each phone system in order and use the first active one.
+    for _, phone in ipairs(phoneSystems) do
+        if isStarted(phone.name) then
+            debugPrint("^6Bridge^7[^3"..phone.name.."^7]: ^2Sending mail to player^7", data.src)
+            phone.send(data)
+            return true
+        end
+    end
+    print("^6Bridge^7: ^1ERROR ^2Sending mail to player ^7- ^2No supported phone found")
+    return false
+end
 -------------------------------------------------------------
 -- Phone System Event Handlers
 -------------------------------------------------------------
