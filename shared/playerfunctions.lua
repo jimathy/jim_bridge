@@ -153,6 +153,18 @@ end
 -- Economy Event Handlers
 -------------------------------------------------------------
 
+--- BillPlayer
+function billPlayer(data)
+    if not Config.System.Billing or Config.System.Billing == "jim" then
+        TriggerEvent("jim-payments:client:Charge", {
+            job = data.job,
+            gang = data.gang,
+            coords = data.coords.xyz,
+            img = data.img
+        })
+    end
+end
+
 --- Charges a player by removing money from their account.
 ---
 --- @param cost number The amount to charge.
