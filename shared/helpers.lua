@@ -56,6 +56,25 @@ function isServer()
     return IsDuplicityVersion()
 end
 
+function checkExportExists(resource, export)
+    if not resource or not export then return false end
+
+    local exists = false
+    local ok, result = pcall(function()
+        exists = type(exports[resource][export]) == "function"
+    end)
+
+    if ok and exists then
+        debugPrint(("^3Export Check^7: ^5exports^7['^5%s^7']:^5%s^7() ^2Exists^7"):format(resource, export))
+        return true
+    else
+        debugPrint(("^3Export Check^7: ^5exports^7['^5%s^7']:^5%s^7() ^1Doesn^7'^1t Exist^7"):format(resource, export))
+        return false
+    end
+end
+
+
+
 -------------------------------------------------------------
 -- Debugging and JSON Utilities
 -------------------------------------------------------------
