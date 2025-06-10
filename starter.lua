@@ -191,14 +191,14 @@ for _, v in pairs({ -- This is a specific load order
 end
 
 if isStarted(QBInv) then
-    if not checkExportExists(QBInv, "CreateShop") then
+    if not checkExportExists(QBInv, "HasItem") then
         print("^6Bridge^7: ^2Can^7'^2t ^2find new QBInv export^7, ^2forcing ^1QBInvNew ^2to ^1false^7")
         QBInvNew = false
     end
 end
 
 if isStarted(PSInv) then
-    if not checkExportExists(PSInv, "CreateShop") then
+    if not checkExportExists(PSInv, "HasItem") then
         print("^6Bridge^7: ^2Can^7't ^2find new PSInv export^7, ^2forcing ^1QBInvNew ^2to ^1false^7")
         QBInvNew = false
     end
