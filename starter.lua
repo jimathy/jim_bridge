@@ -189,3 +189,17 @@ for _, v in pairs({ -- This is a specific load order
         print("^5CoreLoader^7: ^2loaded file^7: ^3"..(v):gsub("/", "^7/^3"):gsub("%.lua", "^7.lua").."^7")
     end
 end
+
+if isStarted(QBInv) then
+    if not checkExportExists(QBInv, "CreateShop") then
+        print("^6Bridge^7: ^2Can^7'^2t ^2find new QBInv export^7, ^2forcing ^1QBInvNew ^2to ^1false^7")
+        QBInvNew = false
+    end
+end
+
+if isStarted(PSInv) then
+    if not checkExportExists(PSInv, "CreateShop") then
+        print("^6Bridge^7: ^2Can^7't ^2find new PSInv export^7, ^2forcing ^1QBInvNew ^2to ^1false^7")
+        QBInvNew = false
+    end
+end
