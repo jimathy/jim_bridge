@@ -93,6 +93,9 @@ elseif checkExists(Exports.QBExport) then
     itemResource = Exports.QBExport
     Core = exports[Exports.QBExport]:GetCoreObject()
     Items = Core.Shared.Items
+    if Items == nil then
+        print("^1ERROR^7: ^1Can NOT find shared ^7Items ^1table^7, ^1possible error in that file^7?")
+    end
 
 elseif checkExists(Exports.ESXExport) then
     itemResource = Exports.ESXExport
@@ -111,6 +114,10 @@ elseif checkExists(Exports.RSGExport) then
     itemResource = Exports.RSGExport
     Core = exports[Exports.RSGExport]:GetCoreObject()
     Items = Core.Shared.Items
+    if Items == nil then
+        print("^1ERROR^7: ^1Can NOT find shared ^7Items ^1table^7, ^1possible error in that file^7?")
+    end
+
 end
 
 ---------------------
@@ -120,6 +127,9 @@ if checkExists(Exports.QBXExport) or checkExists(Exports.QBExport) then
     vehResource = Exports.QBExport
     Core = Core or exports[Exports.QBExport]:GetCoreObject()
     Vehicles = Core.Shared.Vehicles
+    if Vehicles == nil then
+        print("^1ERROR^7: ^1Can NOT find shared ^7Vehicles ^1table^7, ^1possible error in that file^7?")
+    end
 
 elseif checkExists(Exports.OXCoreExport) then
     vehResource = Exports.OXCoreExport
@@ -150,6 +160,10 @@ elseif checkExists(Exports.RSGExport) then
     vehResource = Exports.RSGExport
     Core = Core or exports[Exports.RSGExport]:GetCoreObject()
     Vehicles = Core.Shared.Vehicles
+    if Vehicles == nil then
+        print("^1ERROR^7: ^1Can NOT find shared ^7Vehicles ^1table^7, ^1possible error in that file^7?")
+    end
+
 end
 
 ---------------------
@@ -159,6 +173,9 @@ if checkExists(Exports.QBXExport) then
     jobResource = Exports.QBXExport
     Core = Core or exports[Exports.QBXExport]:GetCoreObject()
     Jobs, Gangs = exports[Exports.QBXExport]:GetJobs(), exports[Exports.QBXExport]:GetGangs()
+    if Jobs == nil then
+        print("^1ERROR^7: ^1Can NOT find shared ^7Jobs ^1table^7, ^1possible error in that file^7?")
+    end
 
 elseif checkExists(Exports.OXCoreExport) then
     jobResource = Exports.OXCoreExport
@@ -222,6 +239,10 @@ elseif checkExists(Exports.RSGExport) then
     jobResource = Exports.RSGExport
     Core = Core or exports[Exports.RSGExport]:GetCoreObject()
     Jobs, Gangs = Core.Shared.Jobs, Core.Shared.Gangs
+    if Jobs == nil then
+        print("^1ERROR^7: ^1Can NOT find shared ^7Jobs ^1table^7, ^1possible error in that file^7?")
+    end
+
 end
 
 -- Save to global cache
