@@ -176,39 +176,44 @@ function getPlayerInv(src)
 end
 
 function isInventoryOpen()
-    if isStarted(OXInv) then
-        return LocalPlayer.state.invBusy
 
-    elseif isStarted(QSInv) then
-        return exports[QSInv]:inInventory()
+    return IsNuiFocused()
 
-    elseif isStarted(OrigenInv) then
-        return exports[OrigenInv]:IsInventoryOpen()
+    --if isStarted(OXInv) then
+    --    return LocalPlayer.state.invBusy
 
-    elseif isStarted(CoreInv) then
-        return exports[CoreInv]:isInventoryOpen()
+    --elseif isStarted(QSInv) then
+    --    return exports[QSInv]:inInventory()
 
-    elseif isStarted(CodeMInv) then
-        return false
-        -- CodeM doesn't have a function to check if the inventory is open
-        -- No idea what it uses, so it just skips the check
+    --elseif isStarted(OrigenInv) then
+    --    return exports[OrigenInv]:IsInventoryOpen()
 
-    elseif isStarted(TgiannInv) then
-        return exports[TgiannInv]:IsInventoryActive()
+    --elseif isStarted(CoreInv) then
+    --    return exports[CoreInv]:isInventoryOpen()
 
-    elseif isStarted(QBInv) then
-        return LocalPlayer.state.inv_busy
+    --elseif isStarted(CodeMInv) then
+    --    return false
+    --    -- CodeM doesn't have a function to check if the inventory is open
+    --    -- No idea what it uses, so it just skips the check
 
-    elseif isStarted(PSInv) then
-        return LocalPlayer.state.inv_busy
+    --elseif isStarted(TgiannInv) then
+    --    return IsNuiFocused()
 
-    elseif ESX and isStarted(ESXExport) then
-        return false
+    --elseif isStarted(QBInv) then
+    --    return LocalPlayer.state.inv_busy
 
-    elseif isStarted(RSGInv) then
-        return LocalPlayer.state.inv_busy
+    --elseif isStarted(PSInv) then
+    --    return LocalPlayer.state.inv_busy
 
-    end
+    --elseif ESX and isStarted(ESXExport) then
+    --    return false
+
+    --elseif isStarted(RSGInv) then
+    --    return LocalPlayer.state.inv_busy
+
+    --end
+
+
 end
 
 -------------------------------------------------------------

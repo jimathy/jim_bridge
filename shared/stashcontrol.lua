@@ -222,6 +222,60 @@ RegisterNetEvent(getScript()..":server:openServerStash", function(data)
     end
 end)
 
+function clearStash(stashId)
+    if isStarted(QBInv) then
+        debugPrint("^5Bridge^7: ^2Cleared ^3"..QBInv.."^2 Stash^7", stashId)
+        if QBInvNew then
+            exports[QBInv]:ClearStash(stashId)
+        else
+            MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+                ['stash'] = stashId,
+                ['items'] = json.encode({})
+            })
+        end
+
+    elseif isStarted(OXInv) then
+        debugPrint("^5Bridge^7: ^2Cleared ^3"..OXInv.."^2 Stash^7", stashId)
+        exports[OXInv]:ClearInventory(stashId)
+
+    elseif isStarted(PSInv) then
+        debugPrint("^5Bridge^7: ^2Cleared ^3"..PSInv.."^2 Stash^7", stashId)
+        if QBInvNew then
+            exports[QBInv]:ClearStash(stashId)
+        else
+            MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+                ['stash'] = stashId,
+                ['items'] = json.encode({})
+            })
+        end
+
+    elseif isStarted(QSInv) then
+        debugPrint("^5Bridge^7: ^2Cleared ^3"..QSInv.."^2 Stash^7", stashId)
+        exports[QSInv]:ClearOtherInventory('stash', stashId)
+
+    elseif isStarted(CoreInv) then
+        debugPrint("^5Bridge^7: ^2Cleared ^3"..CoreInv.."^2 Stash^7", stashId)
+        exports[CoreInv]:clearInventory("stash-"..stashId)
+
+    elseif isStarted(CodeMInv) then
+        debugPrint("^5Bridge^7: ^2Cleared ^3"..CodeMInv.."^2 Stash^7", stashId)
+        exports[CodeMInv]:ClearInventory(stashId)
+
+    elseif isStarted(OrigenInv) then
+        debugPrint("^5Bridge^7: ^2Cleared ^3"..OrigenInv.."^2 Stash^7", stashId)
+        exports[OrigenInv]:ClearInventory(stashId)
+
+    elseif isStarted(TgiannInv) then
+        debugPrint("^5Bridge^7: ^2Cleared ^3"..TgiannInv.."^2 Stash^7", stashId)
+        exports["tgiann-inventory"]:DeleteInventory("stash", stashId)
+
+    elseif isStarted(RSGInv) then
+        debugPrint("^5Bridge^7: ^2Cleared ^3"..RSGInv.."^2 Stash^7", stashId)
+        exports[RSGInv]:ClearStash(stashId)
+
+    end
+end
+
 
 -------------------------------------------------------------
 -- Stash Retrieval Function
