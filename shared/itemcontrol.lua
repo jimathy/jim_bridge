@@ -196,7 +196,7 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
                         break
                     end
                 end
-                if Config.Crafting.showItemBox then
+                if Config.Crafting ~= nil and Config.Crafting.showItemBox then
                     TriggerClientEvent((isStarted(QBInv) and QBInvNew and "qb-" or "").."inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
                 end
 
@@ -210,7 +210,7 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
                         break
                     end
                 end
-                if Config.Crafting.showItemBox then
+                if Config.Crafting ~= nil and Config.Crafting.showItemBox then
                     TriggerClientEvent("inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
                 end
 
@@ -223,7 +223,7 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
                         break
                     end
                 end
-                if Config.Crafting.showItemBox then
+                if Config.Crafting ~= nil and Config.Crafting.showItemBox then
                     TriggerClientEvent("rsg-inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
                 end
 
@@ -277,7 +277,7 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
 
         elseif isStarted(PSInv) then invName = PSInv
             if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
-                if Config.Crafting.showItemBox then
+                if Config.Crafting ~= nil and Config.Crafting.showItemBox then
                     TriggerClientEvent("ps-inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
                 end
             end
