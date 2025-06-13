@@ -50,7 +50,7 @@ function hasItem(items, amount, src)
 
             local count = 0
             for _, itemData in pairs(grabInv) do
-                jsonPrint(itemData)
+                --jsonPrint(itemData)
                 if itemData and itemData.name == item then
                     count += (itemData.amount or itemData.count or 1)
                 end
@@ -138,6 +138,14 @@ function getPlayerInv(src)
             grabInv = exports[TgiannInv]:GetPlayerItems()
         end
 
+    elseif isStarted(JPRInv) then
+        foundInv = JPRInv
+        if src then
+            grabInv = Core.Functions.GetPlayer(src).PlayerData.items
+        else
+            grabInv = Core.Functions.GetPlayerData().items
+        end
+
     elseif isStarted(QBInv) then
         foundInv = QBInv
         if src then
@@ -148,8 +156,11 @@ function getPlayerInv(src)
 
     elseif isStarted(PSInv) then
         foundInv = PSInv
-        if src then grabInv = Core.Functions.GetPlayer(src).PlayerData.items
-        else grabInv = Core.Functions.GetPlayerData().items end
+        if src then
+            grabInv = Core.Functions.GetPlayer(src).PlayerData.items
+        else
+            grabInv = Core.Functions.GetPlayerData().items
+        end
 
     elseif ESX and isStarted(ESXExport) then
         foundInv = ESX
@@ -178,41 +189,6 @@ end
 function isInventoryOpen()
 
     return IsNuiFocused()
-
-    --if isStarted(OXInv) then
-    --    return LocalPlayer.state.invBusy
-
-    --elseif isStarted(QSInv) then
-    --    return exports[QSInv]:inInventory()
-
-    --elseif isStarted(OrigenInv) then
-    --    return exports[OrigenInv]:IsInventoryOpen()
-
-    --elseif isStarted(CoreInv) then
-    --    return exports[CoreInv]:isInventoryOpen()
-
-    --elseif isStarted(CodeMInv) then
-    --    return false
-    --    -- CodeM doesn't have a function to check if the inventory is open
-    --    -- No idea what it uses, so it just skips the check
-
-    --elseif isStarted(TgiannInv) then
-    --    return IsNuiFocused()
-
-    --elseif isStarted(QBInv) then
-    --    return LocalPlayer.state.inv_busy
-
-    --elseif isStarted(PSInv) then
-    --    return LocalPlayer.state.inv_busy
-
-    --elseif ESX and isStarted(ESXExport) then
-    --    return false
-
-    --elseif isStarted(RSGInv) then
-    --    return LocalPlayer.state.inv_busy
-
-    --end
-
 
 end
 
@@ -248,12 +224,14 @@ function invImg(item)
         elseif isStarted(OrigenInv) then
             imgLink = "nui://"..OrigenInv.."/html/img/"..(Items[item].image or "")
 
+        elseif isStarted(JPRInv) then
+            imgLink = "nui://"..JPRInv.."/html/images/"..(Items[item].image or "")
+
         elseif isStarted(QBInv) then
             imgLink = "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
 
         elseif isStarted(PSInv) then
             imgLink = "nui://"..PSInv.."/html/images/"..(Items[item].image or "")
-
         elseif isStarted(TgiannInv) then
             imgLink = "nui://inventory_images/images/"..(Items[item].image or "")
 

@@ -151,6 +151,22 @@ function openStash(data)
             slots = data.slots or 40
         })
 
+    elseif isStarted(JPRInv) then
+        if QBInvNew then
+            TriggerServerEvent(getScript()..':server:openServerStash', {
+                stashName = data.stash,
+                label = data.label,
+                maxweight = data.maxWeight or 600000,
+                slots = data.slots or 40
+            })
+        else
+            TriggerEvent("inventory:client:SetCurrentStash", data.stash)
+            TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, {
+                slots = data.slots or 50,
+                maxWeight = data.maxWeight or 600000
+            })
+        end
+
     elseif isStarted(QBInv) then
         if QBInvNew then
             TriggerServerEvent(getScript()..':server:openServerStash', {
@@ -211,6 +227,9 @@ RegisterNetEvent(getScript()..":server:openServerStash", function(data)
     if isStarted(TgiannInv) then
         exports[TgiannInv]:OpenInventory(source, 'stash', data.stashName, data)
     end
+    if isStarted(JPRInv) then
+        exports[JPRInv]:OpenInventory(source, data.stashName, data)
+    end
     if isStarted(QBInv) then
         exports[QBInv]:OpenInventory(source, data.stashName, data)
     end
@@ -223,7 +242,18 @@ RegisterNetEvent(getScript()..":server:openServerStash", function(data)
 end)
 
 function clearStash(stashId)
-    if isStarted(QBInv) then
+    if isStarted(JPRInv) then
+        debugPrint("^5Bridge^7: ^2Cleared ^3"..JPRInv.."^2 Stash^7", stashId)
+        if QBInvNew then
+            exports[JPRInv]:ClearStash(stashId)
+        else
+            MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+                ['stash'] = stashId,
+                ['items'] = json.encode({})
+            })
+        end
+
+    elseif isStarted(QBInv) then
         debugPrint("^5Bridge^7: ^2Cleared ^3"..QBInv.."^2 Stash^7", stashId)
         if QBInvNew then
             exports[QBInv]:ClearStash(stashId)
@@ -241,13 +271,14 @@ function clearStash(stashId)
     elseif isStarted(PSInv) then
         debugPrint("^5Bridge^7: ^2Cleared ^3"..PSInv.."^2 Stash^7", stashId)
         if QBInvNew then
-            exports[QBInv]:ClearStash(stashId)
+            exports[PSInv]:ClearStash(stashId)
         else
             MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
                 ['stash'] = stashId,
                 ['items'] = json.encode({})
             })
         end
+
 
     elseif isStarted(QSInv) then
         debugPrint("^5Bridge^7: ^2Cleared ^3"..QSInv.."^2 Stash^7", stashId)
@@ -328,6 +359,11 @@ function getStash(stashName)
 
     elseif isStarted(PSInv) then
         stashResource = PSInv
+        local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
+		if result then stashItems = json.decode(result) end
+
+    elseif isStarted(JPRInv) then
+        stashResource = JPRInv
         local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
 		if result then stashItems = json.decode(result) end
 
@@ -449,6 +485,29 @@ function stashRemoveItem(stashItems, stashName, items)
             debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with ^7"..TgiannInv, k, v)
         end
 
+    elseif isStarted(JPRInv) then
+        if not stashItems or not next(stashItems) then
+            stashItems = getStash(stashName[1])
+        end
+        for k, v in pairs(items) do
+            for l in pairs(stashItems) do
+                if stashItems[l].name == k then
+                    if (stashItems[l].amount - v) <= 0 then
+                        debugPrint("^6Bridge^7: ^2None of this item left in stash ^3Stash^7", k, v)
+                        stashItems[l] = nil
+                    else
+                        debugPrint("^6Bridge^7: ^2Removing item from ^3Stash^2 with "..JPRInv, k, v)
+                        stashItems[l].amount -= v
+                    end
+                end
+            end
+        end
+        debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3JPR^2 stash '^6"..stashName[1].."^7'")
+        MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+            ['stash'] = stashName[1],
+            ['items'] = json.encode(stashItems)
+        })
+
     elseif isStarted(QBInv) then
         if QBInvNew then
             for k, v in pairs(items) do
@@ -531,7 +590,7 @@ RegisterNetEvent(getScript()..":server:stashRemoveItem", stashRemoveItem)
 --- local hasAll, details = stashhasItem(currentStashItems, { iron = 2, wood = 5 })
 --- ```
 function stashhasItem(stashItems, items, amount)
-    local invs = { OXInv, QSInv, CoreInv, CodeMInv, OrigenInv, TgiannInv, QBInv, PSInv, RSGInv }
+    local invs = { OXInv, QSInv, CoreInv, CodeMInv, OrigenInv, TgiannInv, JPRInv, QBInv, PSInv, RSGInv }
     local foundInv = ""
     for _, inv in ipairs(invs) do
         if isStarted(inv) then

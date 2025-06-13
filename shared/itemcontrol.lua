@@ -186,6 +186,20 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
                 invName = TgiannInv
                 exports[TgiannInv]:RemoveItem(src, item, remamount)
 
+            elseif isStarted(JPRInv) then
+                invName = JPRInv
+                while remamount > 0 do
+                    if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1, slot) then
+                        remamount -= 1
+                    else
+                        print("^1Error removing "..item.." Amount left: "..remamount)
+                        break
+                    end
+                end
+                if Config.Crafting ~= nil and Config.Crafting.showItemBox then
+                    TriggerClientEvent("inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
+                end
+
             elseif isStarted(QBInv) then
                 invName = QBInv
                 while remamount > 0 do
@@ -269,6 +283,13 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
 
         elseif isStarted(TgiannInv) then invName = TgiannInv
             exports[TgiannInv]:AddItem(src, item, amountToAdd, slot, info)
+
+        elseif isStarted(JPRInv) then invName = JPRInv
+            if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
+                if Config.Crafting ~= nil and Config.Crafting.showItemBox then
+                    TriggerClientEvent("ps-inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
+                end
+            end
 
         elseif isStarted(QBInv) then invName = QBInv
             if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
@@ -379,7 +400,7 @@ end
 function getDurability(item)
     local lowestSlot = 100
     local durability = nil
-    if isStarted(QBInv) or isStarted(PSInv) or isStarted(RSGInv) then
+    if isStarted(QBInv) or isStarted(PSInv) or isStarted(RSGInv) or isStarted(JPRInv) then
         local itemcheck = Core.Functions.GetPlayerData().items
         for k, v in pairs(itemcheck) do
             if v.name == item then
@@ -488,7 +509,7 @@ end
 --- ```
 RegisterNetEvent(getScript()..":server:setMetaData", function(data)
     local src = source
-    if isStarted(QBInv) or isStarted(PSInv) or isStarted(RSGInv) then
+    if isStarted(QBInv) or isStarted(PSInv) or isStarted(RSGInv) or isStarted(JPRInv) then
         debugPrint(src, data.item, 1, data.slot)
         local Player = Core.Functions.GetPlayer(src)
         Player.PlayerData.items[data.slot].info = data.metadata
@@ -624,6 +645,22 @@ function canCarry(itemTable, src)
         elseif isStarted(TgiannInv) then
             for k, v in pairs(itemTable) do
                 resultTable[k] = exports[TgiannInv]:CanCarryItem(source, k, v)
+            end
+
+        elseif isStarted(JPRInv) then
+            local items = getPlayerInv(src)
+            local totalWeight = 0
+            if not items then return false end
+            for _, item in pairs(items) do
+                totalWeight += (item.weight * item.amount)
+            end
+            for k, v in pairs(itemTable) do
+                local itemInfo = Items[k]
+                if not itemInfo then
+                    resultTable[k] = true
+                else
+                    resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight
+                end
             end
 
         elseif isStarted(QBInv) then
