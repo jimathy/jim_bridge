@@ -231,3 +231,16 @@ function useDoor(data)
     DoScreenFadeIn(1000)
     Wait(100)
 end
+
+
+function openBossMenu(isGang, group)
+    if isStarted("qb-management") then
+        if isGang then
+            TriggerEvent("qb-gangmenu:client:OpenMenu")
+        else
+            TriggerEvent("qb-bossmenu:client:OpenMenu")
+        end
+    elseif isStarted("qbx_management") then
+        exports["qbx_management"]:OpenBossMenu(isGang and "gang" or "job")
+    end
+end
