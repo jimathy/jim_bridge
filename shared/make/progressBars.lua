@@ -43,9 +43,10 @@ function progressBar(data)
     local result = nil
     if data.cam then startTempCam(data.cam) end
     if Config.System.ProgressBar == "ox" then
-        if exports[OXLibExport]:progressBar({
+        local options = {
             duration = debugMode and 1000 or data.time,
             label = data.label,
+            position = data.position or "bottom",
             useWhileDead = data.dead or false,
 			canCancel = data.cancel and data.cancel or true,
             anim = {
@@ -55,14 +56,34 @@ function progressBar(data)
                 scenario = data.task
             },
             disable = {
-                combat = true
+                combat = data.combat or true,
+                move = data.movement or false,
+                car = data.carMovement or false,
+                mouse = data.mouse or false
             },
-        }) then
-            result = true
-        else
-            result = false
+        }
+        if data.prop and data.prop.model then
+            options.prop = {
+                model = data.prop.model,
+                pos = data.prop.pos or vec3(0, 0, 0),
+                rot = data.prop.rot or vec3(0, 0, 0),
+                bone = data.prop.bone or 0
+            }
         end
-
+        if data.propTwo and data.propTwo.model then
+            options.propTwo = {
+                model = data.propTwo.model,
+                pos = data.propTwo.pos or vec3(0, 0, 0),
+                rot = data.propTwo.rot or vec3(0, 0, 0),
+                bone = data.propTwo.bone or 0
+            }
+        end
+        if data.progressType == "circle" then result = exports[OXLibExport]:progressCircle(options)
+        elseif data.progressType == "bar" then result = exports[OXLibExport]:progressBar(options)
+        else
+            result = exports[OXLibExport]:progressBar(options)
+        end
+        return result
     elseif Config.System.ProgressBar == "qb" then
         Core.Functions.Progressbar("progbar",
             data.label,
