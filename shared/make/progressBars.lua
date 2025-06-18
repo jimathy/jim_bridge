@@ -78,12 +78,21 @@ function progressBar(data)
                 bone = data.propTwo.bone or 0
             }
         end
-        if data.progressType == "circle" then result = exports[OXLibExport]:progressCircle(options)
-        elseif data.progressType == "bar" then result = exports[OXLibExport]:progressBar(options)
-        else
-            result = exports[OXLibExport]:progressBar(options)
+        if data.progressType == "circle" then
+            if exports[OXLibExport]:progressCircle(options) then
+                result = true
+            else
+                result = false
+            end
         end
-        return result
+        if not data.progressType or data.progressType == "bar" then
+            if exports[OXLibExport]:progressBar(options) then
+                result = true
+            else
+                result = false
+            end
+        end
+
     elseif Config.System.ProgressBar == "qb" then
         Core.Functions.Progressbar("progbar",
             data.label,
@@ -200,7 +209,9 @@ function progressBar(data)
         inProgress = false
     end
 
-    while result == nil do Wait(10) end
+    while result == nil do
+        Wait(10)
+    end
 
     -- Cleanup
     FreezeEntityPosition(ped, false)
@@ -277,7 +288,7 @@ function stopProgressBar()
         exports[OXLibExport]:cancelProgress()
     elseif Config.System.ProgressBar == "qb" then
         TriggerEvent("progressbar:client:cancel")
-    elseif Config.System.ProgressBar == "gta" then
+    elseif Config.System.ProgressBar == "gta" or Config.System.ProgressBar == "red" then
         inProgress = false
     end
 end
