@@ -1,12 +1,14 @@
-2.0.15
+2.0.16
 
-- Fix old PSInv/QBInv stashes being wiped when it should be updating them
-- Better breakout from opening inventory while crafting
-- Unify isInventoryOpen() function to simply check for IsNuiFocused()
-- Add clearStash() and doesItemExist() functions for future use
-- Add warmenu.lua file for gta scaleform menus (loading is disabled by default)
-- Move custom GTA native notify, skillcheck, target to separate files, can be used outside the script
-- Complete refactor of framework shared info loading, now only does it once and then shares to scripts
-- Added extra checks for ESX loading, should hopefully stop the coreloader line 317 error
+- Fix weapon item caching for ox_inv
+- add checkExportExist() function
+- Start adding a `billPlayer()` function for multi-billing script support
+- Add support for sending mails to npwd_qbx_mail addon
+- Add "support" for CoreM's shop integration
+- Add Auto check for QBInvNew variable for older inventories
+- Add warnings for if theres an error in your shared vehicles, items or jobs file
+- Add full support for JPR-Inventory
+- Changes to crafting menu ui
+- Fixes to setThirst() and setHunger() functions
 
 https://github.com/jimathy/jim_bridge

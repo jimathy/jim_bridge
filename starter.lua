@@ -14,6 +14,7 @@ Exports = {
     CodeMInv = "codem-inventory",
     OrigenInv = "origen_inventory",
     TgiannInv = "tgiann-inventory",
+    JPRInv = "jpr-inventory",
 
     OXLibExport = "ox_lib",
 

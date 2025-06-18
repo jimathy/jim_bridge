@@ -1,10 +1,11 @@
 --[[
     Cached Resource Initialization Module
     --------------------------------------
-    This module initializes shared data (Items, Vehicles, Jobs, Gangs)
-    only once and stores it in _G.__jimBridgeDataCache for reuse across scripts.
+    Initializes shared resource data (Items, Vehicles, Jobs, Gangs) once and caches it
+    to improve performance and reduce redundant data fetching across scripts.
 ]]
 
+-- Define resource names used in different frameworks
 local Exports = {
     QBExport = "qb-core",
     QBXExport = "qbx_core",
@@ -19,6 +20,7 @@ local Exports = {
     CodeMInv = "codem-inventory",
     OrigenInv = "origen_inventory",
     TgiannInv = "tgiann-inventory",
+    JPRInv = "jpr-inventory",
 
     OXLibExport = "ox_lib",
 
@@ -32,17 +34,20 @@ local Exports = {
     RSGInv = "rsg-inventory"
 }
 
--- Ensure cache only runs once
+-- Prevent reloading if cache is already initialized
 if _G.__jimBridgeDataCache then return end
 _G.__jimBridgeDataCache = {}
 local cache = _G.__jimBridgeDataCache
 
-function checkExists(resourceName)
+-- Helper function to check if resource exists in server (instead of if it is already started)
+local function checkExists(resourceName)
     return GetResourceState(resourceName):find("start") or GetResourceState(resourceName):find("stopped")
 end
 
+-- Ensure oxmysql resource is loaded
 local fileLoader = assert(load(LoadResourceFile("oxmysql", ('lib/MySQL.lua')), ('@@oxmysql/lib/MySQL.lua')))
 fileLoader()
+
 if checkExists(Exports.OXCoreExport) then
     -- Detected OX_Core in server, wait for it to be started if needed
     while GetResourceState(Exports.OXCoreExport) ~= "started" do Wait(100) end
@@ -56,7 +61,7 @@ if checkExists(Exports.ESXExport) then
     fileLoader()
 end
 
--- Init variables
+-- Initialize variables for caching
 local Items, Vehicles, Jobs, Gangs, Core = nil, nil, nil, nil, nil
 local itemResource, jobResource, vehResource = "", "", ""
 
@@ -70,6 +75,7 @@ end
 ---------------------
 ---- Load Items -----
 ---------------------
+-- Items initialization based on detected inventory system
 if checkExists(Exports.OXInv) then
     -- Wait for OX Inventory to start if it's not already started
     while GetResourceState(Exports.OXInv) ~= "started" do Wait(100) end
@@ -95,6 +101,7 @@ elseif checkExists(Exports.QBExport) then
     Items = Core.Shared.Items
     if Items == nil then
         print("^1ERROR^7: ^1Can NOT find shared ^7Items ^1table^7, ^1possible error in that file^7?")
+        Items = {} -- Fallback to an empty table
     end
 
 elseif checkExists(Exports.ESXExport) then
@@ -116,6 +123,7 @@ elseif checkExists(Exports.RSGExport) then
     Items = Core.Shared.Items
     if Items == nil then
         print("^1ERROR^7: ^1Can NOT find shared ^7Items ^1table^7, ^1possible error in that file^7?")
+        Items = {} -- Fallback to an empty table
     end
 
 end
@@ -123,12 +131,14 @@ end
 ---------------------
 --- Load Vehicles ---
 ---------------------
+-- Vehicle loading depending on framework
 if checkExists(Exports.QBXExport) or checkExists(Exports.QBExport) then
     vehResource = Exports.QBExport
     Core = Core or exports[Exports.QBExport]:GetCoreObject()
     Vehicles = Core.Shared.Vehicles
     if Vehicles == nil then
         print("^1ERROR^7: ^1Can NOT find shared ^7Vehicles ^1table^7, ^1possible error in that file^7?")
+        Vehicles = {} -- Fallback to an empty table
     end
 
 elseif checkExists(Exports.OXCoreExport) then
@@ -162,6 +172,7 @@ elseif checkExists(Exports.RSGExport) then
     Vehicles = Core.Shared.Vehicles
     if Vehicles == nil then
         print("^1ERROR^7: ^1Can NOT find shared ^7Vehicles ^1table^7, ^1possible error in that file^7?")
+        Vehicles = {} -- Fallback to an empty table
     end
 
 end
@@ -169,12 +180,14 @@ end
 ---------------------
 ----- Load Jobs -----
 ---------------------
+-- Jobs loading based on framework
 if checkExists(Exports.QBXExport) then
     jobResource = Exports.QBXExport
     Core = Core or exports[Exports.QBXExport]:GetCoreObject()
     Jobs, Gangs = exports[Exports.QBXExport]:GetJobs(), exports[Exports.QBXExport]:GetGangs()
     if Jobs == nil then
         print("^1ERROR^7: ^1Can NOT find shared ^7Jobs ^1table^7, ^1possible error in that file^7?")
+        Jobs = {} -- Fallback to an empty table
     end
 
 elseif checkExists(Exports.OXCoreExport) then
@@ -241,6 +254,7 @@ elseif checkExists(Exports.RSGExport) then
     Jobs, Gangs = Core.Shared.Jobs, Core.Shared.Gangs
     if Jobs == nil then
         print("^1ERROR^7: ^1Can NOT find shared ^7Jobs ^1table^7, ^1possible error in that file^7?")
+        Jobs = {} -- Fallback to an empty table
     end
 
 end
@@ -269,13 +283,10 @@ CreateThread(function()
     print("^6FrameworkCache^7: ^2Loaded ^5"..tostring(counts.Gangs).."^2 Gangs from ^7"..jobResource)
 end)
 
---print(json.encode(cache.Items , { indent = true}))
-
 RegisterNetEvent("jim_bridge:requestCache", function()
     local src = source
     TriggerClientEvent("jim_bridge:receiveCache", src, _G.__jimBridgeDataCache)
 end)
-
 
 exports("GetSharedData", function()
     -- Wait for data to be ready before returning it

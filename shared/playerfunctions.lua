@@ -109,19 +109,18 @@ end)
 --- setThirst(playerId, 80)
 --- ```
 function setThirst(src, thirst)
+
+    debugPrint("^4Debug^7: ^2Adding thirst^7: ^3"..thirst.." ^2to player^7: ^3"..src.."^7")
     if isStarted(ESXExport) then
         TriggerClientEvent('esx_status:add', src, 'thirst', thirst)
 
-    elseif isStarted(QBExport) or isStarted(QBXExport) then
+    elseif isStarted(QBExport) or isStarted(QBXExport) or isStarted(RSGExport) then
         local Player = Core.Functions.GetPlayer(src)
         Player.Functions.SetMetaData('thirst', thirst)
-        TriggerClientEvent("hud:client:UpdateNeeds", src, thirst, Player.PlayerData.metadata.thirst)
+        TriggerClientEvent("hud:client:UpdateNeeds", src, Player.PlayerData.metadata.hunger, thirst)
 
-    elseif isStarted(RSGExport) then
-        local Player = Core.Functions.GetPlayer(src)
-        Player.Functions.SetMetaData('thirst', thirst)
-        TriggerClientEvent("hud:client:UpdateNeeds", src, thirst, Player.PlayerData.metadata.thirst)
     end
+
 end
 
 --- Sets the player's hunger level.
@@ -134,18 +133,16 @@ end
 --- setHunger(playerId, 60)
 --- ```
 function setHunger(src, hunger)
+
+    debugPrint("^4Debug^7: ^2Adding hunger^7: ^3"..hunger.." ^2to player^7: ^3"..src.."^7")
     if isStarted(ESXExport) then
         TriggerClientEvent('esx_status:add', src, 'hunger', hunger)
 
-    elseif isStarted(QBExport) or isStarted(QBXExport) then
+    elseif isStarted(QBExport) or isStarted(QBXExport) or isStarted(RSGExport) then
         local Player = Core.Functions.GetPlayer(src)
         Player.Functions.SetMetaData('hunger', hunger)
-        TriggerClientEvent("hud:client:UpdateNeeds", src, hunger, Player.PlayerData.metadata.hunger)
+        TriggerClientEvent("hud:client:UpdateNeeds", src, hunger, Player.PlayerData.metadata.thirst)
 
-    elseif isStarted(RSGExport) then
-        local Player = Core.Functions.GetPlayer(src)
-        Player.Functions.SetMetaData('hunger', hunger)
-        TriggerClientEvent("hud:client:UpdateNeeds", src, hunger, Player.PlayerData.metadata.hunger)
     end
 end
 

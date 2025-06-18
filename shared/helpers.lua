@@ -493,7 +493,7 @@ end
 --- end
 --- ```
 function ensureNetToVeh(vehNetID)
-    debugPrint("^6Bridge^7: ^3ensureNetToVeh^7: ^2Requesting NetworkDoesNetworkIdExist^7(^6"..vehNetID.."^7)")
+    --debugPrint("^6Bridge^7: ^3ensureNetToVeh^7: ^2Requesting NetworkDoesNetworkIdExist^7(^6"..vehNetID.."^7)")
     local timeout = 100
     while not NetworkDoesNetworkIdExist(vehNetID) and timeout > 0 do
         timeout -= 1
@@ -521,7 +521,7 @@ end
 --- end
 --- ```
 function ensureNetToEnt(entNetID)
-    debugPrint("^6Bridge^7: ^3ensureNetToEnt^7: ^2Requesting NetworkDoesNetworkIdExist^7(^6"..entNetID.."^7)")
+    --debugPrint("^6Bridge^7: ^3ensureNetToEnt^7: ^2Requesting NetworkDoesNetworkIdExist^7(^6"..entNetID.."^7)")
     local timeout = 100
     while not NetworkDoesNetworkIdExist(entNetID) and timeout > 0 do
         timeout -= 1

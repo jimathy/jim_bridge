@@ -88,6 +88,7 @@ function craftingMenu(data)
 
     -- Check if the player can carry the required items (server callback).
     local canCarryTable = triggerCallback(getScript()..':server:canCarry', tempCarryTable)
+
     -- Process each recipe to create menu entries.
     for i = 1, #Recipes do
         if not Recipes[i]["amount"] then Recipes[i]["amount"] = 1 end
@@ -106,10 +107,13 @@ function craftingMenu(data)
                     local metaTable = {}
                     -- Build ingredient details.
                     for l, b in pairs(Recipes[i][tostring(k)]) do
-                        settext = settext..(settext ~= "" and br or "")..(Items[l] and Items[l].label or "error - "..l)..(b > 1 and " x"..b or "")
+                        local label = Items[l] and Items[l].label or "error - "..l
+                        local hasItem = checkStashItem(data.stashName, { [l] = b })
+                        local missingMark = not hasItem and " ❌" or " "
+                        settext = settext..(settext ~= "" and br or "").."[ x"..b.." ] - "..label..(b > 1 and " x"..b or "")..missingMark
+
                         metaTable[Items[l] and Items[l].label or "error - "..l] = b
                         itemTable[l] = b
-                        --Wait(0)
                     end
 
                     while not canCarryTable do Wait(0) end
@@ -117,17 +121,17 @@ function craftingMenu(data)
                     setheader = ((metadata and metadata.label) or (Items[tostring(k)] and Items[tostring(k)].label) or "error - "..tostring(k))
                                ..(Recipes[i]["amount"] > 1 and " x"..Recipes[i]["amount"] or "")
 
-                    local statusEmoji = disable and " ❌" or not canCarryTable[k] and " 📦" or " ✔️"
+                    local statusEmoji = disable and " " or not canCarryTable[k] and " 📦" or " ✔️"
                     local isNew = (Recipes[i]["hasCrafted"] ~= nil and craftedItems[k] == nil) and "✨ " or ""
                     setheader = isNew .. setheader .. statusEmoji
 
                     Menu[#Menu + 1] = {
-                        arrow = not disable and canCarryTable[k],
+                        arrow = isOx() and (not disable and canCarryTable[k]),
                         isMenuHeader = disable or not canCarryTable[k],
                         icon = invImg((metadata and metadata.image) or tostring(k)),
                         image = invImg((metadata and metadata.image) or tostring(k)),
                         header = setheader,
-                        txt = (isStarted(QBMenuExport) or disable) and settext or nil,
+                        txt = settext or nil,
                         metadata = metaTable,
                         onSelect = (not disable and canCarryTable[k]) and function()
                             local transdata = {
