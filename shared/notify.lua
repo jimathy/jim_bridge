@@ -31,6 +31,7 @@
 --- triggerNotify("Alert", "You have been warned for misconduct.", "error", playerId)
 --- ```
 function triggerNotify(title, message, type, src)
+    if not Config.System or not Config.System.Notify then debugPrint("Notify triggered but not set up") return end
     if Config.System.Notify == "okok" then
         if not src then
             TriggerEvent('okokNotify:Alert', title, message, 6000, type)
