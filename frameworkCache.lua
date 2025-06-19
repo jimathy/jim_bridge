@@ -87,11 +87,7 @@ if checkExists(Exports.OXInv) then
     for k, v in pairs(Items) do
         if k:find("WEAPON") then
             Items[k:lower()] = Items[k]
-            Items[k:lower()].image = k..".png"
         end
-        Items[k].image = (v.client and v.client.image) and v.client.image:gsub("nui://"..Exports.OXInv.."/web/images/", "") or k..".png"
-        Items[k].hunger = v.client and v.client.hunger
-        Items[k].thirst = v.client and v.client.thirst
     end
 
 elseif checkExists(Exports.QBExport) then
