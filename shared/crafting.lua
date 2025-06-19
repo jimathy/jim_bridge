@@ -110,7 +110,7 @@ function craftingMenu(data)
                         local label = Items[l] and Items[l].label or "error - "..l
                         local hasItem = checkStashItem(data.stashName, { [l] = b })
                         local missingMark = not hasItem and " ❌" or " "
-                        settext = settext..(settext ~= "" and br or "").."[ x"..b.." ] - "..label..(b > 1 and " x"..b or "")..missingMark
+                        settext = settext..(settext ~= "" and br or "").."[ x"..b.." ] - "..label..missingMark
 
                         metaTable[Items[l] and Items[l].label or "error - "..l] = b
                         itemTable[l] = b
