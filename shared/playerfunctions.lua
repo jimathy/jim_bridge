@@ -173,6 +173,7 @@ end
 --- chargePlayer(100, "cash", playerId)
 --- ```
 function chargePlayer(cost, moneyType, newsrc)
+    local is_success = false
     local src = newsrc or source
     local fundResource = ""
     if cost < 0 then
@@ -181,33 +182,35 @@ function chargePlayer(cost, moneyType, newsrc)
     end
     if moneyType == "cash" then
         if isStarted(OXInv) then fundResource = OXInv
-            exports[OXInv]:RemoveItem(src, "money", cost)
+            is_success = exports[OXInv]:RemoveItem(src, "money", cost)
 
         elseif isStarted(QBExport) or isStarted(QBXExport) then
             fundResource = QBExport
-            Core.Functions.GetPlayer(src).Functions.RemoveMoney("cash", cost)
+            is_success = Core.Functions.GetPlayer(src).Functions.RemoveMoney("cash", cost)
 
         elseif isStarted(RSGExport) then
             fundResource = RSGExport
-            Core.Functions.GetPlayer(src).Functions.RemoveMoney("cash", cost)
+            is_success = Core.Functions.GetPlayer(src).Functions.RemoveMoney("cash", cost)
 
         elseif isStarted(ESXExport) then
             fundResource = ESXExport
             ESX.GetPlayerFromId(src).removeMoney(cost, "")
+            is_success = true
 
         end
     elseif moneyType == "bank" then
         if isStarted(QBExport) or isStarted(QBXExport) then
             fundResource = QBExport
-            Core.Functions.GetPlayer(src).Functions.RemoveMoney("bank", cost)
+            is_success = Core.Functions.GetPlayer(src).Functions.RemoveMoney("bank", cost)
 
         elseif isStarted(RSGExport) then
             fundResource = RSGExport
-            Core.Functions.GetPlayer(src).Functions.RemoveMoney("bank", cost)
+            is_success = Core.Functions.GetPlayer(src).Functions.RemoveMoney("bank", cost)
 
         elseif isStarted(ESXExport) then
             fundResource = ESXExport
             ESX.GetPlayerFromId(src).removeMoney(cost, "")
+            is_success = true
         end
     end
 
@@ -216,6 +219,7 @@ function chargePlayer(cost, moneyType, newsrc)
     else
         debugPrint("^6Bridge^7: ^2Charging ^2Player^7: '^6"..cost.."^7'", moneyType, fundResource)
     end
+    return is_success
 end
 RegisterNetEvent(getScript()..":server:ChargePlayer", function(cost, moneyType, newsrc)
     debugPrint(GetInvokingResource())
@@ -237,39 +241,42 @@ end)
 --- fundPlayer(150, "cash", playerId)
 --- ```
 function fundPlayer(fund, moneyType, newsrc)
+    local is_success = false
     local src = newsrc or source
     local fundResource = ""
 
     if moneyType == "cash" then
         if isStarted(OXInv) then
             fundResource = OXInv
-            exports[OXInv]:AddItem(src, "money", fund)
+            is_success = exports[OXInv]:AddItem(src, "money", fund)
 
         elseif isStarted(QBExport) or isStarted(QBXExport) then
             fundResource = QBExport
-            Core.Functions.GetPlayer(src).Functions.AddMoney("cash", fund)
+            is_success = Core.Functions.GetPlayer(src).Functions.AddMoney("cash", fund)
 
         elseif isStarted(RSGExport) then
             fundResource = RSGExport
-            Core.Functions.GetPlayer(src).Functions.AddMoney("cash", fund)
+            is_success = Core.Functions.GetPlayer(src).Functions.AddMoney("cash", fund)
 
         elseif isStarted(ESXExport) then
             fundResource = ESXExport
             ESX.GetPlayerFromId(src).addMoney(fund, "")
+            is_success = true
 
         end
     elseif moneyType == "bank" then
         if isStarted(QBExport) or isStarted(QBXExport) then
             fundResource = QBExport
-            Core.Functions.GetPlayer(src).Functions.AddMoney("bank", fund)
+            is_success = Core.Functions.GetPlayer(src).Functions.AddMoney("bank", fund)
 
         elseif isStarted(RSGExport) then
             fundResource = RSGExport
-            Core.Functions.GetPlayer(src).Functions.AddMoney("bank", fund)
+            is_success = Core.Functions.GetPlayer(src).Functions.AddMoney("bank", fund)
 
         elseif isStarted(ESXExport) then
             fundResource = ESXExport
             ESX.GetPlayerFromId(src).addMoney(fund, "")
+            is_success = true
         end
     end
 
@@ -278,6 +285,7 @@ function fundPlayer(fund, moneyType, newsrc)
     else
         debugPrint("^6Bridge^7: ^2Funding Player: '^2"..fund.."^7'", moneyType, fundResource)
     end
+    return is_success
 end
 
 -------------------------------------------------------------
