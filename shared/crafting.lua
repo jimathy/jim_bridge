@@ -400,7 +400,7 @@ function makeItem(data)
                             currentToken = nil -- clear client cached token
                             CreateThread(function()
                                 if data.craft["hasCrafted"] ~= nil then
-                                    debugPrint("hasCrafted Found, marking '"..data.item.."' as crafted for player")
+                                    debugPrint("^5Bridge^7: ^3hasCrafted ^2Found^7, ^2marking ^7'^4"..data.item.."^7' ^2as crafted for player^7")
                                     data.craftable.craftedItems[data.item] = true
                                     triggerCallback(getScript()..":server:SetMetadata", "craftedItems", data.craftable.craftedItems)
                                 end
@@ -408,7 +408,7 @@ function makeItem(data)
                                 if data.craft["exp"] ~= nil then
                                     craftingLevel += data.craft["exp"].give
                                     jsonPrint(data.craft["exp"])
-                                    debugPrint("exp found, giving exp for '"..data.item.."'")
+                                    debugPrint("^6Bridge^7: ^3EXP ^2found^7, ^2giving exp for ^7'^4"..data.item.."^7'")
                                     triggerCallback(getScript()..":server:SetMetadata", "craftingLevel", craftingLevel)
                                 end
                             end)
@@ -457,9 +457,9 @@ end
 --- @usage
 RegisterNetEvent(getScript()..":Crafting:GetItem", function(ItemMake, craftable, stashName, metadata, token)
     local src = source
-    debugPrint(GetInvokingResource())
+    debugPrint("^6Bridge^7: ^4"..getScript().."^7:^4Crafting^7:^4GetItem ^2invoked by^7: "..GetInvokingResource())
 	if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= "qb-core" then
-        debugPrint("^1Error^7: ^1Possible exploit^7, ^1vital function was called from an external resource^7")
+        debugPrint("^1ERROR^7: ^1Possible exploit^7, ^1vital function was called from an external resource^7")
         return
     end
 

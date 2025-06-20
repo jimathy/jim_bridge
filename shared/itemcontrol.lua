@@ -30,25 +30,34 @@ validTokens = {}
 --- end)
 --- ```
 function createUseableItem(item, funct)
-    if isStarted(ESXExport) then
-        debugPrint("^6Bridge^7: ^2Registering item as ^3Usable^2 with ^7es_extended^7", item)
-        while not ESX do Wait(0) end
-        ESX.RegisterUsableItem(item, funct)
+    if doesItemExist(item) then
+        local itemResource = ""
+        if isStarted(ESXExport) then
+            itemResource = ESXExport
+            while not ESX do Wait(0) end
+            ESX.RegisterUsableItem(item, funct)
 
-    elseif isStarted(QBExport) and not isStarted(QBXExport) then
-        debugPrint("^6Bridge^7: ^2Registering item as ^3Usable^2 with ^7qb-core^7", item)
-        Core.Functions.CreateUseableItem(item, funct)
+        elseif isStarted(QBExport) and not isStarted(QBXExport) then
+            itemResource = QBExport
+            Core.Functions.CreateUseableItem(item, funct)
 
-    elseif isStarted(QBXExport) then
-        debugPrint("^6Bridge^7: ^2Registering item as ^3Usable^2 with ^7qbx_core^7", item)
-        exports[QBXExport]:CreateUseableItem(item, funct)
+        elseif isStarted(QBXExport) then
+            itemResource = QBXExport
+            exports[QBXExport]:CreateUseableItem(item, funct)
 
-    elseif isStarted(RSGExport) then
-        debugPrint("^6Bridge^7: ^2Registering item as ^3Usable^2 with ^1rsg-core^7", item)
-        Core.Functions.CreateUseableItem(item, funct)
+        elseif isStarted(RSGExport) then
+            itemResource = RSGExport
+            Core.Functions.CreateUseableItem(item, funct)
 
+        end
+
+        if itemResource ~= "" then
+            debugPrint("^6Bridge^7: ^2Registering ^3UsableItem^2 with ^4"..itemResource.."^7:", item)
+        else
+            debugPrint("^4ERROR^7: No supported framework detected for registering usable item: ^3"..item.."^7")
+        end
     else
-        print("^4ERROR^7: No supported framework detected for registering usable item: ^3"..item.."^7")
+        print("^1ERROR^7: ^1Tried to make item usable but it didn't exist^7: "..item)
     end
 end
 

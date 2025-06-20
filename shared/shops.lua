@@ -221,8 +221,9 @@ end)
 --- registerShop("weaponShop", "Weapon Shop", weaponItems, "society_weapons")
 --- ```
 function registerShop(name, label, items, society)
+    local shopResource = ""
     if isStarted(OXInv) then
-        debugPrint("^6Bridge^7: ^2Registering ^3OX ^2Store^7:", name, label)
+        shopResource = OXInv
         exports[OXInv]:RegisterShop(name, {
             name = label,
             inventory = items,
@@ -230,11 +231,11 @@ function registerShop(name, label, items, society)
         })
 
     elseif isStarted(TgiannInv) then
-        debugPrint("^6Bridge^7: ^2Registering ^3Tgiann ^2Store^7:", name, label)
+        shopResource = TgiannInv
         exports[TgiannInv]:RegisterShop(name, items)
 
-    elseif isStarted(QBInv) and QBInvNew then
-        debugPrint("^6Bridge^7: ^2Registering ^3QB ^2Store^7:", name, label)
+    elseif isStarted(QBInv) and checkExportExists(QBInv, "CreateShop") then
+        shopResource = QBInv
         exports[QBInv]:CreateShop({
             name = name,
             label = label,
@@ -244,7 +245,7 @@ function registerShop(name, label, items, society)
         })
 
     elseif isStarted(PSInv) and QBInvNew then
-        debugPrint("^6Bridge^7: ^2Registering ^3PS ^2Store^7:", name, label)
+        shopResource = PSInv
         exports[PSInv]:CreateShop({
             name = name,
             label = label,
@@ -254,7 +255,7 @@ function registerShop(name, label, items, society)
         })
 
     elseif isStarted(RSGInv) then
-        debugPrint("^6Bridge^7: ^2Registering ^3RSG ^2Store^7:", name, label)
+        shopResource = RSGInv
         exports[RSGInv]:CreateShop({
             name = name,
             label = label,
@@ -262,5 +263,10 @@ function registerShop(name, label, items, society)
             items = items,
             society = society,
         })
+    end
+    if shopResource ~= "" then
+        debugPrint("^6Bridge^7: ^2Registering ^5"..shopResource.." ^3Store^7:", name, "^4Label^7: "..label)
+    else
+        debugPrint("^1ERROR^7: ^1Couldn't find supported inventory to register command^7:", name)
     end
 end

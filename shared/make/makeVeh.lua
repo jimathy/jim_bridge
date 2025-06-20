@@ -54,14 +54,14 @@ function makeDistVehicle(data, radius, onEnter, onExit)
         onEnter = function()
             vehicle = makeVeh(data.model, data.coords)
 			if onEnter then
-				debugPrint("makeDistVehicle onEnter running")
+				debugPrint("^6Bridge^7: ^4makeDistVehicle ^3onEnter^7() ^2running^7")
 				onEnter(vehicle)
 			end
         end,
         onExit = function()
             deleteVehicle(vehicle)
 			if onExit then
-				debugPrint("makeDistVehicle onExit running")
+				debugPrint("^6Bridge^7: ^4makeDistVehicle ^3onExit^7() ^2running^7")
 				onExit(vehicle)
 			end
         end,

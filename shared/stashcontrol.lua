@@ -644,26 +644,24 @@ end
 --- )
 --- ```
 function registerStash(name, label, slots, weight, owner, coords)
+    local stashResource = ""
     if isStarted(OXInv) then
-        debugPrint("^6Bridge^7: ^2Registering ^3OX ^2Stash^7:", name, label, owner or nil)
+        stashResource = OXInv
         exports[OXInv]:RegisterStash(name, label, slots or 50, weight or 4000000, owner or nil)
 
-    --elseif isStarted(QSInv) then
-    --    debugPrint("^6Bridge^7: ^2Registering ^3QS ^2Stash^7:", name, label)
-    --    exports[QSInv]:RegisterStash(name, label, slots or 50, weight or 4000000)
-
-    --elseif isStarted(CoreInv) then
-    --    debugPrint("^6Bridge^7: ^2Registering ^3CoreInv ^2Stash^7:", name, label)
-    --    exports[CoreInv]:openHolder(nil, name, 'stash', nil, nil, false, nil)
-
     elseif isStarted(OrigenInv) then
-        debugPrint("^6Bridge^7: ^2Registering ^3OrigenInv ^2Stash^7:", name, label)
+        stashResource = OrigenInv
         exports["origen_inventory"]:registerStash(name, label, slots or 50, weight or 4000000)
 
     elseif isStarted(TgiannInv) then
-        debugPrint("^6Bridge^7: ^2Registering ^3TgiannInv ^2Stash^7:", name, label)
+        stashResource = TgiannInv
         exports[TgiannInv]:RegisterStash(name, label, slots or 50, weight or 4000000)
 
+    end
+    if stashResource ~= "" then
+        debugPrint("^6Bridge^7: ^2Registering ^4"..stashResource.." ^3Stash^7:", name, "^4Label^7: "..label)
+    else
+        print("^1ERROR^7: ^1Couldn't find supported inventory to register stash^7:", name)
     end
 end
 

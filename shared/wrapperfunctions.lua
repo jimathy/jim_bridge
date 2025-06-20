@@ -21,24 +21,29 @@
 --- })
 --- ```
 function registerCommand(command, options)
-
+    local commandResource = ""
     if isStarted(OXLibExport) then
-        debugPrint("^6Bridge^7: ^2Registering ^3Command^2 with ^7"..OXLibExport, command)
+        commandResource = OXLibExport
         lib.addCommand(command, { help = options[1], restricted = options[5] and "group."..options[5] or nil }, options[4])
 
     elseif isStarted(QBExport) and not isStarted(QBXExport) then
-        debugPrint("^6Bridge^7: ^2Registering ^3Command^2 with ^7"..QBExport, command)
+        commandResource = QBExport
         Core.Commands.Add(command, options[1], options[2], options[3], options[4], options[5] or nil)
 
     elseif isStarted(RSGExport) then
-        debugPrint("^6Bridge^7: ^2Registering ^3Command^2 with ^7"..RSGExport, command)
+        commandResource = RSGExport
         Core.Commands.Add(command, options[1], options[2], options[3], options[4], options[5] or nil)
 
     elseif isStarted(ESXExport) then
-        debugPrint("^6Bridge^7: ^2Registering ^3Command^2 with ^7ESX Legacy", command)
+        commandResource = ESXExport
         ESX.RegisterCommand(command, options[5] or 'admin', function(xPlayer, args, showError)
             options[4](xPlayer.source, args, showError)
         end, false, { help = options[1] })
 
+    end
+    if commandResource ~= "" then
+        debugPrint("^6Bridge^7: ^2Registering ^3Command^2 with ^4"..commandResource.."^7:", "^7/"..command)
+    else
+        print("^1ERROR^7: ^1Couldn't find supported framework to register command^7:", "/"..command)
     end
 end

@@ -39,7 +39,7 @@ function createCallback(callbackName, funct)
             elseif isStarted(ESXExport) then
                 ESX.RegisterServerCallback(callbackName, adaptedFunction)
             else
-                print("^6Bridge^7: ^1ERROR^7: ^3Can't find any script to register callback with", callbackName)
+                print("^1ERROR^7: ^1Can't find any supported framework to register callback with^7: "..callbackName)
             end
         end
     end

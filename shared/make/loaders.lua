@@ -187,7 +187,7 @@ end
 --- ```
 function playAnim(animDict, animName, duration, flag, ped, speed)
     loadAnimDict(animDict)
-    debugPrint("Attempting to make player play anim", animDict, animName)
+    debugPrint("^6Bridge^7: ^3playAnim^7() ^2Triggered^7: ", animDict, animName)
 	TaskPlayAnim(ped and ped or PlayerPedId(), animDict, animName, speed or 8.0, speed or -8.0, duration or 30000, flag or 50, 1, false, false, false)
 end
 
@@ -204,7 +204,7 @@ end
 --- stopAnim('amb@world_human_hang_out_street@male_c@base', 'base', PlayerPedId())
 --- ```
 function stopAnim(animDict, animName, ped)
-    debugPrint("Stopping anim for "..(ped or PlayerPedId()))
+    debugPrint("^6Bridge^7: ^3stopAnim^7() ^2Triggered^7: ", animDict, animName)
     StopAnimTask(ped or PlayerPedId(), animDict, animName, 0.5)
     StopAnimTask(ped or PlayerPedId(), animName, animDict, 0.5)
     unloadAnimDict(animDict)
