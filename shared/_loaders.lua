@@ -83,7 +83,7 @@ end
 --- end)
 --- ```
 function onPlayerUnload(func)
-    AddEventHandler('QBCore:Client:OnPlayerUnload', function() func() end)
+    RegisterNetEvent('QBCore:Client:OnPlayerUnload', function() func() end)
     AddEventHandler('ox:playerLogout', function() func() end)
     AddEventHandler('RSGCore:Client:OnPlayerUnload', function() func() end)
 
