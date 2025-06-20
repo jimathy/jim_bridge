@@ -175,18 +175,12 @@ function openShop(data)
         TriggerEvent("codem-inventory:openshop", data.shop)
 
     elseif isStarted(QBInv) then
-        if QBInvNew then
-            TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
-        else
-            TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
-        end
+        TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
+        TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
 
     elseif isStarted(PSInv) then
-        if QBInvNew then
-            TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
-        else
-            TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
-        end
+        TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
+        TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
 
     elseif isStarted(RSGInv) then
         TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
@@ -195,10 +189,10 @@ function openShop(data)
 end
 
 RegisterNetEvent(getScript()..':server:openServerShop', function(data)
-    if isStarted(QBInv) then
+    if isStarted(QBInv) and checkExportExists(QBInv, "OpenShop") then
         exports[QBInv]:OpenShop(source, data)
     end
-    if isStarted(PSInv) then
+    if isStarted(PSInv) and checkExportExists(PSInv, "OpenShop") then
         exports[PSInv]:OpenShop(source, data)
     end
     if isStarted(TgiannInv) then
@@ -244,7 +238,7 @@ function registerShop(name, label, items, society)
             society = society,
         })
 
-    elseif isStarted(PSInv) and QBInvNew then
+    elseif isStarted(PSInv) and checkExportExists(PSInv, "CreateShop") then
         shopResource = PSInv
         exports[PSInv]:CreateShop({
             name = name,
@@ -267,6 +261,6 @@ function registerShop(name, label, items, society)
     if shopResource ~= "" then
         debugPrint("^6Bridge^7: ^2Registering ^5"..shopResource.." ^3Store^7:", name, "^4Label^7: "..label)
     else
-        debugPrint("^1ERROR^7: ^1Couldn't find supported inventory to register command^7:", name)
+        debugPrint("^1ERROR^7: ^1Couldn't find supported inventory to register shop^7:", name)
     end
 end
