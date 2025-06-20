@@ -243,18 +243,14 @@ end)
 
 function clearStash(stashId)
     if isStarted(JPRInv) then
-        debugPrint("^5Bridge^7: ^2Cleared ^3"..JPRInv.."^2 Stash^7", stashId)
-        if QBInvNew then
-            exports[JPRInv]:ClearStash(stashId)
-        else
-            MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
-                ['stash'] = stashId,
-                ['items'] = json.encode({})
-            })
-        end
+        debugPrint("^5Bridge^7: ^2Clearing ^3"..JPRInv.."^2 Stash^7", stashId)
+        MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+            ['stash'] = stashId,
+            ['items'] = json.encode({})
+        })
 
     elseif isStarted(QBInv) then
-        debugPrint("^5Bridge^7: ^2Cleared ^3"..QBInv.."^2 Stash^7", stashId)
+        debugPrint("^5Bridge^7: ^2Clearing ^3"..QBInv.."^2 Stash^7", stashId)
         if QBInvNew then
             exports[QBInv]:ClearStash(stashId)
         else
@@ -265,11 +261,11 @@ function clearStash(stashId)
         end
 
     elseif isStarted(OXInv) then
-        debugPrint("^5Bridge^7: ^2Cleared ^3"..OXInv.."^2 Stash^7", stashId)
+        debugPrint("^5Bridge^7: ^2Clearing ^3"..OXInv.."^2 Stash^7", stashId)
         exports[OXInv]:ClearInventory(stashId)
 
     elseif isStarted(PSInv) then
-        debugPrint("^5Bridge^7: ^2Cleared ^3"..PSInv.."^2 Stash^7", stashId)
+        debugPrint("^5Bridge^7: ^2Clearing ^3"..PSInv.."^2 Stash^7", stashId)
         if QBInvNew then
             exports[PSInv]:ClearStash(stashId)
         else
@@ -279,29 +275,28 @@ function clearStash(stashId)
             })
         end
 
-
     elseif isStarted(QSInv) then
-        debugPrint("^5Bridge^7: ^2Cleared ^3"..QSInv.."^2 Stash^7", stashId)
+        debugPrint("^5Bridge^7: ^2Clearing ^3"..QSInv.."^2 Stash^7", stashId)
         exports[QSInv]:ClearOtherInventory('stash', stashId)
 
     elseif isStarted(CoreInv) then
-        debugPrint("^5Bridge^7: ^2Cleared ^3"..CoreInv.."^2 Stash^7", stashId)
+        debugPrint("^5Bridge^7: ^2Clearing ^3"..CoreInv.."^2 Stash^7", stashId)
         exports[CoreInv]:clearInventory("stash-"..stashId)
 
     elseif isStarted(CodeMInv) then
-        debugPrint("^5Bridge^7: ^2Cleared ^3"..CodeMInv.."^2 Stash^7", stashId)
+        debugPrint("^5Bridge^7: ^2Clearing ^3"..CodeMInv.."^2 Stash^7", stashId)
         exports[CodeMInv]:ClearInventory(stashId)
 
     elseif isStarted(OrigenInv) then
-        debugPrint("^5Bridge^7: ^2Cleared ^3"..OrigenInv.."^2 Stash^7", stashId)
+        debugPrint("^5Bridge^7: ^2Clearing ^3"..OrigenInv.."^2 Stash^7", stashId)
         exports[OrigenInv]:ClearInventory(stashId)
 
     elseif isStarted(TgiannInv) then
-        debugPrint("^5Bridge^7: ^2Cleared ^3"..TgiannInv.."^2 Stash^7", stashId)
+        debugPrint("^5Bridge^7: ^2Clearing ^3"..TgiannInv.."^2 Stash^7", stashId)
         exports["tgiann-inventory"]:DeleteInventory("stash", stashId)
 
     elseif isStarted(RSGInv) then
-        debugPrint("^5Bridge^7: ^2Cleared ^3"..RSGInv.."^2 Stash^7", stashId)
+        debugPrint("^5Bridge^7: ^2Clearing ^3"..RSGInv.."^2 Stash^7", stashId)
         exports[RSGInv]:ClearStash(stashId)
 
     end
@@ -661,7 +656,7 @@ function registerStash(name, label, slots, weight, owner, coords)
     if stashResource ~= "" then
         debugPrint("^6Bridge^7: ^2Registering ^4"..stashResource.." ^3Stash^7:", name, "^4Label^7: "..label)
     else
-        print("^1ERROR^7: ^1Couldn't find supported inventory to register stash^7:", name)
+        debugPrint("^1ERROR^7: ^1Couldn't find supported inventory to register stash^7:", name)
     end
 end
 
