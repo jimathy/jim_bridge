@@ -47,22 +47,21 @@ function onPlayerLoaded(func, onStart)
 
         if isStarted(QBExport) or isStarted(QBXExport) then
             onPlayerFramework = QBExport
-            AddEventHandler('QBCore:Client:OnPlayerLoaded', tempFunc)
+            RegisterNetEvent('QBCore:Client:OnPlayerLoaded', tempFunc)
         elseif isStarted(ESXExport) then
             onPlayerFramework = ESXExport
-            AddEventHandler('esx:playerLoaded', function()
+            RegisterNetEvent('esx:playerLoaded', function()
                 if waitForSharedLoad() then
-                    if isStarted(ESXExport) then Wait(1000) end
                     tempFunc()
                 end
             end
         )
         elseif isStarted(OXCoreExport) then
             onPlayerFramework = OXCoreExport
-            AddEventHandler('ox:playerLoaded', tempFunc)
+            RegisterNetEvent('ox:playerLoaded', tempFunc)
         elseif isStarted(RSGExport) then
             onPlayerFramework = RSGExport
-            AddEventHandler('RSGCore:Client:OnPlayerLoaded', tempFunc)
+            RegisterNetEvent('RSGCore:Client:OnPlayerLoaded', tempFunc)
         end
 
         if onPlayerFramework ~= "" then
@@ -84,10 +83,10 @@ end
 --- ```
 function onPlayerUnload(func)
     RegisterNetEvent('QBCore:Client:OnPlayerUnload', function() func() end)
-    AddEventHandler('ox:playerLogout', function() func() end)
-    AddEventHandler('RSGCore:Client:OnPlayerUnload', function() func() end)
+    RegisterNetEvent('ox:playerLogout', function() func() end)
+    RegisterNetEvent('RSGCore:Client:OnPlayerUnload', function() func() end)
 
-    --AddEventHandler('esx:playerLogout', function() func() end)
+    RegisterNetEvent('esx:onPlayerLogout', function() func() end)
     -- ^ Only server side for now, need a way to send it to client if not already available
 end
 
