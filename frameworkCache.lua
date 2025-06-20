@@ -62,8 +62,8 @@ if checkExists(Exports.ESXExport) then
 end
 
 -- Initialize variables for caching
-local Items, Vehicles, Jobs, Gangs, Core = nil, nil, nil, nil, nil
-local itemResource, jobResource, vehResource = "", "", ""
+local Items, Vehicles, Jobs, Gangs, Core = {}, {}, {}, {}, nil
+local itemResource, jobResource, vehResource = "N/A", "N/A", "N/A"
 
 -- Print just to announce it knows the exports/scripts exist in the server
 for _, v in pairs(Exports) do
@@ -80,13 +80,32 @@ if checkExists(Exports.OXInv) then
     -- Wait for OX Inventory to start if it's not already started
     while GetResourceState(Exports.OXInv) ~= "started" do Wait(100) end
     itemResource = Exports.OXInv
-    Items = exports[Exports.OXInv]:Items()
+
+    local success, result = pcall(function()
+        return exports[Exports.OXInv]:Items()
+    end)
+    if success and result then
+        Items = result
+    end
+
+    if Items == nil or not next(Items) then
+        print("^1--------------------------------------------^7")
+        print("^1ERROR^7: ^1Can NOT find "..Exports.OXInv.." ^7Items ^1list^7, ^1possible error in that file^7?")
+        print("^1--------------------------------------------^7")
+        Items = {} -- Fallback to an empty table
+    end
 
     -- Get Weapon info and duplicate them if they are uppercase
     -- (duplicate incase anything checks for the uppercase version)
     for k, v in pairs(Items) do
-        if k:find("WEAPON") then
-            Items[k:lower()] = Items[k]
+        if type(k) == "string" then
+            if k:find("WEAPON") then
+                Items[k:lower()] = Items[k]
+            end
+        else
+            print("^1ERROR^7: ^1Possible table inside a table, check your items.lua^7?")
+            print("^1Possible Issue found^7:")
+            print(json.encode(Items[k], {indent = true}))
         end
     end
 
@@ -95,8 +114,11 @@ elseif checkExists(Exports.QBExport) then
     itemResource = Exports.QBExport
     Core = exports[Exports.QBExport]:GetCoreObject()
     Items = Core.Shared.Items
-    if Items == nil then
-        print("^1ERROR^7: ^1Can NOT find shared ^7Items ^1table^7, ^1possible error in that file^7?")
+
+    if Items == nil or not next(Items) then
+        print("^1--------------------------------------------^7")
+        print("^1ERROR^7: ^1Can NOT find "..Exports.QBExport.." ^7Items ^1list^7, ^1possible error in that file^7?")
+        print("^1--------------------------------------------^7")
         Items = {} -- Fallback to an empty table
     end
 
@@ -117,8 +139,10 @@ elseif checkExists(Exports.RSGExport) then
     itemResource = Exports.RSGExport
     Core = exports[Exports.RSGExport]:GetCoreObject()
     Items = Core.Shared.Items
-    if Items == nil then
-        print("^1ERROR^7: ^1Can NOT find shared ^7Items ^1table^7, ^1possible error in that file^7?")
+    if Items == nil or not next(Items) then
+        print("^1--------------------------------------------^7")
+        print("^1ERROR^7: ^1Can NOT find "..Exports.RSGExport.." ^7Items ^1list^7, ^1possible error in that file^7?")
+        print("^1--------------------------------------------^7")
         Items = {} -- Fallback to an empty table
     end
 
@@ -132,8 +156,10 @@ if checkExists(Exports.QBXExport) or checkExists(Exports.QBExport) then
     vehResource = Exports.QBExport
     Core = Core or exports[Exports.QBExport]:GetCoreObject()
     Vehicles = Core.Shared.Vehicles
-    if Vehicles == nil then
-        print("^1ERROR^7: ^1Can NOT find shared ^7Vehicles ^1table^7, ^1possible error in that file^7?")
+    if Vehicles == nil or not next(Vehicles) then
+        print("^1--------------------------------------------^7")
+        print("^1ERROR^7: ^1Can NOT find "..Exports.QBExport.." ^7Vehicles ^1list^7, ^1possible error in that file^7?")
+        print("^1--------------------------------------------^7")
         Vehicles = {} -- Fallback to an empty table
     end
 
@@ -166,8 +192,10 @@ elseif checkExists(Exports.RSGExport) then
     vehResource = Exports.RSGExport
     Core = Core or exports[Exports.RSGExport]:GetCoreObject()
     Vehicles = Core.Shared.Vehicles
-    if Vehicles == nil then
+    if Vehicles == nil or not next(Vehicles) then
+        print("^1--------------------------------------------^7")
         print("^1ERROR^7: ^1Can NOT find shared ^7Vehicles ^1table^7, ^1possible error in that file^7?")
+        print("^1--------------------------------------------^7")
         Vehicles = {} -- Fallback to an empty table
     end
 
@@ -181,8 +209,10 @@ if checkExists(Exports.QBXExport) then
     jobResource = Exports.QBXExport
     Core = Core or exports[Exports.QBXExport]:GetCoreObject()
     Jobs, Gangs = exports[Exports.QBXExport]:GetJobs(), exports[Exports.QBXExport]:GetGangs()
-    if Jobs == nil then
+    if Jobs == nil or not next(Jobs) then
+        print("^1--------------------------------------------^7")
         print("^1ERROR^7: ^1Can NOT find shared ^7Jobs ^1table^7, ^1possible error in that file^7?")
+        print("^1--------------------------------------------^7")
         Jobs = {} -- Fallback to an empty table
     end
 
@@ -248,8 +278,10 @@ elseif checkExists(Exports.RSGExport) then
     jobResource = Exports.RSGExport
     Core = Core or exports[Exports.RSGExport]:GetCoreObject()
     Jobs, Gangs = Core.Shared.Jobs, Core.Shared.Gangs
-    if Jobs == nil then
+    if Jobs == nil or not next(Jobs) then
+        print("^1--------------------------------------------^7")
         print("^1ERROR^7: ^1Can NOT find shared ^7Jobs ^1table^7, ^1possible error in that file^7?")
+        print("^1--------------------------------------------^7")
         Jobs = {} -- Fallback to an empty table
     end
 
