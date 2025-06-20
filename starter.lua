@@ -177,7 +177,7 @@ for _, v in pairs({ -- This is a specific load order
     'effects.lua',
 
     --'warmenu.lua',
-
+    '_authToken.lua',
     -- Do version check last
     '_scriptversioncheck.lua'
 }) do
