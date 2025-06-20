@@ -82,12 +82,15 @@ end
 --- end)
 --- ```
 function onPlayerUnload(func)
+    debugPrint("^6Bridge^7: ^2Registering ^3onPlayerUnload^7()")
     RegisterNetEvent('QBCore:Client:OnPlayerUnload', function() func() end)
+
     RegisterNetEvent('ox:playerLogout', function() func() end)
+
     RegisterNetEvent('RSGCore:Client:OnPlayerUnload', function() func() end)
 
     RegisterNetEvent('esx:onPlayerLogout', function() func() end)
-    -- ^ Only server side for now, need a way to send it to client if not already available
+
 end
 
 -------------------------------------------------------------
