@@ -242,5 +242,8 @@ function openBossMenu(isGang, group)
         end
     elseif isStarted("qbx_management") then
         exports["qbx_management"]:OpenBossMenu(isGang and "gang" or "job")
+
+    elseif isStarted("esx_society") then
+        TriggerEvent('esx_society:openBossMenu', group, function() end, { wash = false })
     end
 end
