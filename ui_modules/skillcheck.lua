@@ -79,7 +79,7 @@ function gtaSkillCheck()
                     -- Draw stationary cursor at result position
                     DrawRect(x - width / 2 + cursorPos * width, y, 0.002, height + 0.01, 255, 255, 255, 255)
                     -- Display result text
-                    drawSuccessText(x, y, result and "Success" or "Failed", result and 114 or 228, result and 204 or 52, result and 144 or 52)
+                    drawGTASuccessText(x, y, result and "Success" or "Failed", result and 114 or 228, result and 204 or 52, result and 144 or 52)
                 end
                 if result then
                     successes += 1
@@ -94,7 +94,7 @@ function gtaSkillCheck()
     return successes == barsRequired
 end
 
-function drawSuccessText(x, y, text, r, g, b)
+function drawGTASuccessText(x, y, text, r, g, b)
     SetTextFont(8)
     SetTextScale(0.45, 0.45)
     SetTextColour(r, g, b, 255)
@@ -118,4 +118,10 @@ function createScaleBars(x, y, width, height)
     DrawRect(x, y, width, height, 100, 100, 100, 255)
 end
 
-exports("skillCheck", gtaSkillCheck)
+exports("skillCheck", function(...)
+    if GetCurrentGameName() == "rdr3" then
+        --redSkillCheck(...)
+    else
+        gtaSkillCheck(...)
+    end
+end)
