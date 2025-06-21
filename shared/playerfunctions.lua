@@ -159,6 +159,9 @@ function billPlayer(data)
             coords = data.coords.xyz,
             img = data.img
         })
+    elseif Config.System.Billing == "okok" then
+        -- TriggerServerEvent("okokBilling:CreateCustomInvoice", target, price, reason, invoiceSource, society, societyName)
+        TriggerEvent("okokBilling:ToggleCreateInvoice")
     end
 end
 
