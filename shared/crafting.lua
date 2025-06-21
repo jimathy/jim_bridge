@@ -457,7 +457,7 @@ end
 --- @usage
 RegisterNetEvent(getScript()..":Crafting:GetItem", function(ItemMake, craftable, stashName, metadata, token)
     local src = source
-    debugPrint("^6Bridge^7: ^4"..getScript().."^7:^4Crafting^7:^4GetItem ^2invoked by^7: "..GetInvokingResource())
+    -- debugPrint("^6Bridge^7: ^4"..getScript().."^7:^4Crafting^7:^4GetItem ^2invoked by^7: "..GetInvokingResource())
 	if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= "qb-core" then
         debugPrint("^1ERROR^7: ^1Possible exploit^7, ^1vital function was called from an external resource^7")
         return
