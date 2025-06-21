@@ -24,8 +24,8 @@
 --- ```
 function createCallback(callbackName, funct)
     if isServer() then
-        debugPrint("^6Bridge^7: ^2Registering ^3Callback^7:", callbackName)
         if isStarted(OXLibExport) then
+            debugPrint("^6Bridge^7: ^2Registering ^4"..OXLibExport.." ^3Callback^7:", callbackName)
             lib.callback.register(callbackName, funct)
         else
             local adaptedFunction = function(source, cb, ...)
@@ -34,9 +34,11 @@ function createCallback(callbackName, funct)
             end
 
             if isStarted(QBExport) then
+                debugPrint("^6Bridge^7: ^2Registering ^4"..QBExport.." ^3Callback^7:", callbackName)
                 Core = Core or exports[QBExport]:GetCoreObject()
                 Core.Functions.CreateCallback(callbackName, adaptedFunction)
             elseif isStarted(ESXExport) then
+                debugPrint("^6Bridge^7: ^2Registering ^4"..ESXExport.." ^3Callback^7:", callbackName)
                 ESX.RegisterServerCallback(callbackName, adaptedFunction)
             else
                 print("^1ERROR^7: ^1Can't find any supported framework to register callback with^7: "..callbackName)
