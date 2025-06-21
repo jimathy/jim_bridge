@@ -99,9 +99,9 @@ else
             end
         end
         if isStarted(OXInv) then
-            for k, v in pairs(Items) do
-                local tempInfo = exports[OXInv]:Items(v.name)
-                if tempInfo.client then
+            for k, v in pairsByKeys(Items) do
+                local tempInfo = exports[OXInv]:Items(k)
+                if tempInfo and tempInfo.client then
                     Items[k].image = (tempInfo.client and tempInfo.client.image) and tempInfo.client.image:gsub("nui://"..OXInv.."/web/images/", "") or k..".png"
                     Items[k].hunger = tempInfo.client and tempInfo.client.hunger
                     Items[k].thirst = tempInfo.client and tempInfo.client.thirst
