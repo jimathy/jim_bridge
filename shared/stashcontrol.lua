@@ -266,14 +266,10 @@ function clearStash(stashId)
 
     elseif isStarted(PSInv) then
         debugPrint("^5Bridge^7: ^2Clearing ^3"..PSInv.."^2 Stash^7", stashId)
-        if QBInvNew then
-            exports[PSInv]:ClearStash(stashId)
-        else
-            MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
-                ['stash'] = stashId,
-                ['items'] = json.encode({})
-            })
-        end
+        MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+            ['stash'] = stashId,
+            ['items'] = json.encode({})
+        })
 
     elseif isStarted(QSInv) then
         debugPrint("^5Bridge^7: ^2Clearing ^3"..QSInv.."^2 Stash^7", stashId)
