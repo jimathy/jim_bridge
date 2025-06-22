@@ -48,7 +48,7 @@ function progressBar(data)
             label = data.label,
             position = data.position or "bottom",
             useWhileDead = data.dead or false,
-			canCancel = data.cancel and data.cancel or true,
+			canCancel = data.cancel or true,
             anim = {
                 dict = data.dict,
                 clip = data.anim,
@@ -57,8 +57,8 @@ function progressBar(data)
             },
             disable = {
                 combat = data.combat or true,
-                move = data.movement or false,
-                car = data.carMovement or false,
+                move = (not data.disableMovement) or false,
+                car = data.disableMovement or false,
                 mouse = data.mouse or false
             },
         }
@@ -99,8 +99,19 @@ function progressBar(data)
             debugMode and 1000 or data.time,
             data.dead or false,
 			data.cancel or true,
-            { disableMovement = true, disableCarMovement = true, disableMouse = false, disableCombat = true },
-            { animDict = data.dict, anim = data.anim, flags = data.flag or 32, task = data.task }, {}, {},
+            {
+                disableMovement = data.disableMovement or false,
+                disableCarMovement = data.disableMovement or false,
+                disableMouse = data.disableMouse or false,
+                disableCombat = data.disableCombat or true,
+            },
+            {
+                animDict = data.dict,
+                anim = data.anim,
+                flags = data.flag or 32,
+                task = data.task
+            },
+            {}, {},
             function()
                 result = true
             end, function()
@@ -132,8 +143,8 @@ function progressBar(data)
             anim = data.anim,
             flag = data.flag or 32,
             task = data.task,
-            disableMovement = true,
-            cancel = true,
+            disableMovement = data.disableMovement or false,
+            cancel = data.cancel or true,
         }) then
             result = true
         else
@@ -148,8 +159,8 @@ function progressBar(data)
             anim = data.anim,
             flag = data.flag or 32,
             task = data.task,
-            disableMovement = true,
-            cancel = true,
+            disableMovement = data.disableMovement or false,
+            cancel = data.cancel or true,
         }) then
             result = true
         else
