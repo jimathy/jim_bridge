@@ -5,7 +5,7 @@
     or other type (e.g., coyote). It uses predefined model hashes stored in the AnimalPeds table.
 
     Global Flags:
-      - isCat, isDog, isBigDog, isSmallDog, isCoyote, isAnimal: Booleans to track the player's
+      - isCat, isPedDog, isBigDog, isSmallDog, isCoyote, isAnimal: Booleans to track the player's
         current animal classification.
 
     When running client-side (not on the server), the module checks the player's Ped after they load.
@@ -26,13 +26,13 @@
 ]]
 
 -- Global animal classification flags.
-isCat, isDog, isBigDog, isSmallDog, isCoyote, isAnimal = false, false, false, false, false, false
+isPedCat, isPedDog, isBigDog, isSmallDog, isCoyote, isAnimal = false, false, false, false, false, false
 
 if not isServer() then
     onPlayerLoaded(function()
-        Wait(2000)
+        Wait(1000)
         -- Reset classification flags
-        isCat, isDog, isBigDog, isSmallDog, isCoyote = false, false, false, false, false
+        isPedCat, isPedDog, isBigDog, isSmallDog, isCoyote = false, false, false, false, false
         -- Check if the player's Ped is an animal.
         isPedAnimal()
         if isAnimal then
@@ -41,18 +41,18 @@ if not isServer() then
 
             -- Determine if the Ped is a cat:
             -- Also treat 'ft-raccoon' as a cat unless it is 'ft-sphynx'
-            isCat = (isCat(ped) or pedModel == `ft-raccoon`) and (pedModel ~= `ft-sphynx`)
+            isPedCat = (isCat(ped) == true or pedModel == `ft-raccoon`) and (pedModel ~= `ft-sphynx`)
 
             -- Determine if the Ped is a dog and whether it's big:
-            isDog, isBigDog = isDog(ped)
+            isPedDog, isBigDog = isDog(ped)
             isSmallDog = not isBigDog
-            if isDog and pedModel == `a_c_coyote` then isDog = false end
+            if isPedDog and pedModel == `a_c_coyote` then isPedDog = false end
 
             -- Determine if the Ped is a coyote (special case):
             isCoyote = (pedModel == `ft-sphynx` or pedModel == `a_c_coyote`)
 
             -- Special override: if model is 'ft-capmonkey2', treat as a dog.
-            if pedModel == `ft-capmonkey2` then isDog = true end
+            if pedModel == `ft-capmonkey2` then isPedDog = true end
         end
     end, true)
 
@@ -79,7 +79,7 @@ if not isServer() then
             for animalModelHash, _ in pairs(animalCategory) do
                 if PedModel == animalModelHash then
                     isAnimal = true
-                    debugPrint("^6Bridge^7: ^2Ped is Animal")
+                    debugPrint("^4isAnimal^7: ^2Ped is ^4Animal")
                     return true
                 end
             end
@@ -109,6 +109,7 @@ if not isServer() then
         local PedModel = GetEntityModel(ped or PlayerPedId())
         for modelHash, _ in pairs(AnimalPeds.CatPeds) do
             if PedModel == modelHash then
+                debugPrint("^4isAnimal^7: ^2Ped is ^4Cat")
                 return true
             end
         end
@@ -126,8 +127,8 @@ if not isServer() then
     ---
     ---@usage
     --- ```lua
-    --- local isDog, isBigDog = isDog()
-    --- if isDog then
+    --- local isPedDog, isBigDog = isDog()
+    --- if isPedDog then
     ---     if isBigDog then
     ---         print("Player is a big dog!")
     ---     else
@@ -151,11 +152,13 @@ if not isServer() then
         local PedModel = GetEntityModel(ped or PlayerPedId())
         for modelHash, _ in pairs(AnimalPeds.BigDogs) do
             if PedModel == modelHash then
+                debugPrint("^4isAnimal^7: ^2Ped is ^4Dog")
                 return true, true
             end
         end
         for modelHash, _ in pairs(AnimalPeds.SmallDogs) do
             if PedModel == modelHash then
+                debugPrint("^4isAnimal^7: ^2Ped is ^4Small Dog")
                 return true, false
             end
         end
