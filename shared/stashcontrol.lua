@@ -192,6 +192,7 @@ function openStash(data)
                 slots = data.slots or 40
             })
         else
+            TriggerEvent("ps-inventory:client:SetCurrentStash", data.stash)
             TriggerEvent("inventory:client:SetCurrentStash", data.stash)
             TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, {
                 slots = data.slots or 50,
