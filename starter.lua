@@ -191,16 +191,46 @@ for _, v in pairs({ -- This is a specific load order
     end
 end
 
+-- Auto Detection of Old/New QBInv/PSInv versions --
+
 if isStarted(QBInv) then
-    if not checkExportExists(QBInv, "HasItem") then
-        print("^6Bridge^7: ^2Can^7'^2t ^2find new QBInv export^7, ^2forcing ^1QBInvNew ^2to ^1false^7")
-        QBInvNew = false
+    if isServer() then
+        if not checkExportExists(QBInv, "CreateShop") then
+            print("^6Bridge^7: ^2Can^7'^2t ^2find new ^4"..QBInv.."^2 export^7, ^2forcing ^1QBInvNew ^2to ^1false^7")
+            QBInvNew = false
+        end
+    else
+        if checkExportExists(QBInv, "GetTrunkSize") then
+            print("^6Bridge^7: ^2Found old ^4"..QBInv.."^3 export^7, ^2forcing ^1QBInvNew ^2to ^1false^7")
+            QBInvNew = false
+        end
     end
 end
 
 if isStarted(PSInv) then
-    if not checkExportExists(PSInv, "HasItem") then
-        print("^6Bridge^7: ^2Can^7't ^2find new PSInv export^7, ^2forcing ^1QBInvNew ^2to ^1false^7")
-        QBInvNew = false
+    if isServer() then
+        if not checkExportExists(PSInv, "CreateShop") then
+            print("^6Bridge^7: ^2Can^7'^2t ^2find new ^4"..PSInv.."^2 export^7, ^2forcing ^1QBInvNew ^2to ^1false^7")
+            QBInvNew = false
+        end
+    else
+        local function versionCompare(v1, v2)
+            local split = function(v) local t = {} for s in v:gmatch("[^.]+") do t[#t+1] = tonumber(s) end return t end
+            local a, b = split(v1), split(v2)
+            for i = 1, math.max(#a, #b) do
+                local ai, bi = a[i] or 0, b[i] or 0
+                if ai > bi then return true
+                elseif ai < bi then return false end
+            end
+            return true
+        end
+
+        if versionCompare(GetResourceMetadata("ps-inventory", "version", 0), "1.0.6") then
+            print("^6Bridge^7: ^4"..PSInv.."^2 Version above ^31.0.6^7, ^2forcing ^1QBInvNew ^2to ^1true^7")
+            QBInvNew = true
+        else
+            print("^6Bridge^7: ^4"..PSInv.."^2 Version ^1below ^31.0.6^7, ^2forcing ^1QBInvNew ^2to ^1false^7")
+            QBInvNew = false
+        end
     end
 end
