@@ -1,4 +1,5 @@
 local inProgress = false
+local storedPID = nil
 
 --- Displays a progress bar using the configured progress bar system.
 ---
@@ -211,7 +212,6 @@ end
 -- System to handle sending/sharing progress bars between players --
 -- For example, healing someone --
 
-local storedPID = nil
 
 --- Server event handler for starting a shared progress bar.
 --- This event is triggered when a player wants to start a progress bar on another player.
