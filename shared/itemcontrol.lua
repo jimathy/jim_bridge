@@ -744,6 +744,130 @@ if isServer() then
     end)
 end
 
+function getMaxInvWeight()
+    local weight = 0
+    if isStarted(QBInv) then
+        if checkExportExists(QBInv, "GetMaxWeight") then
+            return exports[QBInv]:GetMaxWeight()
+        else
+            return InventoryWeight
+        end
+    end
+    if isStarted(PSInv) then
+        if checkExportExists(PSInv, "GetMaxWeight") then
+            return exports[PSInv]:GetMaxWeight()
+        else
+            return InventoryWeight
+        end
+    end
+    if isStarted(RSGInv) then
+        if checkExportExists(RSGInv, "GetMaxWeight") then
+            return exports[RSGInv]:GetMaxWeight()
+        else
+            return InventoryWeight
+        end
+    end
+    if isStarted(JPRInv) then
+        if checkExportExists(JPRInv, "GetMaxWeight") then
+            return exports[JPRInv]:GetMaxWeight()
+        else
+            return InventoryWeight
+        end
+    end
+
+    if isStarted(OXInv) then
+        return exports[OXInv]:GetPlayerMaxWeight()
+    end
+
+    if isStarted(QSInv) then
+        return InventoryWeight
+    end
+
+    if isStarted(CoreInv) then
+        return InventoryWeight
+    end
+
+    if isStarted(CodeMInv) then
+        return InventoryWeight
+    end
+
+    if isStarted(OrigenInv) then
+        return InventoryWeight
+    end
+
+    if isStarted(TgiannInv) then
+        return InventoryWeight
+    end
+
+    -- For ESX default inventory (es_extended)
+    if ESX and isStarted(ESXExport) then
+        return InventoryWeight
+    end
+
+    return InventoryWeight
+end
+
+function getCurrentInvWeight()
+    local weight = 0
+    if isStarted(QBInv) or isStarted(PSInv) or isStarted(RSGInv) or isStarted(JPRInv) then
+        local itemcheck = Core.Functions.GetPlayerData().items
+        for _, v in pairs(itemcheck) do
+            weight += ((v.weight * v.amount) or 0)
+        end
+    end
+
+    if isStarted(OXInv) then
+        weight = exports[OXInv]:GetPlayerWeight()
+    end
+
+    if isStarted(QSInv) then
+        local itemcheck = exports[QSInv]:getUserInventory()
+        for _, v in pairs(itemcheck) do
+            weight += ((v.weight * v.amount) or 0)
+        end
+    end
+
+    if isStarted(CoreInv) then
+        local itemcheck = exports[CoreInv]:getInventory()
+        for _, v in pairs(itemcheck) do
+            weight += ((v.weight * v.amount) or 0)
+        end
+    end
+
+    if isStarted(CodeMInv) then
+        local itemcheck = exports[CodeMInv]:GetClientPlayerInventory()
+        for _, v in pairs(itemcheck) do
+            weight += ((v.weight * v.amount) or 0)
+        end
+    end
+
+    if isStarted(OrigenInv) then
+        local itemcheck = exports[OrigenInv]:getPlayerInventory()
+        for _, v in pairs(itemcheck) do
+            weight += ((v.weight * v.amount) or 0)
+        end
+    end
+
+    if isStarted(TgiannInv) then
+        local itemcheck = exports[TgiannInv]:GetPlayerItems()
+        for _, v in pairs(itemcheck) do
+            weight += ((v.weight * v.amount) or 0)
+        end
+    end
+
+    -- For ESX default inventory (es_extended)
+    if ESX and isStarted(ESXExport) then
+        local xPlayer = ESX.GetPlayerData() or {}
+        if xPlayer.inventory then
+            for _, v in pairs(xPlayer.inventory) do
+                weight += ((v.weight * v.amount) or 0)
+            end
+        end
+    end
+
+    return weight
+end
+
 -------------------------------------------------------------
 -- Check Item Existance - return boolean(true,false)
 -------------------------------------------------------------
