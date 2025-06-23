@@ -58,7 +58,7 @@ function progressBar(data)
             },
             disable = {
                 combat = data.combat or true,
-                move = (not data.disableMovement) or false,
+                move = data.disableMovement or false,
                 car = data.disableMovement or false,
                 mouse = data.mouse or false
             },
