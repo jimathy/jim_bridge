@@ -872,10 +872,6 @@ end
 
 function hasFreeInventorySlots(slots, src)
     local inv = getPlayerInv(src)
-    print(countTable(inv))
-    print(countTable(inv) + slots)
-    print(InventorySlots)
-    print((countTable(inv) + slots) <= InventorySlots)
     if (countTable(inv) + slots) <= InventorySlots then
         return true
     end
