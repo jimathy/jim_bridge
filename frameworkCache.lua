@@ -35,9 +35,12 @@ local Exports = {
 }
 
 -- Prevent reloading if cache is already initialized
-if _G.__jimBridgeDataCache then return end
-_G.__jimBridgeDataCache = {}
-local cache = _G.__jimBridgeDataCache
+local cache = {
+    Items = {},
+    Vehicles = {},
+    Jobs = {},
+    Gangs = {},
+}
 
 -- Helper function to check if resource exists in server (instead of if it is already started)
 local function checkExists(resourceName)
@@ -62,7 +65,6 @@ if checkExists(Exports.ESXExport) then
 end
 
 -- Initialize variables for caching
-local Items, Vehicles, Jobs, Gangs, Core = {}, {}, {}, {}, nil
 local itemResource, jobResource, vehResource = "N/A", "N/A", "N/A"
 
 -- Print just to announce it knows the exports/scripts exist in the server
@@ -85,22 +87,15 @@ if checkExists(Exports.OXInv) then
         return exports[Exports.OXInv]:Items()
     end)
     if success and result then
-        Items = result
-    end
-
-    if Items == nil or not next(Items) then
-        print("^1--------------------------------------------^7")
-        print("^1ERROR^7: ^1Can NOT find "..Exports.OXInv.." ^7Items ^1list^7, ^1possible error in that file^7?")
-        print("^1--------------------------------------------^7")
-        Items = {} -- Fallback to an empty table
+        cache.Items = result
     end
 
     -- Get Weapon info and duplicate them if they are uppercase
     -- (duplicate incase anything checks for the uppercase version)
-    for k, v in pairs(Items) do
+    for k, v in pairs(cache.Items) do
         if type(k) == "string" then
             if k:find("WEAPON") then
-                Items[k:lower()] = Items[k]
+                cache.Items[k:lower()] = cache.Items[k]
             end
         else
             print("^1ERROR^7: ^1Possible table inside a table, check your items.lua^7?")
@@ -112,24 +107,16 @@ if checkExists(Exports.OXInv) then
 elseif checkExists(Exports.QBExport) then
     while GetResourceState(Exports.QBExport) ~= "started" do Wait(100) end
     itemResource = Exports.QBExport
-    Core = exports[Exports.QBExport]:GetCoreObject()
-    Items = Core.Shared.Items
-
-    if Items == nil or not next(Items) then
-        print("^1--------------------------------------------^7")
-        print("^1ERROR^7: ^1Can NOT find "..Exports.QBExport.." ^7Items ^1list^7, ^1possible error in that file^7?")
-        print("^1--------------------------------------------^7")
-        Items = {} -- Fallback to an empty table
-    end
+    cache.Items = exports[Exports.QBExport]:GetCoreObject().Shared.Items
 
 elseif checkExists(Exports.ESXExport) then
     itemResource = Exports.ESXExport
     if GetResourceState(Exports.QSInv):find("start") then
         Items = exports[Exports.QSInv]:GetItemList()
     else
-        Items = ESX.GetItems()
-        while not next(Items) do
-            Items = ESX.GetItems()
+        cache.Items = ESX.GetItems()
+        while not next(cache.Items) do
+            cache.Items = ESX.GetItems()
             Wait(1000)
         end
     end
@@ -137,37 +124,26 @@ elseif checkExists(Exports.ESXExport) then
 elseif checkExists(Exports.RSGExport) then
     while GetResourceState(Exports.RSGExport) ~= "started" do Wait(100) end
     itemResource = Exports.RSGExport
-    Core = exports[Exports.RSGExport]:GetCoreObject()
-    Items = Core.Shared.Items
-    if Items == nil or not next(Items) then
-        print("^1--------------------------------------------^7")
-        print("^1ERROR^7: ^1Can NOT find "..Exports.RSGExport.." ^7Items ^1list^7, ^1possible error in that file^7?")
-        print("^1--------------------------------------------^7")
-        Items = {} -- Fallback to an empty table
-    end
-
+    cache.Items = exports[Exports.RSGExport]:GetCoreObject().Shared.Items
 end
 
 ---------------------
 --- Load Vehicles ---
 ---------------------
 -- Vehicle loading depending on framework
-if checkExists(Exports.QBXExport) or checkExists(Exports.QBExport) then
+if checkExists(Exports.QBXExport) then
+    vehResource = Exports.QBXExport
+    cache.Vehicles = exports[Exports.QBExport]:GetCoreObject().Shared.Vehicles
+
+elseif checkExists(Exports.QBExport)then
     vehResource = Exports.QBExport
-    Core = Core or exports[Exports.QBExport]:GetCoreObject()
-    Vehicles = Core.Shared.Vehicles
-    if Vehicles == nil or not next(Vehicles) then
-        print("^1--------------------------------------------^7")
-        print("^1ERROR^7: ^1Can NOT find "..Exports.QBExport.." ^7Vehicles ^1list^7, ^1possible error in that file^7?")
-        print("^1--------------------------------------------^7")
-        Vehicles = {} -- Fallback to an empty table
-    end
+    cache.Vehicles = exports[Exports.QBExport]:GetCoreObject().Shared.Vehicles
 
 elseif checkExists(Exports.OXCoreExport) then
     vehResource = Exports.OXCoreExport
-    Vehicles = {}
+    cache.Vehicles = {}
     for k, v in pairs(Ox.GetVehicleData()) do
-        Vehicles[k] = {
+        cache.Vehicles[k] = {
             model = k, hash = GetHashKey(k),
             price = v.price,
             name = v.name,
@@ -178,9 +154,8 @@ elseif checkExists(Exports.OXCoreExport) then
 elseif checkExists(Exports.ESXExport) then
     vehResource = Exports.ESXExport
     while not MySQL do Wait(1000) end
-    Vehicles = {}
     for _, v in pairs(MySQL.query.await('SELECT model, price, name FROM vehicles')) do
-        Vehicles[v.model] = {
+        cache.Vehicles[v.model] = {
             model = v.model,
             hash = GetHashKey(v.model),
             price = v.price,
@@ -190,14 +165,7 @@ elseif checkExists(Exports.ESXExport) then
 
 elseif checkExists(Exports.RSGExport) then
     vehResource = Exports.RSGExport
-    Core = Core or exports[Exports.RSGExport]:GetCoreObject()
-    Vehicles = Core.Shared.Vehicles
-    if Vehicles == nil or not next(Vehicles) then
-        print("^1--------------------------------------------^7")
-        print("^1ERROR^7: ^1Can NOT find shared ^7Vehicles ^1table^7, ^1possible error in that file^7?")
-        print("^1--------------------------------------------^7")
-        Vehicles = {} -- Fallback to an empty table
-    end
+    cache.Vehicles = exports[Exports.RSGExport]:GetCoreObject().Shared.Vehicles
 
 end
 
@@ -207,18 +175,14 @@ end
 -- Jobs loading based on framework
 if checkExists(Exports.QBXExport) then
     jobResource = Exports.QBXExport
-    Core = Core or exports[Exports.QBXExport]:GetCoreObject()
-    Jobs, Gangs = exports[Exports.QBXExport]:GetJobs(), exports[Exports.QBXExport]:GetGangs()
-    if Jobs == nil or not next(Jobs) then
-        print("^1--------------------------------------------^7")
-        print("^1ERROR^7: ^1Can NOT find shared ^7Jobs ^1table^7, ^1possible error in that file^7?")
-        print("^1--------------------------------------------^7")
-        Jobs = {} -- Fallback to an empty table
-    end
+    cache.Jobs, cache.Gangs = exports[Exports.QBXExport]:GetJobs(), exports[Exports.QBXExport]:GetGangs()
+
+elseif checkExists(Exports.QBExport) then
+    jobResource = Exports.QBExport
+    cache.Jobs, cache.Gangs = exports[Exports.QBExport]:GetCoreObject().Shared.Jobs, exports[Exports.QBExport]:GetCoreObject().Shared.Gangs
 
 elseif checkExists(Exports.OXCoreExport) then
     jobResource = Exports.OXCoreExport
-    Jobs = {}
     while not MySQL do Wait(1000) end
     local tempJobs = MySQL.query.await('SELECT * FROM `ox_groups`')
     local tempGrades = MySQL.query.await('SELECT * FROM `ox_group_grades`')
@@ -228,34 +192,29 @@ elseif checkExists(Exports.OXCoreExport) then
         gradeMap[grade.group][grade.grade] = { name = grade.label }
     end
     for _, job in pairs(tempJobs) do
-        Jobs[job.name] = {
+        cache.Jobs[job.name] = {
             label = job.label,
             grades = gradeMap[job.name] or {}
         }
     end
-    Gangs = Jobs
-
-elseif checkExists(Exports.QBExport) then
-    jobResource = Exports.QBExport
-    Core = Core or exports[Exports.QBExport]:GetCoreObject()
-    Jobs, Gangs = Core.Shared.Jobs, Core.Shared.Gangs
+    cache.Gangs = cache.Jobs
 
 elseif checkExists(Exports.ESXExport) then
     jobResource = Exports.ESXExport
     ESX = exports[Exports.ESXExport]:getSharedObject()
-    Jobs = ESX.GetJobs()
-    while not next(Jobs) do
+    cache.Jobs = ESX.GetJobs()
+    while not next(cache.Jobs) do
         Wait(100)
-        Jobs = ESX.GetJobs()
+        cache.Jobs = ESX.GetJobs()
     end
-    for Role, Grades in pairs(Jobs) do
+    for Role, Grades in pairs(cache.Jobs) do
         -- Check for if user has added grades
         if Grades.grades == nil or not next(Grades.grades) then
             goto continue
         end
         for grade, info in pairs(Grades.grades) do
             if info.label and info.label:find("[Bb]oss") then
-                Jobs[Role].grades[grade].isBoss = true
+                cache.Jobs[Role].grades[grade].isBoss = true
                 goto continue
             end
         end
@@ -268,64 +227,157 @@ elseif checkExists(Exports.ESXExport) then
         end
 
         if highestGrade then
-            Jobs[Role].grades[tostring(highestGrade)].isBoss = true
+            cache.Jobs[Role].grades[tostring(highestGrade)].isBoss = true
         end
         ::continue::
     end
-    Gangs = Jobs
+    cache.Gangs = cache.Jobs
 
 elseif checkExists(Exports.RSGExport) then
     jobResource = Exports.RSGExport
-    Core = Core or exports[Exports.RSGExport]:GetCoreObject()
-    Jobs, Gangs = Core.Shared.Jobs, Core.Shared.Gangs
-    if Jobs == nil or not next(Jobs) then
-        print("^1--------------------------------------------^7")
-        print("^1ERROR^7: ^1Can NOT find shared ^7Jobs ^1table^7, ^1possible error in that file^7?")
-        print("^1--------------------------------------------^7")
-        Jobs = {} -- Fallback to an empty table
-    end
+    cache.Jobs, cache.Gangs = exports[Exports.RSGExport]:GetCoreObject().Shared.Jobs, exports[Exports.RSGExport]:GetCoreObject().Shared.Gangs
 
 end
 
--- Save to global cache
-cache.Items = Items
-cache.Vehicles = Vehicles
-cache.Jobs = Jobs
-cache.Gangs = Gangs
+-- Fallback if nil or empty
+if cache.Items == nil or not next(cache.Items) then
+    print("^1--------------------------------------------^7")
+    print("^1ERROR^7: ^1Can NOT find "..itemResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").." ^7Items ^1list^7, ^1possible error in that file or is it empty^7?")
+    print("^1--------------------------------------------^7")
+    cache.Items = {} -- Fallback to an empty table
+end
+if cache.Vehicles == nil or not next(cache.Vehicles) then
+    print("^1--------------------------------------------^7")
+    print("^1ERROR^7: ^1Can NOT find "..vehResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").." ^7Vehicles ^1list^7, ^1possible error in that file or is it empty^7?")
+    print("^1--------------------------------------------^7")
+    cache.Vehicles = {} -- Fallback to an empty table
+end
+if cache.Jobs == nil or not next(cache.Jobs) then
+    print("^1--------------------------------------------^7")
+    print("^1ERROR^7: ^1Can NOT find "..jobResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").." ^7job ^1list^7, ^1possible error in that file or is it empty^7?")
+    print("^1--------------------------------------------^7")
+    cache.Jobs = {} -- Fallback to an empty table
+end
+
+-- Auto Detection of Inventory Weight -- **EXPERIMENTAL**
+-- Forcefully load the the specified config file from inventory scripts
+-- This allows to get information required for certain functions that need to detect how much space is left in a players inventory
+-- This is born from too many tickets of me needing to explain that they need to change "InventoryWeight" to match their inv setting
+local function getInventoryConfig(resource, data)
+    if data.convars then
+        return function(path)
+            local key = path[1]
+            local convar = key == "MaxWeight" and data.convars.weight or key == "MaxSlots" and data.convars.slots
+            return convar and GetConvarInt(convar.key, convar.default) or nil, "Unsupported convar path: " .. table.concat(path, ".")
+        end
+    end
+
+    local content = LoadResourceFile(resource, data.file)
+    if not content then return nil, "Failed to load file" end
+
+    local env = {
+        GetConvar = GetConvar, vector3 = vector3, Citizen = Citizen,
+        GetResourceState = GetResourceState, exports = exports,
+    }
+
+    local fn, err = load(content, '@'..data.file, 't', env)
+    if not fn then return nil, "Failed to compile config: " .. err end
+    if not pcall(fn) then return nil, "Error executing config file" end
+
+    local cfg = env.Config or env.config
+    if not cfg then return nil, "Config table not found" end
+
+    return function(path)
+        local ref = cfg
+        for _, k in ipairs(path) do
+            if type(ref) ~= "table" then return nil, "Path invalid at: " .. tostring(k) end
+            ref = ref[k]
+        end
+        return ref
+    end
+end
+
+-- Inventory table
+local invWeightTable = {
+    [Exports.OXInv] = { convars = {
+        weight = { key = "inventory:weight", default = 30000 },
+        slots  = { key = "inventory:slots",  default = 40 }
+    }},
+    [Exports.QBInv] =       { file = "config/config.lua",       path = { "MaxWeight" }, slotPath = { "MaxSlots" } },
+    [Exports.JPRInv] =      { file = "configs/main_config.lua", path = { "MaxInventoryWeight" }, slotPath = { "MaxInventorySlots" } },
+    [Exports.PSInv] =       { file = "config.lua",              path = { "MaxInventoryWeight" }, slotPath = { "MaxInventorySlots" } },
+    [Exports.QSInv] =       { file = "config/config.lua",       path = { "InventoryWeight", "weight" }, slotPath = { "InventoryWeight", "slots" } },
+    [Exports.TgiannInv] =   { file = "configs/config.lua",      path = { "slotsMaxWeights", "player", "maxWeight" }, slotPath = { "slotsMaxWeights", "player", "slots" } },
+    [Exports.CodeMInv] =    { file = "config/config.lua",       path = { "MaxWeight" }, slotPath = { "MaxSlots" } },
+    [Exports.RSGInv] =      { file = "config/config.lua",       path = { "MaxWeight" }, slotPath = { "MaxSlots" } },
+    --[Exports.OrigenInv] = { file = "config.lua", path = { "MaxWeight" } },
+}
+
+-- Run config detection
+local invResource = ""
+for script, data in pairs(invWeightTable) do
+    if checkExists(script) then
+        if script == Exports.QBInv and GetResourceState(Exports.JPRInv):find("start") then return end
+
+        local lookup, err = getInventoryConfig(script, data)
+        if not lookup then
+            print(("^1ERROR^7: ^1Config loader failed from ^5%s^7: ^1%s^7"):format(script, err or "unknown"))
+            return
+        end
+
+        local function resolve(label, path)
+            local val, perr = lookup(path)
+            if val then
+                cache["Inventory"..label] = val
+                return
+            end
+            local warnType = label == "Weight" and "^1ERROR" or "^3WARNING"
+            print(("%s^7: ^1Failed to get ^7Inventory%s ^1from ^5%s^7: ^1%s^7"):format(warnType, label, script, perr or "unknown"))
+        end
+
+        resolve("Weight", data.path or { "MaxWeight" })
+        resolve("Slots",  data.slotPath or { "MaxSlots" })
+
+        invResource = script:gsub("-", "^7-^4"):gsub("_", "^7_^4")
+        break
+    end
+end
+
 
 CreateThread(function()
     local counts = {
-        Items = 0,
-        Vehicles = 0,
-        Jobs = 0,
-        Gangs = 0,
+        Items = 0, Vehicles = 0, Jobs = 0, Gangs = 0,
     }
     for k, v in pairs(cache) do
-        for count in pairs(v) do
-            counts[k] += 1
-        end
+        if type(v) ~= "number" then for count in pairs(v) do counts[k] += 1 end end
     end
-    print("^6FrameworkCache^7: ^2Loaded ^5"..tostring(counts.Items).."^2 Items from ^7"..itemResource)
-    print("^6FrameworkCache^7: ^2Loaded ^5"..tostring(counts.Vehicles).."^2 Vehicles from ^7"..vehResource)
-    print("^6FrameworkCache^7: ^2Loaded ^5"..tostring(counts.Jobs).."^2 Jobs from ^7"..jobResource)
-    print("^6FrameworkCache^7: ^2Loaded ^5"..tostring(counts.Gangs).."^2 Gangs from ^7"..jobResource)
+    if cache.InventoryWeight then
+        print("^6FrameWorkCache^7: ^4"..invResource.."^2 InventoryWeight^7: ^3"..cache.InventoryWeight.."^7 (^3"..(cache.InventoryWeight / 1000).."kg^7)")
+    end
+    if cache.InventorySlots then
+        print("^6FrameWorkCache^7: ^4"..invResource.."^2 InventorySlots^7: ^3"..cache.InventorySlots.."^7")
+    end
+    print("^6FrameworkCache^7: ^4"..itemResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Items).."^2 Items^7")
+    print("^6FrameworkCache^7: ^4"..vehResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Vehicles).."^2 Vehicles^7")
+    print("^6FrameworkCache^7: ^4"..jobResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Jobs).."^2 Jobs^7")
+    print("^6FrameworkCache^7: ^4"..jobResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Gangs).."^2 Gangs^7")
 end)
 
 RegisterNetEvent("jim_bridge:requestCache", function()
     local src = source
-    TriggerClientEvent("jim_bridge:receiveCache", src, _G.__jimBridgeDataCache)
+    TriggerClientEvent("jim_bridge:receiveCache", src, cache)
 end)
 
 exports("GetSharedData", function()
     -- Wait for data to be ready before returning it
     local timeout = GetGameTimer() + 5000
     while (
-        not _G.__jimBridgeDataCache or
-        (not _G.__jimBridgeDataCache.Items or next(_G.__jimBridgeDataCache.Items) == nil) or
-        (not _G.__jimBridgeDataCache.Vehicles or next(_G.__jimBridgeDataCache.Vehicles) == nil) or
-        (not _G.__jimBridgeDataCache.Jobs or next(_G.__jimBridgeDataCache.Jobs) == nil)
+        not cache or
+        (not cache.Items or next(cache.Items) == nil) or
+        (not cache.Vehicles or next(cache.Vehicles) == nil) or
+        (not cache.Jobs or next(cache.Jobs) == nil)
     ) and GetGameTimer() < timeout do
         Wait(50)
     end
-    return _G.__jimBridgeDataCache
+    return cache
 end)

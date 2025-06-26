@@ -197,22 +197,23 @@ function waitForSharedLoad()
     local timeout = 100000  -- 10 seconds in milliseconds
     local startTime = GetGameTimer()
     local loaded = true
-    --Wait(1000)
-    local count = {}
     local loop = 0
-    while ((not Jobs or not next(Jobs)) and (not Items or not next(Items)) and (not Vehicles or not next(Vehicles))) and (GetGameTimer() - startTime) < timeout do
-        if not messageShown then
+    while ((not Jobs or not next(Jobs)) or
+        (not Items or not next(Items)) or
+        (not Vehicles or not next(Vehicles))
+    ) and ((GetGameTimer() - startTime) < timeout) do
+        if loop >= 3 and not messageShown then
             if (not Jobs or not next(Jobs)) then
-                debugPrint("^4Debug^7: ^2Waiting for Jobs to be loaded")
+                print("^4Debug^7: ^2Waiting for ^7Jobs^2 to be loaded")
             end
             if (not Items or not next(Items)) then
-                debugPrint("^4Debug^7: ^2Waiting for Items to be loaded")
+                print("^4Debug^7: ^2Waiting for ^7Items^2 to be loaded")
             end
             if (not Vehicles or not next(Vehicles)) then
-                debugPrint("^4Debug^7: ^2Waiting for Vehicles to be loaded")
+                print("^4Debug^7: ^2Waiting for ^7Vehicles^2 to be loaded")
             end
+            messageShown = true
         end
-        messageShown = true
         --print((GetGameTimer() - startTime) < timeout)
         Wait(1000)
         if Jobs and Items and Vehicles then

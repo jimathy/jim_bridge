@@ -225,7 +225,7 @@ if isStarted(PSInv) then
             return true
         end
 
-        if versionCompare(GetResourceMetadata("ps-inventory", "version", 0), "1.0.6") then
+        if versionCompare(GetResourceMetadata(PSInv, "version", 0), "1.0.6") then
             print("^6Bridge^7: ^4"..PSInv.."^2 Version above ^31.0.6^7, ^2forcing ^1QBInvNew ^2to ^1true^7")
             QBInvNew = true
         else
