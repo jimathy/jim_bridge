@@ -516,17 +516,19 @@ end
 --- ```lua
 --- TriggerServerEvent("script:server:setMetaData", { item = "drill", slot = 5, metadata = { durability = 80 } })
 --- ```
-RegisterNetEvent(getScript()..":server:setMetaData", function(data)
-    local src = source
+RegisterNetEvent(getScript()..":server:setMetaData", function(data, src)
+    local src = src or source
     if isStarted(QBInv) or isStarted(PSInv) or isStarted(RSGInv) or isStarted(JPRInv) then
-        debugPrint(src, data.item, 1, data.slot)
+        --debugPrint(src, data.item, 1, data.slot)
         local Player = Core.Functions.GetPlayer(src)
         Player.PlayerData.items[data.slot].info = data.metadata
-        Player.PlayerData.items[data.slot].description = "HP : "..data.metadata.durability
+        if data.metadata.durability then
+            Player.PlayerData.items[data.slot].description = "HP : "..data.metadata.durability
+        end
         Player.Functions.SetInventory(Player.PlayerData.items)
 
     elseif isStarted(OXInv) then
-        exports[OXInv]:SetDurability(src, data.slot, data.metadata.durability)
+        exports[OXInv]:SetMetadata(src, data.slot, data.metadata)
 
     elseif isStarted(QSInv) then
         exports[QSInv]:SetItemMetadata(src, data.slot, data.metadata)
