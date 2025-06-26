@@ -64,49 +64,41 @@ if IsDuplicityVersion() then
     debugPrint("^6Bridge^7: ^2Shared cache successfully loaded from export^7.")
     --print(countTable(Items), countTable(Vehicles), countTable(Jobs))
 else
-    local hasCache = false
-    -- 🔹 Client Side: Request from server
-    cache = {}
+    -- Shared bridge cache - prevent duplicate listeners
+    exports["jim_bridge"]:GetBridgeCache(function(cache)
+        Items = cache.Items or {}
+        Vehicles = cache.Vehicles or {}
+        Jobs = cache.Jobs or {}
+        Gangs = cache.Gangs or {}
+        InventoryWeight = cache.InventoryWeight or InventoryWeight
+        InventorySlots = cache.InventorySlots or 50
 
-    RegisterNetEvent("jim_bridge:receiveCache", function(data)
-        if not hasCache then
-            cache = data
-            hasCache = true
-        else
-            return
-        end
-    end)
-
-    TriggerServerEvent("jim_bridge:requestCache")
-
-    while not cache or not next(cache) do Wait(50) end
-    Items = cache.Items or {}
-    Vehicles = cache.Vehicles or {}
-    Jobs = cache.Jobs or {}
-    Gangs = cache.Gangs or {}
-    InventoryWeight = cache.InventoryWeight or InventoryWeight
-    InventorySlots = cache.InventorySlots or 50
-
-    if isStarted(ESXExport) then
-        for _, v in pairs(Vehicles) do
-            Vehicles[v.model] = {
-                model = v.model,
-                hash = v.hash,
-                price = v.price,
-                name = v.name,
-                brand = GetMakeNameFromVehicleModel(v.model):lower():gsub("^%l", string.upper)
-            }
-        end
-    end
-    if isStarted(OXInv) then
-        for k, v in pairsByKeys(Items) do
-            local tempInfo = exports[OXInv]:Items(k)
-            if tempInfo and tempInfo.client then
-                Items[k].image = (tempInfo.client and tempInfo.client.image) and tempInfo.client.image:gsub("nui://"..OXInv.."/web/images/", "") or k..".png"
-                Items[k].hunger = tempInfo.client and tempInfo.client.hunger
-                Items[k].thirst = tempInfo.client and tempInfo.client.thirst
+        CreateThread(function()
+            if isStarted(ESXExport) then
+                for _, v in pairs(Vehicles) do
+                    Vehicles[v.model] = {
+                        model = v.model,
+                        hash = v.hash,
+                        price = v.price,
+                        name = v.name,
+                        brand = GetMakeNameFromVehicleModel(v.model):lower():gsub("^%l", string.upper)
+                    }
+                end
             end
-        end
-    end
-    debugPrint("^6Bridge^7: ^2Shared cache successfully loaded from export^7.")
+
+            if isStarted(OXInv) then
+                for k, v in pairs(Items) do
+                    local tempInfo = exports[OXInv]:Items(k)
+                    Items[k].image = k..".png" -- Set default image
+                    if tempInfo and tempInfo.client then -- if client info, check for hard set image
+                        Items[k].image = (tempInfo.client.image) and tempInfo.client.image:gsub("nui://"..OXInv.."/web/images/", "") or Items[k].image
+                        Items[k].hunger = tempInfo.client.hunger
+                        Items[k].thirst = tempInfo.client.thirst
+                    end
+                end
+            end
+        end)
+
+        debugPrint("^6Bridge^7: ^2Shared cache successfully loaded from export^7.")
+    end)
 end
