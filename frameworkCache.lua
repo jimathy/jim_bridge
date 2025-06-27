@@ -104,6 +104,35 @@ if checkExists(Exports.OXInv) then
         end
     end
 
+elseif checkExists(Exports.QBXExport) then
+    while GetResourceState(Exports.QBXExport) ~= "started" do Wait(100) end
+    itemResource = Exports.QBXExport
+    cache.Items = exports[Exports.QBExport]:GetCoreObject().Shared.Items
+    -- If this is nil, they need to update to qbx_core 1.23.0+
+    if not cache.Items then
+        -- if their inventory doesn't allow that (they refuse to update their butchered core replacement):
+        if GetResourceState(Exports.QSInv):find("start") then
+            itemResource = Exports.QSInv
+            cache.Items = exports[Exports.QSInv]:GetItemList()
+
+        elseif GetResourceState(Exports.OrigenInv):find("start") then
+            itemResource = Exports.OrigenInv
+            cache.Items = exports[Exports.OrigenInv]:Items()
+
+        elseif GetResourceState(Exports.CodeMInv):find("start") then
+            itemResource = Exports.CodeMInv
+            cache.Items = exports[Exports.CodeMInv]:GetItemList()
+
+        elseif GetResourceState(Exports.CoreInv):find("start") then
+            itemResource = Exports.CoreInv
+            cache.Items = exports[Exports.CoreInv]:getItemsList()
+
+        elseif GetResourceState(Exports.TgiannInv):find("start") then
+            itemResource = Exports.TgiannInv
+            cache.Items = exports[Exports.TgiannInv]:Items()
+        end
+    end
+
 elseif checkExists(Exports.QBExport) then
     while GetResourceState(Exports.QBExport) ~= "started" do Wait(100) end
     itemResource = Exports.QBExport
@@ -112,7 +141,7 @@ elseif checkExists(Exports.QBExport) then
 elseif checkExists(Exports.ESXExport) then
     itemResource = Exports.ESXExport
     if GetResourceState(Exports.QSInv):find("start") then
-        Items = exports[Exports.QSInv]:GetItemList()
+        cache.Items = exports[Exports.QSInv]:GetItemList()
     else
         cache.Items = ESX.GetItems()
         while not next(cache.Items) do
@@ -242,19 +271,19 @@ end
 -- Fallback if nil or empty
 if cache.Items == nil or not next(cache.Items) then
     print("^1--------------------------------------------^7")
-    print("^1ERROR^7: ^1Can NOT find "..itemResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").." ^7Items ^1list^7, ^1possible error in that file or is it empty^7?")
+    print("^1ERROR^7: ^1Can NOT find "..itemResource.." ^7Items ^1list^7, ^1possible error in that file or is it empty^7?")
     print("^1--------------------------------------------^7")
     cache.Items = {} -- Fallback to an empty table
 end
 if cache.Vehicles == nil or not next(cache.Vehicles) then
     print("^1--------------------------------------------^7")
-    print("^1ERROR^7: ^1Can NOT find "..vehResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").." ^7Vehicles ^1list^7, ^1possible error in that file or is it empty^7?")
+    print("^1ERROR^7: ^1Can NOT find "..vehResource.." ^7Vehicles ^1list^7, ^1possible error in that file or is it empty^7?")
     print("^1--------------------------------------------^7")
     cache.Vehicles = {} -- Fallback to an empty table
 end
 if cache.Jobs == nil or not next(cache.Jobs) then
     print("^1--------------------------------------------^7")
-    print("^1ERROR^7: ^1Can NOT find "..jobResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").." ^7job ^1list^7, ^1possible error in that file or is it empty^7?")
+    print("^1ERROR^7: ^1Can NOT find "..jobResource.." ^7job ^1list^7, ^1possible error in that file or is it empty^7?")
     print("^1--------------------------------------------^7")
     cache.Jobs = {} -- Fallback to an empty table
 end
@@ -278,6 +307,7 @@ local function getInventoryConfig(resource, data)
     local env = {
         GetConvar = GetConvar, vector3 = vector3, Citizen = Citizen,
         GetResourceState = GetResourceState, exports = exports,
+        DependencyCheck = DependencyCheck or function() return nil end,
     }
 
     local fn, err = load(content, '@'..data.file, 't', env)
@@ -296,6 +326,7 @@ local function getInventoryConfig(resource, data)
         return ref
     end
 end
+
 
 -- Inventory table
 local invWeightTable = {
