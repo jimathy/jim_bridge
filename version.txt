@@ -1,17 +1,8 @@
-2.0.18
+2.0.19
 
-- Fix ox_inv client item caching (images)
-- Add better checks if errors in ox_inv items and add more prominent error messages all around
-- Tidy up several debugPrints
-- Move AuthEvents to new file
-- Fix clearStash error with PSInv and JPRInv
-- Add extra trigger event for PSInv when opening stash (hopefully fix missing items for some)
-- Fix onPlayerUnloaded() not triggering
-- Add support for esx_society in openBossMenu()
-- Added support for okokbilling to billPlayer()
-- Rework progressBar and ui_modules folder
-- Rework isAnimal.lua to be more automated and smarter
-- Rework/Fix auto detection of QBInvNew
-- Add new functions to get players current Inventory Weight
+- SetMetadata function now handles full metadata, not just durability
+- Completely rework framework caching, it was lagging behind and breaking
+- Add new hasFreeInvnentorySlots() function
+- Add inv config file grabber, checks inventory configs for inventory weight/slots
 
 https://github.com/jimathy/jim_bridge
