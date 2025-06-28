@@ -18,10 +18,11 @@ files {
 -- Version checker
 server_scripts {
     'frameworkCache.lua',
-    '_versioncheck.lua'
+    '_versioncheck.lua',
 }
 
 client_scripts {
     'clientFrameworkCache.lua',
-    'ui_modules/*.lua'
+    'ui_modules/*.lua',
+    'dev_modules/*.lua',
 }

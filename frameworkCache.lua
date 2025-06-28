@@ -353,7 +353,7 @@ for script, data in pairs(invWeightTable) do
         local lookup, err = getInventoryConfig(script, data)
         if not lookup then
             print(("^1ERROR^7: ^1Config loader failed from ^5%s^7: ^1%s^7"):format(script, err or "unknown"))
-            return
+            break
         end
 
         local function resolve(label, path)
