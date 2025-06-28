@@ -24,5 +24,4 @@ server_scripts {
 client_scripts {
     'clientFrameworkCache.lua',
     'ui_modules/*.lua',
-    'dev_modules/*.lua',
 }
