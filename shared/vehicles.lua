@@ -53,6 +53,7 @@ function searchCar(vehicle)
             "Military",          --20
             "Commercial",        --21
             "Trains",            --22
+            "Open Wheel",        --23
         }
         if Vehicles then
             for k, v in pairs(Vehicles) do
