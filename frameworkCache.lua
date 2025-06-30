@@ -41,7 +41,17 @@ local cache = {
     Jobs = {},
     Gangs = {},
 }
+local cacheReady = false
+local timers = {}
+local function startTimer(label)
+    timers[label] = GetGameTimer()
+end
 
+local function endTimer(label)
+    timers[label] = GetGameTimer() - (timers[label] or GetGameTimer())
+    timers[label] = timers[label] / 1000
+end
+startTimer("Cache")
 -- Helper function to check if resource exists in server (instead of if it is already started)
 local function checkExists(resourceName)
     return GetResourceState(resourceName):find("start") or GetResourceState(resourceName):find("stopped")
@@ -78,6 +88,7 @@ end
 ---- Load Items -----
 ---------------------
 -- Items initialization based on detected inventory system
+startTimer("Items")
 if checkExists(Exports.OXInv) then
     -- Wait for OX Inventory to start if it's not already started
     while GetResourceState(Exports.OXInv) ~= "started" do Wait(100) end
@@ -155,10 +166,12 @@ elseif checkExists(Exports.RSGExport) then
     itemResource = Exports.RSGExport
     cache.Items = exports[Exports.RSGExport]:GetCoreObject().Shared.Items
 end
+endTimer("Items")
 
 ---------------------
 --- Load Vehicles ---
 ---------------------
+startTimer("Vehicles")
 -- Vehicle loading depending on framework
 if checkExists(Exports.QBXExport) then
     vehResource = Exports.QBXExport
@@ -197,10 +210,12 @@ elseif checkExists(Exports.RSGExport) then
     cache.Vehicles = exports[Exports.RSGExport]:GetCoreObject().Shared.Vehicles
 
 end
+endTimer("Vehicles")
 
 ---------------------
 ----- Load Jobs -----
 ---------------------
+startTimer("Jobs")
 -- Jobs loading based on framework
 if checkExists(Exports.QBXExport) then
     jobResource = Exports.QBXExport
@@ -267,6 +282,7 @@ elseif checkExists(Exports.RSGExport) then
     cache.Jobs, cache.Gangs = exports[Exports.RSGExport]:GetCoreObject().Shared.Jobs, exports[Exports.RSGExport]:GetCoreObject().Shared.Gangs
 
 end
+endTimer("Jobs")
 
 -- Fallback if nil or empty
 if cache.Items == nil or not next(cache.Items) then
@@ -292,6 +308,8 @@ end
 -- Forcefully load the the specified config file from inventory scripts
 -- This allows to get information required for certain functions that need to detect how much space is left in a players inventory
 -- This is born from too many tickets of me needing to explain that they need to change "InventoryWeight" to match their inv setting
+startTimer("InvWeight")
+startTimer("InvSlots")
 local function getInventoryConfig(resource, data)
     if data.convars then
         return function(path)
@@ -326,7 +344,6 @@ local function getInventoryConfig(resource, data)
         return ref
     end
 end
-
 
 -- Inventory table
 local invWeightTable = {
@@ -373,7 +390,8 @@ for script, data in pairs(invWeightTable) do
         break
     end
 end
-
+endTimer("InvWeight")
+endTimer("InvSlots")
 
 CreateThread(function()
     local counts = {
@@ -383,15 +401,18 @@ CreateThread(function()
         if type(v) ~= "number" then for count in pairs(v) do counts[k] += 1 end end
     end
     if cache.InventoryWeight then
-        print("^6FrameWorkCache^7: ^4"..invResource.."^2 InventoryWeight^7: ^3"..cache.InventoryWeight.."^7 (^3"..(cache.InventoryWeight / 1000).."kg^7)")
+        print("^6FrameWorkCache^7: ^4"..invResource.."^2 InventoryWeight^7: ^3"..cache.InventoryWeight.."^7 (^3"..(cache.InventoryWeight / 1000).."kg^7) ^7("..timers["InvWeight"].."s)")
     end
     if cache.InventorySlots then
-        print("^6FrameWorkCache^7: ^4"..invResource.."^2 InventorySlots^7: ^3"..cache.InventorySlots.."^7")
+        print("^6FrameWorkCache^7: ^4"..invResource.."^2 InventorySlots^7: ^3"..cache.InventorySlots.." ^7("..timers["InvSlots"].."s)")
     end
-    print("^6FrameworkCache^7: ^4"..itemResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Items).."^2 Items^7")
-    print("^6FrameworkCache^7: ^4"..vehResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Vehicles).."^2 Vehicles^7")
-    print("^6FrameworkCache^7: ^4"..jobResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Jobs).."^2 Jobs^7")
-    print("^6FrameworkCache^7: ^4"..jobResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Gangs).."^2 Gangs^7")
+    print("^6FrameworkCache^7: ^4"..itemResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Items).."^2 Items ^7("..timers["Items"].."s)")
+    print("^6FrameworkCache^7: ^4"..vehResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Vehicles).."^2 Vehicles ^7("..timers["Vehicles"].."s)")
+    print("^6FrameworkCache^7: ^4"..jobResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Jobs).."^2 Jobs ^7("..timers["Jobs"].."s)")
+    print("^6FrameworkCache^7: ^4"..jobResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Gangs).."^2 Gangs ^7("..timers["Jobs"].."s)")
+    endTimer("Cache")
+    print("^6FrameworkCache^7: ^2Cache Ready ^7("..timers["Cache"].."s)")
+    cacheReady = true
 end)
 
 RegisterNetEvent("jim_bridge:requestCache", function()
@@ -400,15 +421,16 @@ RegisterNetEvent("jim_bridge:requestCache", function()
 end)
 
 exports("GetSharedData", function()
-    -- Wait for data to be ready before returning it
-    local timeout = GetGameTimer() + 5000
-    while (
-        not cache or
-        (not cache.Items or next(cache.Items) == nil) or
-        (not cache.Vehicles or next(cache.Vehicles) == nil) or
-        (not cache.Jobs or next(cache.Jobs) == nil)
-    ) and GetGameTimer() < timeout do
-        Wait(50)
+    -- Wait indefinitely (with periodic checks) until cacheReady is true
+    local timeout = GetGameTimer() + 20000  -- 20 second failsafe timeout
+    while not cacheReady and GetGameTimer() < timeout do
+        Wait(100)
     end
+
+    if not cacheReady then
+        print("^1ERROR^7: jim_bridge cache timed out waiting for data.")
+        return nil  -- Signal clearly if cache never became ready
+    end
+
     return cache
 end)

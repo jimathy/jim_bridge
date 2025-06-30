@@ -34,7 +34,7 @@ end
 
 if IsDuplicityVersion() then
     local cache = nil
-    local timeout = GetGameTimer() + 5000 -- 5 seconds max wait
+    local timeout = GetGameTimer() + 20000 -- 20 seconds max wait
 
     -- Wait until jim_bridge is started and export is available
     while not cache and GetGameTimer() < timeout do
