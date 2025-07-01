@@ -275,7 +275,6 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
     else
         local amountToAdd = amount or 1
         if isStarted(OXInv) then invName = OXInv
-            jsonPrint(info)
             exports[OXInv]:AddItem(src, item, amountToAdd, info, slot)
 
         elseif isStarted(QSInv) then invName = QSInv
