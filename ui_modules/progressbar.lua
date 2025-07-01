@@ -6,6 +6,25 @@ local function loadTextureDict(dict)
 	end
 end
 
+local function loadAnimDict(animDict)
+	if not DoesAnimDictExist(animDict) then
+		print("^6Bridge^7: ^1ERROR^7: ^2Anim Dictionary^7 - '^6"..animDict.."^7' ^2does not exist in server") return
+	else
+		while not HasAnimDictLoaded(animDict) do RequestAnimDict(animDict) Wait(5) end
+	end
+end
+
+local function playAnim(animDict, animName, duration, flag, ped, speed)
+    loadAnimDict(animDict)
+	TaskPlayAnim(ped and ped or PlayerPedId(), animDict, animName, speed or 8.0, speed or -8.0, duration or 30000, flag or 50, 1, false, false, false)
+end
+
+local function stopAnim(animDict, animName, ped)
+    StopAnimTask(ped or PlayerPedId(), animDict, animName, 0.5)
+    StopAnimTask(ped or PlayerPedId(), animName, animDict, 0.5)
+    unloadAnimDict(animDict)
+end
+
 function redProgressBar(data)
     local ped = PlayerPedId()
 
