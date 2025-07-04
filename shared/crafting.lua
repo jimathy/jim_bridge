@@ -89,6 +89,14 @@ function craftingMenu(data)
     -- Check if the player can carry the required items (server callback).
     local canCarryTable = triggerCallback(getScript()..':server:canCarry', tempCarryTable)
 
+    local usingStash = data.stashName ~= nil
+
+    Menu[#Menu+1] = {
+        icon = usingStash and "fas fa-boxes-stacked" or "fas fa-person",
+        header = "Material Source: "..(usingStash and "Job Stash" or "Player Inventory"),
+        disabled = true,
+    }
+
     -- Process each recipe to create menu entries.
     for i = 1, #Recipes do
         if not Recipes[i]["amount"] then Recipes[i]["amount"] = 1 end
