@@ -32,6 +32,25 @@ function skillCheck(data)
     elseif Config.System.skillCheck == "gta" then
         exports.jim_bridge:skillCheck()
 
+    elseif Config.System.skillCheck == "lation" then
+        local Skillbar = exports.lation_ui:skillCheck("",
+            {
+                "easy",
+                "easy",
+                "easy"
+            },
+            {
+                "1",
+                "2",
+                "3",
+                "4"
+            })
+
+        if Skillbar then
+            result = true
+        else
+            result = false
+        end
     else
         result = true
     end

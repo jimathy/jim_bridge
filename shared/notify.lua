@@ -62,6 +62,20 @@ function triggerNotify(title, message, type, src)
         else
             TriggerClientEvent(getScript()..":DisplayESXNotify", src, type, message)
         end
+    elseif Config.System.Notify == "lation" then
+        if not src then
+            exports.lation_ui:notify({
+                title = title,
+                message = message,
+                type = type or "success",
+            })
+        else
+            TriggerClientEvent("lation_ui:notify", src, {
+                title = title,
+                message = message,
+                type = type or "success",
+            })
+        end
 
     elseif Config.System.Notify == "red" then
         if isStarted("jim-redui") then

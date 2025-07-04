@@ -35,10 +35,25 @@ function drawText(image, input, style, oxStyleTable)
 
     elseif Config.System.drawText == "ox" then
         -- Append newline spacing to each input line.
+        local inputnum = countTable(input)
         for k, v in pairs(input) do
-            input[k] = v.."   \n"
+            input[k] = v..(inputnum ~= k and "   \n" or "")
         end
         lib.showTextUI(table.concat(input), { icon = (image and radarTable[image] or image) or nil, position = 'left-center', style = oxStyleTable })
+
+    elseif Config.System.drawText == "lation" then
+        local inputnum = countTable(input)
+        for k, v in pairs(input) do
+            input[k] = v..(inputnum ~= k and "   \n" or "")
+        end
+        exports.lation_ui:showText({
+            --title = " ",
+            description = table.concat(input),
+            keybind = nil,
+            icon = (image and radarTable[image] or image) or nil,
+            iconColor = '#3B82F6',
+            position = 'center-left'
+        })
 
     elseif Config.System.drawText == "gta" then
         -- Concatenate input lines and apply GTA style formatting.
@@ -88,6 +103,8 @@ function hideText()
         exports[QBExport]:HideText()
     elseif Config.System.drawText == "ox" then
         lib.hideTextUI()
+    elseif Config.System.drawText == "lation" then
+        exports.lation_ui:hideText()
     elseif Config.System.drawText == "gta" then
         ClearAllHelpMessages()
     elseif Config.System.drawText == "esx" then

@@ -135,6 +135,34 @@ function progressBar(data)
             end
         })
 
+    elseif Config.System.ProgressBar == "lation" then
+        if exports.lation_ui:progressBar({
+            label = data.label,
+            description = nil,
+            duration = debugMode and 1000 or data.time,
+            icon = data.icon,
+            useWhileDead = data.dead or false,
+            disable = {
+                combat = data.combat or true,
+                move = data.disableMovement or false,
+                car = data.disableMovement or false,
+            },
+            anim = {
+                dict = data.dict,
+                clip = data.anim,
+            },
+            prop = {
+                model = data.prop and data.prop.model,
+                pos = data.prop and (data.prop.pos or vec3(0, 0, 0)),
+                rot = data.prop and (data.prop.rot or vec3(0, 0, 0)),
+                bone = data.prop and (data.prop.bone or 0)
+            }
+        }) then
+            result = true
+        else
+            result = true
+        end
+
     elseif Config.System.ProgressBar == "red" then
         -- Currently only uses jim-redui if you choose this option
         if exports["jim_bridge"]:redProgressBar({
@@ -204,6 +232,8 @@ function stopProgressBar()
         exports[OXLibExport]:cancelProgress()
     elseif Config.System.ProgressBar == "qb" then
         TriggerEvent("progressbar:client:cancel")
+    elseif Config.System.ProgressBar == "lation" then
+        exports.lation_ui:cancelProgress()
     elseif Config.System.ProgressBar == "gta" or Config.System.ProgressBar == "red" then
         exports["jim_bridge"]:stopProgressBar()
     end

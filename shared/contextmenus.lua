@@ -47,48 +47,7 @@
 --- })
 --- ```
 function openMenu(Menu, data)
-    if Config.System.Menu == "jim" then
-        if data.onBack then
-            table.insert(Menu, 1, {
-                icon = "fas fa-circle-arrow-left",
-                header = " ",
-                txt = "Return",
-                params = {
-                    isAction = true,
-                    event = data.onBack,
-                },
-            })
-        elseif data.canClose then
-            table.insert(Menu, 1, {
-                icon = "fas fa-circle-xmark",
-                header = " ",
-                txt = "Close",
-                params = {
-                    isAction = true,
-                    event = data.onExit and data.onExit or (function() exports[QBMenuExport]:closeMenu() end),
-                },
-            })
-        end
-        if data.header ~= nil then
-            local tempMenu = {}
-            for k, v in pairs(Menu) do tempMenu[k + 1] = v end
-            tempMenu[1] = { header = data.header, txt = data.headertxt or "", isMenuHeader = true }
-            Menu = tempMenu
-        end
-        for k in pairs(Menu) do
-            if not Menu[k].params or not Menu[k].params.event then
-                Menu[k].params = {
-                    isAction = true,
-                    event = Menu[k].onSelect or function() end,
-                }
-            end
-            if not Menu[k].header then Menu[k].header = " " end
-            if Menu[k].arrow then Menu[k].icon = "fas fa-angle-right" end
-            Menu[k].isMenuHeader = Menu[k].isMenuHeader or Menu[k].disable
-        end
-        TriggerEvent("jim_bridge:client:openMenu", Menu)
-
-    elseif Config.System.Menu == "ox" then
+    if Config.System.Menu == "ox" then
         local index = nil
         if data.onBack and not data.onSelected then
             table.insert(Menu, 1, {
@@ -286,11 +245,56 @@ function openMenu(Menu, data)
         function(data, menu)
             menu.close()
         end)
+
+    elseif Config.System.Menu == "lation" then
+        if data.onBack then
+            table.insert(Menu, 1, {
+                icon = "fas fa-circle-arrow-left",
+                onSelect = data.onBack,
+                header = "Return",
+            })
+        end
+
+        for k in pairs(Menu) do
+            if data.onSelected and Menu[k].arrow then
+                Menu[k].icon = "fas fa-angle-right"
+            end
+            -- If no title, use header or txt as title/label.
+            if not Menu[k].title then
+                if Menu[k].header ~= nil and Menu[k].header ~= "" then
+                    Menu[k].title = Menu[k].header
+                    Menu[k].label = Menu[k].header
+                    if Menu[k].txt then Menu[k].description = Menu[k].txt else Menu[k].description = "" end
+                else
+                    Menu[k].title = Menu[k].txt
+                    Menu[k].label = Menu[k].txt
+                end
+            end
+            -- Copy parameters from 'params' if available.
+            if Menu[k].params then
+                Menu[k].event = Menu[k].params.event
+                Menu[k].args = Menu[k].params.args or {}
+            end
+            if Menu[k].isMenuHeader then
+                Menu[k].readOnly = true
+            end
+        end
+
+        exports.lation_ui:registerMenu({
+            id = 'menu',
+            title = data.header,
+            subtitle = (data.headertxt and data.headertxt or ""),
+            options = Menu,
+        })
+
+        -- Show menu
+        exports.lation_ui:showMenu('menu')
+
     end
 end
 
 --- A line break constant used for menu header formatting.
-br = (Config.System.Menu == "ox" or Config.System.Menu == "gta") and "\n" or "<br>"
+br = (Config.System.Menu == "ox" or Config.System.Menu == "gta" or Config.System.Menu == "lation") and "\n" or "<br>"
 
 --- Checks if the current menu system is 'ox' or 'gta' for formatting purposes.
 --- @return boolean boolean True if using ox or gta menus, otherwise false.
