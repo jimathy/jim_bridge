@@ -138,6 +138,98 @@ function createInput(title, opts)
         )
         return dialog
 
+    elseif Config.System.Menu == "lation" then
+
+        for i in pairs(opts) do
+            currentNum += 1
+            if opts[i] == nil then currentNum -= 1 goto skip end
+            if opts[i].type == "radio" then
+                for k in pairs(opts[i].options) do
+                    opts[i].options[k].label = opts[i].options[k].text
+                end
+                options[currentNum] = {
+                    type = "select",
+                    required = opts[i].isRequired,
+                    label = opts[i].label or opts[i].text,
+                    name = opts[i].name,
+                    default = opts[i].default or opts[i].options[1].value,
+                    options = opts[i].options,
+                }
+            end
+            if opts[i].type == "number" then
+                options[currentNum] = {
+                    type = opts[i].type,
+                    label = opts[i].label or opts[i].text,
+                    description = opts[i].txt and " - "..opts[i].txt or "",
+                    required = opts[i].isRequired,
+                    name = opts[i].name,
+                    options = opts[i].options,
+                }
+            end
+            if opts[i].type == "text" then
+                options[currentNum] = {
+                    type = "input",
+                    label = opts[i].label or opts[i].text,
+                    description = (opts[i].txt and " - "..opts[i].txt or ""),
+                    placeholder = opts[i].default,
+                    required = opts[i].isRequired,
+                }
+            end
+            if opts[i].type == "select" then
+                options[currentNum] = {
+                    type = opts[i].type,
+                    label = opts[i].label or opts[i].text,
+                    description = opts[i].txt and " - "..opts[i].txt or "",
+                    required = opts[i].isRequired,
+                    name = opts[i].name,
+                    options = opts[i].options,
+                    min = opts[i].min,
+                    max = opts[i].max,
+                    default = opts[i].default,
+                }
+            end
+
+            if opts[i].type == "checkbox" then
+                for k in pairs(opts[i].options) do
+                    if options[currentNum] then currentNum += 1 end
+                    options[currentNum] = {
+                        type = opts[i].type,
+                        label = opts[i].options[k].text..(opts[i].txt and " - "..opts[i].txt or ""),
+                        name = opts[i].options[k].value,
+                    }
+                end
+            end
+
+            if opts[i].type == "color" then
+                options[currentNum] = {
+                    type = opts[i].type,
+                    label = opts[i].label,
+                    required = opts[i].isRequired,
+                    format = opts[i].format,
+                    default = opts[i].default,
+                }
+            end
+
+            if opts[i].type == "slider" then
+                options[currentNum] = {
+                    type = opts[i].type,
+                    label = opts[i].label,
+                    required = opts[i].required,
+                    min = opts[i].min,
+                    max = opts[i].max,
+                    default = opts[i].default,
+                }
+            end
+            ::skip::
+        end
+
+        local dialog = exports.lation_ui:input({
+            title = title,
+            submitText = "Accept",
+            options = options
+        })
+        return dialog
+
     elseif Config.System.Menu == "gta" then
         WarMenu.CreateMenu(tostring(opts),
             title,
