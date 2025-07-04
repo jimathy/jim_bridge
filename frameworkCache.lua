@@ -365,7 +365,7 @@ local invWeightTable = {
 local invResource = ""
 for script, data in pairs(invWeightTable) do
     if checkExists(script) then
-        if script == Exports.QBInv and GetResourceState(Exports.JPRInv):find("start") then return end
+        if script == Exports.QBInv and GetResourceState(Exports.JPRInv):find("start") then goto skip end
 
         local lookup, err = getInventoryConfig(script, data)
         if not lookup then
@@ -389,6 +389,7 @@ for script, data in pairs(invWeightTable) do
         invResource = script:gsub("-", "^7-^4"):gsub("_", "^7_^4")
         break
     end
+    ::skip::
 end
 endTimer("InvWeight")
 endTimer("InvSlots")
