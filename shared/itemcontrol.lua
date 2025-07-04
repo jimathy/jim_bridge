@@ -891,9 +891,28 @@ end
 --- if doesItemExist(item) then print("item exists") end
 --- ```
 function doesItemExist(item)
-    if not item or item == "" then return false end
+    if not item or item == "" then
+        return false
+    end
+    if not Items or not next(Items) then
+        return item.." (Missing)"
+    end
     if Items[item] ~= nil then
-        return true
+        return Items[item]
     end
     return false
+end
+
+
+function getItemLabel(item)
+    if not item or item == "" then
+        return ""
+    end
+    if not Items or not next(Items) then
+        return item.." (Missing)"
+    end
+    if Items[item] ~= nil then
+        return Items[item].label
+    end
+    return item.." (Missing)"
 end
