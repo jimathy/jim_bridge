@@ -351,7 +351,12 @@ local invWeightTable = {
         weight = { key = "inventory:weight", default = 30000 },
         slots  = { key = "inventory:slots",  default = 40 }
     }},
-    [Exports.QBInv] =       { file = "config/config.lua",       path = { "MaxWeight" }, slotPath = { "MaxSlots" } },
+    [Exports.QBInv] = {
+        fallback = {
+            { file = "config.lua",              path = { "MaxInventoryWeight" }, slotPath = { "MaxInventorySlots" } }, -- old version
+            { file = "config/config.lua",       path = { "MaxWeight" },       slotPath = { "MaxSlots" } },       -- new version
+        }
+    },
     [Exports.JPRInv] =      { file = "configs/main_config.lua", path = { "MaxInventoryWeight" }, slotPath = { "MaxInventorySlots" } },
     [Exports.PSInv] =       { file = "config.lua",              path = { "MaxInventoryWeight" }, slotPath = { "MaxInventorySlots" } },
     [Exports.QSInv] =       { file = "config/config.lua",       path = { "InventoryWeight", "weight" }, slotPath = { "InventoryWeight", "slots" } },
@@ -367,7 +372,19 @@ for script, data in pairs(invWeightTable) do
     if checkExists(script) then
         if script == Exports.QBInv and GetResourceState(Exports.JPRInv):find("start") then goto skip end
 
-        local lookup, err = getInventoryConfig(script, data)
+        local attempts = data.fallback or { data }
+        local lookup, used, err
+
+        for _, option in ipairs(attempts) do
+            local try, e = getInventoryConfig(script, option)
+            if try then
+                lookup = try
+                used = option
+                break
+            end
+            err = e
+        end
+
         if not lookup then
             print(("^1ERROR^7: ^1Config loader failed from ^5%s^7: ^1%s^7"):format(script, err or "unknown"))
             break
@@ -383,8 +400,8 @@ for script, data in pairs(invWeightTable) do
             print(("%s^7: ^1Failed to get ^7Inventory%s ^1from ^5%s^7: ^1%s^7"):format(warnType, label, script, perr or "unknown"))
         end
 
-        resolve("Weight", data.path or { "MaxWeight" })
-        resolve("Slots",  data.slotPath or { "MaxSlots" })
+        resolve("Weight", used.path or { "MaxWeight" })
+        resolve("Slots",  used.slotPath or { "MaxSlots" })
 
         invResource = script:gsub("-", "^7-^4"):gsub("_", "^7_^4")
         break
