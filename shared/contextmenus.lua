@@ -283,6 +283,7 @@ function openMenu(Menu, data)
         exports.lation_ui:registerMenu({
             id = 'menu',
             title = data.header,
+            onExit = data.onExit and data.onExit or nil,
             subtitle = (data.headertxt and data.headertxt or ""),
             options = Menu,
         })

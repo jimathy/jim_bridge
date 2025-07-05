@@ -53,7 +53,7 @@ setr jim_DisableDebug true
 setr jim_DisableEventDebug true
 
 # Force the default setting for what framework scripts should be used
-setr jim_menuScript qb              # qb, ox, gta, jim, lation
+setr jim_menuScript qb              # qb, ox, gta, lation
 setr jim_notifyScript gta           # qb, ox, gta, esx, okok, red, lation
 setr jim_drawTextScript qb          # qb, ox, gta, esx, lation
 setr jim_progressBarScript qb       # qb, ox, gta, esx, lation
