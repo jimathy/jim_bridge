@@ -654,7 +654,7 @@ function canCarry(itemTable, src)
 
         elseif isStarted(TgiannInv) then
             for k, v in pairs(itemTable) do
-                resultTable[k] = exports[TgiannInv]:CanCarryItem(source, k, v)
+                resultTable[k] = exports[TgiannInv]:CanCarryItem(src, k, v)
             end
 
         elseif isStarted(JPRInv) then
