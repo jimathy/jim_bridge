@@ -319,6 +319,9 @@ end
 ---     metadata = { label = "Custom Pistol", image = "custom_pistol.png" },
 --- })
 --- ```
+
+Config.Crafting.SingleProgress = true -- Set false to use individual progress bars per craft
+
 function makeItem(data)
     if CraftLock then return end
     CraftLock = true
@@ -338,116 +341,143 @@ function makeItem(data)
     local crafted, crafting = true, true
     local cam = createTempCam(PlayerPedId(), data.coords)
     startTempCam(cam)
+
+    -- Calculate total bartime if SingleProgress is enabled
+    local totalBartime = bartime * craftAmount
+
+    -- Run ingredient check and usage separately first
     for i = 1, craftAmount do
         for k, v in pairs(data.craft) do
-            if not excludeKeys[k] then
-                if type(v) == "table" then
-                    for l, b in pairs(v) do
-                        if isInventoryOpen() then
-                            print("^1Error^7: ^2Inventory is open, you tried to break things")
-                            crafted, crafting = false, false
-                            stopTempCam()
-                            ClearPedTasks(PlayerPedId())
-                            if canReturn then craftingMenu(data) end
-                            CraftLock = false
-                            return
-                        end
-                        if crafting and progressBar({
-                            label = "Using "..b.." "..Items[l].label,
-                            time = 1000,
-                            cancel = true,
-                            dict = 'pickup_object',
-                            anim = "putdown_low",
-                            flag = 49,
-                            icon = l,
-                        }) then
-                            TriggerEvent((isStarted(QBInv) and QBInvNew and "qb-" or "")..'inventory:client:ItemBox', Items[l], "use", b)
-                        else
-                            crafted, crafting = false, false
-                            break
-                        end
-                        Wait(200)
-                    end
+            if not excludeKeys[k] and type(v) == "table" then
+                for l, b in pairs(v) do
                     if isInventoryOpen() then
                         print("^1Error^7: ^2Inventory is open, you tried to break things")
-                        crafted, crafting = false, false
                         stopTempCam()
                         ClearPedTasks(PlayerPedId())
                         if canReturn then craftingMenu(data) end
                         CraftLock = false
                         return
                     end
-
-                    if crafted then
-                        local craftProp = nil
-                        if prop then
-                            craftProp = makeProp({ prop = prop.model, coords = vec4(0, 0, 0, 0), true, true })
-                            AttachEntityToEntity(craftProp, PlayerPedId(), GetPedBoneIndex(PlayerPedId(), prop.bone), prop.pos.x, prop.pos.y, prop.pos.z, prop.rot.x, prop.rot.y, prop.rot.z, true, true, false, true, 1, true)
-                        end
-                        if data.sound then
-                            local s = data.sound
-                            PlaySoundFromEntity(s.soundId, s.audioName, PlayerPedId(), s.audioRef, true, 0)
-                        end
-                        if isInventoryOpen() then
-                            --print("^1Error^7: ^2Inventory is open, you tried to break things")
-                            crafted, crafting = false, false
-                            crafted, crafting, CraftLock = false, false, false
-                            return
-                        end
-                        if crafting and progressBar({
-                            label = bartext..((metadata and metadata.label) or Items[data.item].label),
-                            time = bartime,
-                            cancel = true,
-                            dict = animDict,
-                            anim = anim,
-                            flag = 49,
-                            icon = data.item,
-                            request = true,
-                        }) then
-                            TriggerServerEvent(getScript()..":Crafting:GetItem", data.item, data.craft, data.stashName, metadata, currentToken)
-                            currentToken = nil -- clear client cached token
-                            CreateThread(function()
-                                if data.craft["hasCrafted"] ~= nil then
-                                    debugPrint("^5Bridge^7: ^3hasCrafted ^2Found^7, ^2marking ^7'^4"..data.item.."^7' ^2as crafted for player^7")
-                                    data.craftable.craftedItems[data.item] = true
-                                    triggerCallback(getScript()..":server:SetMetadata", "craftedItems", data.craftable.craftedItems)
-                                end
-                                Wait(100)
-                                if data.craft["exp"] ~= nil then
-                                    craftingLevel += data.craft["exp"].give
-                                    jsonPrint(data.craft["exp"])
-                                    debugPrint("^6Bridge^7: ^3EXP ^2found^7, ^2giving exp for ^7'^4"..data.item.."^7'")
-                                    triggerCallback(getScript()..":server:SetMetadata", "craftingLevel", craftingLevel)
-                                end
-                            end)
-                            if data.craftable.Recipes[1].oneUse == true then
-                                removeItem("craftrecipe", 1, nil, data.craftable.Recipes[1].slot)
-                                local breakId = GetSoundId()
-                                PlaySoundFromEntity(breakId, "Drill_Pin_Break", PlayerPedId(), "DLC_HEIST_FLEECA_SOUNDSET", 1, 0)
-                                canReturn = false
-                            end
-                            if data.sound then
-                                StopSound(data.sound.soundId)
-                            end
-                            if data.requiredItemfunc then
-                                data.requiredItemfunc()
-                            end
-                        else
-                            crafting = false
-                            break
-                        end
-                        if craftProp then destroyProp(craftProp) end
+                    if crafting and progressBar({
+                        label = "Using "..b.." "..Items[l].label,
+                        time = 1000,
+                        cancel = true,
+                        dict = 'pickup_object',
+                        anim = "putdown_low",
+                        flag = 49,
+                        icon = l,
+                    }) then
+                        TriggerEvent((isStarted(QBInv) and QBInvNew and "qb-" or "")..'inventory:client:ItemBox', Items[l], "use", b)
+                    else
+                        crafted, crafting = false, false
+                        break
                     end
+                    Wait(200)
                 end
             end
         end
-        Wait(500)
     end
+
+    if not crafted then
+        stopTempCam()
+        ClearPedTasks(PlayerPedId())
+        if canReturn then craftingMenu(data) end
+        CraftLock = false
+        return
+    end
+
+    -- Handle SingleProgress option
+    if Config.Crafting.SingleProgress then
+        local craftProp = nil
+        if prop then
+            craftProp = makeProp({ prop = prop.model, coords = vec4(0, 0, 0, 0), true, true })
+            AttachEntityToEntity(craftProp, PlayerPedId(), GetPedBoneIndex(PlayerPedId(), prop.bone), prop.pos.x, prop.pos.y, prop.pos.z, prop.rot.x, prop.rot.y, prop.rot.z, true, true, false, true, 1, true)
+        end
+        if data.sound then
+            local s = data.sound
+            PlaySoundFromEntity(s.soundId, s.audioName, PlayerPedId(), s.audioRef, true, 0)
+        end
+        if crafting and progressBar({
+            label = bartext..((metadata and metadata.label) or Items[data.item].label).." x"..craftAmount,
+            time = totalBartime,
+            cancel = true,
+            dict = animDict,
+            anim = anim,
+            flag = 49,
+            icon = data.item,
+            request = true,
+        }) then
+            data.craft.amount = craftAmount
+            TriggerServerEvent(getScript()..":Crafting:GetItem", data.item, data.craft, data.stashName, metadata, currentToken)
+            currentToken = nil -- clear client cached token
+            -- handle metadata and experience in a single go
+            if data.craft["hasCrafted"] ~= nil then
+                data.craftable.craftedItems[data.item] = true
+                triggerCallback(getScript()..":server:SetMetadata", "craftedItems", data.craftable.craftedItems)
+            end
+            if data.craft["exp"] ~= nil then
+                craftingLevel += data.craft["exp"].give * craftAmount
+                triggerCallback(getScript()..":server:SetMetadata", "craftingLevel", craftingLevel)
+            end
+            if data.craftable.Recipes[1].oneUse == true then
+                removeItem("craftrecipe", 1, nil, data.craftable.Recipes[1].slot)
+                local breakId = GetSoundId()
+                PlaySoundFromEntity(breakId, "Drill_Pin_Break", PlayerPedId(), "DLC_HEIST_FLEECA_SOUNDSET", 1, 0)
+                canReturn = false
+            end
+            if data.sound then
+                StopSound(data.sound.soundId)
+            end
+            if data.requiredItemfunc then
+                data.requiredItemfunc()
+            end
+        end
+        if craftProp then destroyProp(craftProp) end
+    else
+        -- Run the original loop for multiple progress bars
+        for i = 1, craftAmount do
+            if crafting and progressBar({
+                label = bartext..((metadata and metadata.label) or Items[data.item].label),
+                time = bartime,
+                cancel = true,
+                dict = animDict,
+                anim = anim,
+                flag = 49,
+                icon = data.item,
+                request = true,
+            }) then
+                TriggerServerEvent(getScript()..":Crafting:GetItem", data.item, data.craft, data.stashName, metadata, currentToken)
+                currentToken = nil
+                if data.craft["hasCrafted"] ~= nil then
+                    data.craftable.craftedItems[data.item] = true
+                    triggerCallback(getScript()..":server:SetMetadata", "craftedItems", data.craftable.craftedItems)
+                end
+                if data.craft["exp"] ~= nil then
+                    craftingLevel += data.craft["exp"].give
+                    triggerCallback(getScript()..":server:SetMetadata", "craftingLevel", craftingLevel)
+                end
+                if data.craftable.Recipes[1].oneUse == true then
+                    removeItem("craftrecipe", 1, nil, data.craftable.Recipes[1].slot)
+                    local breakId = GetSoundId()
+                    PlaySoundFromEntity(breakId, "Drill_Pin_Break", PlayerPedId(), "DLC_HEIST_FLEECA_SOUNDSET", 1, 0)
+                    canReturn = false
+                end
+                if data.requiredItemfunc then
+                    data.requiredItemfunc()
+                end
+            else
+                break
+            end
+        end
+    end
+
+    Wait(500)
     stopTempCam()
     CraftLock = false
     if canReturn then craftingMenu(data) end
     ClearPedTasks(PlayerPedId())
 end
+
 
 -------------------------------------------------------------
 -- Server Event Handler: Crafted Item
