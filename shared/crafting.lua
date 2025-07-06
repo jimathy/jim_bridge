@@ -246,7 +246,7 @@ function multiCraft(data)
     })
 
     local dialog = createInput(data.craftable.Header..(Config.System.Menu == "qb" and ": "..br.."How many to craft? "..br.."Max: "..carryMax or ""), {
-        ((Config.System.Menu == "ox") and {
+        ((Config.System.Menu == "ox" or Config.System.Menu == "lation") and {
             type = "slider",
             label = "How many to craft? "..br.."Max: "..carryMax,
             required = true,
