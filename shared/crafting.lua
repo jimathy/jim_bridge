@@ -320,8 +320,6 @@ end
 --- })
 --- ```
 
-Config.Crafting.SingleProgress = true -- Set false to use individual progress bars per craft
-
 function makeItem(data)
     if CraftLock then return end
     CraftLock = true
