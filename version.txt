@@ -1,8 +1,14 @@
-2.0.19
+2.0.20
 
-- SetMetadata function now handles full metadata, not just durability
-- Completely rework framework caching, it was lagging behind and breaking
-- Add new hasFreeInvnentorySlots() function
-- Add inv config file grabber, checks inventory configs for inventory weight/slots
+- Add Full support for lation_ui
+- Add "Open Wheel" to searchCar()
+- Increase timeout for cache timer from 5 seconds to 2 minutes
+- Fix GTA progressbar erroring on playAnim()
+- Add Igredient location indicator when crafting
+- Fix JPRInv checks breaking early when caching framework info
+- Enhance doesItemExist() and add getItemLabel() function
+- Add Support for old qb-inventory config loading
+- Fix typo in cancarry when using Tgiann Inv
+- Add support for single progressBar when crafting
 
 https://github.com/jimathy/jim_bridge
