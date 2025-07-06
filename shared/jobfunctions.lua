@@ -104,16 +104,31 @@ function toggleDuty()
         TriggerServerEvent("QBCore:ToggleDuty")
         Wait(100)
         onDuty = getPlayer().onDuty
+
     elseif isStarted(RSGExport) then
         TriggerServerEvent("RSGCore:ToggleDuty")
         Wait(100)
         onDuty = getPlayer().onDuty
-    else
+
+    elseif isStarted(ESXExport) then
+        local tempJob = ESX.GetPlayerData().job
+        tempJob.onDuty = not onDuty
+        ESX.SetPlayerData("job", tempJob)
+        onDuty = getPlayer().onDuty
         if onDuty then
             triggerNotify(nil, "Now on duty", "success")
         else
             triggerNotify(nil, "Now off duty", "success")
         end
+
+    else
+        onDuty = not onDuty
+        if onDuty then
+            triggerNotify(nil, "Now on duty", "success")
+        else
+            triggerNotify(nil, "Now off duty", "success")
+        end
+
     end
 end
 

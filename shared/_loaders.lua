@@ -117,7 +117,6 @@ function onResourceStart(func, thisScript)
                     debugPrint("^6Bridge^7: ^2Shared Load Detected^7.")
                     hasPrinted = true
                 end
-                if isStarted(ESXExport) then Wait(10000) end
                 func()
             end
         end
