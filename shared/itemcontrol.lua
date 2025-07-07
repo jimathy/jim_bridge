@@ -385,121 +385,51 @@ function breakTool(data) -- WIP
         local breakId = GetSoundId()
         PlaySoundFromEntity(breakId, "Drill_Pin_Break", PlayerPedId(), "DLC_HEIST_FLEECA_SOUNDSET", 1, 0)
     else
-        TriggerServerEvent(getScript()..":server:setMetaData", { item = data.item, slot = slot, metadata = { durability = durability } })
+        TriggerServerEvent(getScript()..":server:setItemMetaData", { item = data.item, slot = slot, metadata = { durability = durability } })
     end
 end
 
---- Retrieves the durability and slot number of an item in a player's inventory.
----
---- Searches through the player's inventory for the specified item.
----
---- @param item string The item name.
---- @return number|nil number The durability, or nil if not found.
---- @return number|nil number The slot number, or nil if not found.
----
---- @usage
---- ```lua
---- local durability, slot = getDurability("drill")
---- if durability then
----     print("Durability:", durability)
----     print("Slot:", slot)
---- end
---- ```
-function getDurability(item)
+--- local metadata = getItemMetadata("item", 1, 1)
+--- print(json.encode(metadata))
+
+
+function getItemMetadata(item, slot, src)
     local lowestSlot = 100
-    local durability = nil
-    if isStarted(QBInv) or isStarted(PSInv) or isStarted(RSGInv) or isStarted(JPRInv) then
-        local itemcheck = Core.Functions.GetPlayerData().items
+    local chosenSlot = slot
+    local metadata = {}
+
+    local itemcheck = getPlayerInv(src)
+
+    if chosenSlot then
+        for k, v in pairs(itemcheck) do
+            if v.name == item and v.slot == chosenSlot then
+                lowestSlot = v.slot
+                metadata = itemcheck[k].info or itemcheck[k].metadata or {}
+                debugPrint("^6Bridge^7: ^2Found metadata for item ^3"..item.." ^2in slot ^3"..lowestSlot.."^7")
+            end
+        end
+    else
         for k, v in pairs(itemcheck) do
             if v.name == item then
                 if v.slot <= lowestSlot then
                     lowestSlot = v.slot
-                    durability = itemcheck[k].info and itemcheck[k].info.durability or nil
+                    metadata = itemcheck[k].info or itemcheck[k].metadata or {}
                 end
             end
         end
     end
+    return metadata, lowestSlot
+end
 
-    if isStarted(OXInv) then
-        local itemcheck = exports[OXInv]:Search('slots', item)
-        for k, v in pairs(itemcheck) do
-            if v.slot <= lowestSlot then
-                debugPrint(v.slot, itemcheck[k].metadata.durability)
-                lowestSlot = v.slot
-                durability = v.metadata and v.metadata.durability or nil
-            end
-        end
+function getDurability(item, slot, src)
+    local metadata, slot = getItemMetadata(item, slot, src)
+    local durability = nil
+
+    if next(metadata) then
+        durability = metadata.durability or nil
     end
 
-    if isStarted(QSInv) then
-        local itemcheck = exports[QSInv]:getUserInventory()
-        for _, v in pairs(itemcheck) do
-            if v.name == item and v.slot <= lowestSlot then
-                lowestSlot = v.slot
-                durability = v.info and v.info.durability or nil
-            end
-        end
-    end
-
-    if isStarted(CoreInv) then
-        local itemcheck = exports[CoreInv]:getInventory()
-        for _, v in pairs(itemcheck) do
-            if v.name == item and v.slot <= lowestSlot then
-                lowestSlot = v.slot
-                durability = v.metadata and v.metadata.durability or nil
-            end
-        end
-    end
-
-    if isStarted(CodeMInv) then
-        local itemcheck = exports[CodeMInv]:GetClientPlayerInventory()
-        for _, v in pairs(itemcheck) do
-            if v.name == item and tonumber(v.slot) <= lowestSlot then
-                lowestSlot = tonumber(v.slot)
-                durability = v.info and v.info.durability or nil
-            end
-        end
-    end
-
-    if isStarted(OrigenInv) then
-        local itemcheck = exports[OrigenInv]:getPlayerInventory()
-        for _, v in pairs(itemcheck) do
-            if v.name == item and v.slot <= lowestSlot then
-                lowestSlot = v.slot
-                durability = v.metadata and v.metadata.durability or nil
-            end
-        end
-    end
-
-    if isStarted(TgiannInv) then
-        local itemcheck = exports[TgiannInv]:GetPlayerItems()
-        for _, v in pairs(itemcheck) do
-            if v.name == item and v.slot <= lowestSlot then
-                lowestSlot = v.slot
-                durability = v.metadata and v.metadata.durability or nil
-            end
-        end
-    end
-
-    -- For ESX default inventory (es_extended)
-    if ESX and isStarted(ESXExport) then
-        local xPlayer = ESX.GetPlayerData() or {}
-        if xPlayer.inventory then
-            for _, v in ipairs(xPlayer.inventory) do
-                if v.name == item then
-                    -- Optionally use a slot field if available; otherwise, use the index
-                    if v.slot and v.slot <= lowestSlot then
-                        lowestSlot = v.slot
-                    end
-                    if v.metadata and v.metadata.durability then
-                        durability = v.metadata.durability
-                    end
-                end
-            end
-        end
-    end
-
-    return durability, lowestSlot
+    return durability, slot
 end
 
 --- Server event handler to set metadata for an item.
@@ -513,9 +443,9 @@ end
 ---
 --- @usage
 --- ```lua
---- TriggerServerEvent("script:server:setMetaData", { item = "drill", slot = 5, metadata = { durability = 80 } })
+--- TriggerServerEvent("script:server:setItemMetaData", { item = "drill", slot = 5, metadata = { durability = 80 } })
 --- ```
-RegisterNetEvent(getScript()..":server:setMetaData", function(data, src)
+RegisterNetEvent(getScript()..":server:setItemMetaData", function(data, src)
     local src = src or source
     if isStarted(QBInv) or isStarted(PSInv) or isStarted(RSGInv) or isStarted(JPRInv) then
         --debugPrint(src, data.item, 1, data.slot)

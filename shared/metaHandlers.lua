@@ -58,9 +58,9 @@ end
 ---
 --- @usage
 --- ```lua
---- local myMeta = GetMetadata(player, "myKey")
+--- local myMeta = getPlayerMetadata(player, "myKey")
 --- ```
-function GetMetadata(player, key)
+function getPlayerMetadata(player, key)
     if not player then
         debugPrint("^6Bridge^7: ^3GetMetadata^7() calling server: "..key)
         return triggerCallback(getScript()..":server:GetMetadata", key)
@@ -98,11 +98,11 @@ createCallback(getScript()..":server:GetMetadata", function(source, key)
     if type(key) == "table" then
         local Metadata = {}
         for _, k in ipairs(key) do
-            Metadata[k] = GetMetadata(player, k)
+            Metadata[k] = getPlayerMetadata(player, k)
         end
         return Metadata
     elseif type(key) == "string" then
-        return GetMetadata(player, key)
+        return getPlayerMetadata(player, key)
     end
 end)
 
@@ -120,9 +120,9 @@ end)
 ---
 --- @usage
 --- ```lua
---- SetMetadata(player, "myKey", "newValue")
+--- setPlayerMetadata(player, "myKey", "newValue")
 --- ```
-function SetMetadata(player, key, value)
+function setPlayerMetadata(player, key, value)
     debugPrint("^6Bridge^7: ^3SetMetadata^7() setting metadata for key: "..key)
     if isStarted(QBExport) or isStarted(QBXExport) then
         debugPrint("^6Bridge^7: ^3SetMetadata^7() using QBExport/QBXExport")
@@ -144,14 +144,14 @@ function SetMetadata(player, key, value)
 end
 
 -- Register a server callback for setting metadata.
-createCallback(getScript()..":server:SetMetadata", function(source, key, value)
+createCallback(getScript()..":server:setPlayerMetadata", function(source, key, value)
     debugPrint("SetMetadata callback triggered for source:", source, "key:", key, "value:", value)
     local player = GetPlayer(source)
     --[[if not player then
         print("Error setting metadata: player not found for source "..tostring(source))
         return false
     end]]
-    SetMetadata(player, key, value)
+    setPlayerMetadata(player, key, value)
     print("Metadata set successfully.", key)
     return true
 end)

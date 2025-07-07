@@ -411,11 +411,11 @@ function makeItem(data)
             -- handle metadata and experience in a single go
             if data.craft["hasCrafted"] ~= nil then
                 data.craftable.craftedItems[data.item] = true
-                triggerCallback(getScript()..":server:SetMetadata", "craftedItems", data.craftable.craftedItems)
+                triggerCallback(getScript()..":server:setPlayerMetadata", "craftedItems", data.craftable.craftedItems)
             end
             if data.craft["exp"] ~= nil then
                 craftingLevel += data.craft["exp"].give * craftAmount
-                triggerCallback(getScript()..":server:SetMetadata", "craftingLevel", craftingLevel)
+                triggerCallback(getScript()..":server:setPlayerMetadata", "craftingLevel", craftingLevel)
             end
             if data.craftable.Recipes[1].oneUse == true then
                 removeItem("craftrecipe", 1, nil, data.craftable.Recipes[1].slot)
@@ -448,11 +448,11 @@ function makeItem(data)
                 currentToken = nil
                 if data.craft["hasCrafted"] ~= nil then
                     data.craftable.craftedItems[data.item] = true
-                    triggerCallback(getScript()..":server:SetMetadata", "craftedItems", data.craftable.craftedItems)
+                    triggerCallback(getScript()..":server:setPlayerMetadata", "craftedItems", data.craftable.craftedItems)
                 end
                 if data.craft["exp"] ~= nil then
                     craftingLevel += data.craft["exp"].give
-                    triggerCallback(getScript()..":server:SetMetadata", "craftingLevel", craftingLevel)
+                    triggerCallback(getScript()..":server:setPlayerMetadata", "craftingLevel", craftingLevel)
                 end
                 if data.craftable.Recipes[1].oneUse == true then
                     removeItem("craftrecipe", 1, nil, data.craftable.Recipes[1].slot)

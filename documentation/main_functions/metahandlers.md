@@ -21,12 +21,12 @@ This module provides access and control over player metadata, which is useful fo
     print("Player stress level:", stress)
     ```
 
-- **SetMetadata(player, key, value)**
+- **setPlayerMetadata(player, key, value)**
 
   ⚠️ Server side only
   - Updates or assigns a value to a specific metadata key for a player.
   - The function updates the player's metadata using the active core export.
   - **Example:**
     ```lua
-    SetMetadata(player, "stress", 0)
+    setPlayerMetadata(player, "stress", 0)
     ```
