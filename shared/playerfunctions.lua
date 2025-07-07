@@ -412,7 +412,7 @@ function hasJob(job, source, grade)
         elseif isStarted(QBExport) and not isStarted(QBXExport) then
             if Core.Functions.GetPlayer then
                 local player = Core.Functions.GetPlayer(src)
-                if not player then print("Player not found for src: "..src) end
+                if not player then goto skip end
                 local jobinfo = player.PlayerData.job
                 if jobinfo.name == job then
                     hasJobFlag = true
@@ -437,11 +437,10 @@ function hasJob(job, source, grade)
                     if grade and not (grade <= ganginfo.grade.level) then hasJobFlag = false end
                 end
             end
-
         elseif isStarted(RSGExport) then
             if Core.Functions.GetPlayer then
                 local player = Core.Functions.GetPlayer(src)
-                if not player then print("Player not found for src: "..src) end
+                if not player then goto skip end
                 local jobinfo = player.PlayerData.job
                 if jobinfo.name == job then
                     hasJobFlag = true
@@ -531,6 +530,7 @@ function hasJob(job, source, grade)
             print("^4ERROR^7: ^2No Core detected for hasJob() ^7- ^2Check ^3starter^1.^2lua^7")
         end
     end
+    ::skip::
     return hasJobFlag, duty
 end
 
