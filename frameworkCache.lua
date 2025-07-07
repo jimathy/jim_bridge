@@ -58,7 +58,7 @@ local function checkExists(resourceName)
 end
 
 -- Ensure oxmysql resource is loaded
-if checkExists(Exports.OXCoreExport) or checkExists(Exports.OXCoreExport) then
+if checkExists(Exports.OXCoreExport) or checkExists(Exports.ESXExport) then
     local fileLoader = assert(load(LoadResourceFile("oxmysql", ('lib/MySQL.lua')), ('@@oxmysql/lib/MySQL.lua')))
     fileLoader()
 end
