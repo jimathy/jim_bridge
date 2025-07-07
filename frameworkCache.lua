@@ -49,17 +49,19 @@ end
 
 local function endTimer(label)
     timers[label] = GetGameTimer() - (timers[label] or GetGameTimer())
-    timers[label] = timers[label] / 1000
+    timers[label] = "("..(timers[label] / 1000).."s)"
 end
-startTimer("Cache")
+startTimer("Cache") startTimer("Items") startTimer("Vehicles") startTimer("Jobs") startTimer("InvWeight") startTimer("InvSlots")
 -- Helper function to check if resource exists in server (instead of if it is already started)
 local function checkExists(resourceName)
     return GetResourceState(resourceName):find("start") or GetResourceState(resourceName):find("stopped")
 end
 
 -- Ensure oxmysql resource is loaded
-local fileLoader = assert(load(LoadResourceFile("oxmysql", ('lib/MySQL.lua')), ('@@oxmysql/lib/MySQL.lua')))
-fileLoader()
+if checkExists(Exports.OXCoreExport) or checkExists(Exports.OXCoreExport) then
+    local fileLoader = assert(load(LoadResourceFile("oxmysql", ('lib/MySQL.lua')), ('@@oxmysql/lib/MySQL.lua')))
+    fileLoader()
+end
 
 if checkExists(Exports.OXCoreExport) then
     -- Detected OX_Core in server, wait for it to be started if needed
@@ -88,7 +90,6 @@ end
 ---- Load Items -----
 ---------------------
 -- Items initialization based on detected inventory system
-startTimer("Items")
 if checkExists(Exports.OXInv) then
     -- Wait for OX Inventory to start if it's not already started
     while GetResourceState(Exports.OXInv) ~= "started" do Wait(100) end
@@ -171,7 +172,6 @@ endTimer("Items")
 ---------------------
 --- Load Vehicles ---
 ---------------------
-startTimer("Vehicles")
 -- Vehicle loading depending on framework
 if checkExists(Exports.QBXExport) then
     vehResource = Exports.QBXExport
@@ -215,7 +215,6 @@ endTimer("Vehicles")
 ---------------------
 ----- Load Jobs -----
 ---------------------
-startTimer("Jobs")
 -- Jobs loading based on framework
 if checkExists(Exports.QBXExport) then
     jobResource = Exports.QBXExport
@@ -308,8 +307,6 @@ end
 -- Forcefully load the the specified config file from inventory scripts
 -- This allows to get information required for certain functions that need to detect how much space is left in a players inventory
 -- This is born from too many tickets of me needing to explain that they need to change "InventoryWeight" to match their inv setting
-startTimer("InvWeight")
-startTimer("InvSlots")
 local function getInventoryConfig(resource, data)
     if data.convars then
         return function(path)
@@ -419,17 +416,17 @@ CreateThread(function()
         if type(v) ~= "number" then for count in pairs(v) do counts[k] += 1 end end
     end
     if cache.InventoryWeight then
-        print("^6FrameWorkCache^7: ^4"..invResource.."^2 InventoryWeight^7: ^3"..cache.InventoryWeight.."^7 (^3"..(cache.InventoryWeight / 1000).."kg^7) ^7("..timers["InvWeight"].."s)")
+        print("^6FrameWorkCache^7: ^4"..invResource.."^2 InventoryWeight^7: ^3"..cache.InventoryWeight.."^7 (^3"..(cache.InventoryWeight / 1000).."kg^7) ^7"..timers["InvWeight"])
     end
     if cache.InventorySlots then
-        print("^6FrameWorkCache^7: ^4"..invResource.."^2 InventorySlots^7: ^3"..cache.InventorySlots.." ^7("..timers["InvSlots"].."s)")
+        print("^6FrameWorkCache^7: ^4"..invResource.."^2 InventorySlots^7: ^3"..cache.InventorySlots.." ^7"..timers["InvSlots"])
     end
-    print("^6FrameworkCache^7: ^4"..itemResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Items).."^2 Items ^7("..timers["Items"].."s)")
-    print("^6FrameworkCache^7: ^4"..vehResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Vehicles).."^2 Vehicles ^7("..timers["Vehicles"].."s)")
-    print("^6FrameworkCache^7: ^4"..jobResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Jobs).."^2 Jobs ^7("..timers["Jobs"].."s)")
-    print("^6FrameworkCache^7: ^4"..jobResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Gangs).."^2 Gangs ^7("..timers["Jobs"].."s)")
+    print("^6FrameworkCache^7: ^4"..itemResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Items).."^2 Items ^7"..timers["Items"])
+    print("^6FrameworkCache^7: ^4"..vehResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Vehicles).."^2 Vehicles ^7"..timers["Vehicles"])
+    print("^6FrameworkCache^7: ^4"..jobResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Jobs).."^2 Jobs ^7"..timers["Jobs"])
+    print("^6FrameworkCache^7: ^4"..jobResource:gsub("-", "^7-^4"):gsub("_", "^7_^4").."^2 Loaded ^3"..tostring(counts.Gangs).."^2 Gangs ^7"..timers["Jobs"])
     endTimer("Cache")
-    print("^6FrameworkCache^7: ^2Cache Ready ^7("..timers["Cache"].."s)")
+    print("^6FrameworkCache^7: ^2Cache Ready ^7"..timers["Cache"])
     cacheReady = true
 end)
 
