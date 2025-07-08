@@ -22,7 +22,7 @@ end
 local function stopAnim(animDict, animName, ped)
     StopAnimTask(ped or PlayerPedId(), animDict, animName, 0.5)
     StopAnimTask(ped or PlayerPedId(), animName, animDict, 0.5)
-    unloadAnimDict(animDict)
+    RemoveAnimDict(animDict)
 end
 
 function redProgressBar(data)
