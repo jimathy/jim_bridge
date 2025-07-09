@@ -18,18 +18,22 @@ function makeVeh(model, coords)
     local veh = CreateVehicle(model, coords.x, coords.y, coords.z, coords.w, true, false)
     SetVehicleHasBeenOwnedByPlayer(veh, true)
 	if gameName ~= "rdr3" then
-		SetNetworkIdCanMigrate(NetworkGetNetworkIdFromEntity(veh), true)
+        SetEntityAlpha(veh, 0, false)
+        SetNetworkIdCanMigrate(NetworkGetNetworkIdFromEntity(veh), true)
 		Wait(100)
 		SetVehicleNeedsToBeHotwired(veh, false)
 		SetVehRadioStation(veh, 'OFF')
 		SetVehicleFuelLevel(veh, 100.0)
 		SetVehicleModKit(veh, 0)
+
 	end
 	SetVehicleOnGroundProperly(veh)
-
 	debugPrint("^6Bridge^7: ^1Veh ^2Created^7: '^6"..veh.."^7' | ^2Hash^7: ^7'^6"..model.."^7' | ^2Coord^7: "..formatCoord(coords))
 	unloadModel(model)
 	Vehicles[#Vehicles + 1] = veh
+    CreateThread(function()
+        fadeInEnt(veh)
+    end)
 	return veh
 end
 

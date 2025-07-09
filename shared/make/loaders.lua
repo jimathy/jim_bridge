@@ -187,7 +187,7 @@ end
 --- ```
 function playAnim(animDict, animName, duration, flag, ped, speed)
     loadAnimDict(animDict)
-    debugPrint("^6Bridge^7: ^3playAnim^7() ^2Triggered^7: ", animDict, animName)
+    debugPrint("^6Bridge^7: ^3playAnim^7() ^2Triggered^7: ", animDict, animName, flag)
 	TaskPlayAnim(ped and ped or PlayerPedId(), animDict, animName, speed or 8.0, speed or -8.0, duration or 30000, flag or 50, 1, false, false, false)
 end
 
@@ -238,4 +238,24 @@ function playGameSound(audioBank, soundSet, soundRef, coords, synced, range)
         PlaySoundFromEntity(soundId, soundRef, coords, soundSet, synced, 1.0)
     end
     ReleaseScriptAudioBank(audioBank)
+end
+
+-- Experimental, add fade in for spawned entities
+function fadeInEnt(ent, duration)
+    duration = duration or 500 -- in ms
+    local fadeSteps = 20
+    local stepTime = duration / fadeSteps
+
+    SetEntityAlpha(ent, 0, false)
+    SetEntityVisible(ent, true, false)
+    SetEntityLocallyInvisible(ent) -- sometimes helps prevent "pop-in" in early frames
+
+    for i = 1, fadeSteps do
+        Wait(stepTime)
+        local newAlpha = math.floor((i / fadeSteps) * 255)
+        SetEntityAlpha(ent, newAlpha, false)
+    end
+
+    -- Restore full visibility
+    ResetEntityAlpha(ent)
 end
