@@ -376,22 +376,46 @@ end
 --- ```lua
 --- breakTool({ item = "drill", damage = 10 })
 --- ```
-function breakTool(data) -- WIP
-    local durability, slot = getDurability(data.item)
-    if not durability then durability = 100 end
-    durability -= data.damage
-    if durability <= 0 then
-        removeItem(data.item, 1)
+function breakTool(data)
+    local metadata, slot = getItemMetadata(data.item)
+    metadata = metadata or {}
+    if not metadata.durability then metadata.durability = 100 end
+    metadata.durability -= data.damage
+    if metadata.durability <= 0 then
+        removeItem(data.item, 1, nil, slot)
         local breakId = GetSoundId()
         PlaySoundFromEntity(breakId, "Drill_Pin_Break", PlayerPedId(), "DLC_HEIST_FLEECA_SOUNDSET", 1, 0)
     else
-        TriggerServerEvent(getScript()..":server:setItemMetaData", { item = data.item, slot = slot, metadata = { durability = durability } })
+        TriggerServerEvent(getScript()..":server:setItemMetaData", { item = data.item, slot = slot, metadata = metadata })
     end
 end
 
---- local metadata = getItemMetadata("item", 1, 1)
---- print(json.encode(metadata))
 
+--- Reduces the uses of a tool by a specified damage amount.
+---
+--- If uses reaches zero or below, the tool is removed and a break sound is played.
+---
+--- @param data table Contains:
+---   - item (string): The tool's name.
+---   - damage (number): The damage % to apply.
+---
+--- @usage
+--- ```lua
+--- useToolDegrade({ item = "drill", maxUse = 10 })
+--- ```
+function useToolDegrade(data) -- WIP
+    local metadata, slot = getItemMetadata(data.item)
+    metadata = metadata or {}
+    if not metadata["Uses Left"] then metadata["Uses Left"] = data.maxUse end
+    metadata["Uses Left"] -= 1
+    if metadata["Uses Left"] <= 0 then
+        removeItem(data.item, 1, nil, slot)
+        local breakId = GetSoundId()
+        PlaySoundFromEntity(breakId, "Drill_Pin_Break", PlayerPedId(), "DLC_HEIST_FLEECA_SOUNDSET", 1, 0)
+    else
+        TriggerServerEvent(getScript()..":server:setItemMetaData", { item = data.item, slot = slot, metadata = metadata })
+    end
+end
 
 function getItemMetadata(item, slot, src)
     local lowestSlot = 100
@@ -419,17 +443,6 @@ function getItemMetadata(item, slot, src)
         end
     end
     return metadata, lowestSlot
-end
-
-function getDurability(item, slot, src)
-    local metadata, slot = getItemMetadata(item, slot, src)
-    local durability = nil
-
-    if next(metadata) then
-        durability = metadata.durability or nil
-    end
-
-    return durability, slot
 end
 
 --- Server event handler to set metadata for an item.
