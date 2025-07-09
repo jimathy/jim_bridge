@@ -37,7 +37,7 @@ if IsDuplicityVersion() then
     local timeout = GetGameTimer() + 900000 -- 15 minutes max wait (had to up this from 2 minutes because of slow servers)
 
     -- Wait until jim_bridge is started and export is available
-    while not cache and GetGameTimer() < timeout do
+    while not cache and (timeout and GetGameTimer() < timeout) do
         if GetResourceState("jim_bridge"):find("start") then
             local success, result = pcall(function()
                 return exports["jim_bridge"]:GetSharedData()
@@ -49,7 +49,7 @@ if IsDuplicityVersion() then
         Wait(100)
     end
 
-    if not cache then
+    if timeout and not cache then
         print("^1ERROR^7: ^2jim_bridge export not available after timeout^7.")
         return
     end

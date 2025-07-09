@@ -369,6 +369,7 @@ for script, data in pairs(invWeightTable) do
     if checkExists(script) then
         if script == Exports.QBInv and GetResourceState(Exports.JPRInv):find("start") then goto skip end
 
+        while GetResourceState(script) ~= "started" do Wait(100) print("Waiting for script start") end
         local attempts = data.fallback or { data }
         local lookup, used, err
 
