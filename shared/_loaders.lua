@@ -193,14 +193,13 @@ end
 
 local messageShown = false
 function waitForSharedLoad()
-    local timeout = 100000  -- 10 seconds in milliseconds
-    local startTime = GetGameTimer()
-    local loaded = true
+    local timeout = GetGameTimer() + 900000 -- 15 minutes max wait (had to up this from 2 minutes because of slow servers)
     local loop = 0
+
     while ((not Jobs or not next(Jobs)) or
         (not Items or not next(Items)) or
         (not Vehicles or not next(Vehicles))
-    ) and ((GetGameTimer() - startTime) < timeout) do
+    ) and (timeout and GetGameTimer() < timeout) do
         if loop >= 3 and not messageShown then
             if (not Jobs or not next(Jobs)) then
                 print("^4Debug^7: ^2Waiting for ^7Jobs^2 to be loaded")
@@ -213,19 +212,16 @@ function waitForSharedLoad()
             end
             messageShown = true
         end
-        --print((GetGameTimer() - startTime) < timeout)
         Wait(1000)
-        if Jobs and Items and Vehicles then
-            --print("^6Bridge^7: ^2Jobs, Items, and Vehicles Loaded^7.")
-            loaded = true
-            break
-        end
+
         loop += 1
     end
-    if not loaded then
+
+    if Jobs and Items and Vehicles then
+        debugPrint("^6Bridge^7: ^2Jobs, Items, and Vehicles Loaded^7.")
+        return true
+    else
         print("^4Error^7: ^1Timeout reached while waiting for shared load^7.")
         return false
-    else
-        return true
     end
 end
