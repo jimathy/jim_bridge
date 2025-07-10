@@ -242,6 +242,7 @@ end
 
 -- Experimental, add fade in for spawned entities
 function fadeInEnt(ent, duration)
+    if not DoesEntityExist(ent) then return end
     duration = duration or 500 -- in ms
     local fadeSteps = 20
     local stepTime = duration / fadeSteps
