@@ -320,12 +320,19 @@ local function getInventoryConfig(resource, data)
     if not content then return nil, "Failed to load file" end
 
     local env = {
-        GetConvar = GetConvar, vector3 = vector3, Citizen = Citizen,
-        GetResourceState = GetResourceState, exports = exports,
-        DependencyCheck = DependencyCheck or function() return nil end,
+        GetConvar = GetConvar,
+        vector3 = vector3,
+        vector4 = vector4,
+        Citizen = Citizen,
+        GetResourceState = GetResourceState,
+        exports = exports,
+        DependencyCheck = function() return nil end,
     }
 
     local fn, err = load(content, '@'..data.file, 't', env)
+    --local success, err = xpcall(fn, function(e)
+    --    print(debug.traceback("Error while executing qs-inventory config:\n" .. tostring(e), 2))
+    --end)
     if not fn then return nil, "Failed to compile config: " .. err end
     if not pcall(fn) then return nil, "Error executing config file" end
 
