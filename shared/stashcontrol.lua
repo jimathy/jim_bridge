@@ -15,6 +15,9 @@ local stash
 -- If running on the server, create a callback to retrieve stash items.
 if isServer() then
     createCallback(getScript()..':server:GetStashItems', function(source, stashName)
+        if stashName == nil or stashName == "" then
+            return {}
+        end
         stash = getStash(stashName)
         return stash
     end)
@@ -35,9 +38,9 @@ local stashCache = {}
 --- local cached = GetStashTimeout("playerStash")
 --- ```
 function GetStashTimeout(stashName, stop)
-    if stop then
+    if stop or (stashName == nil or stashName == "") then
         stashCache = {}
-        return
+        return false
     end
 
     -- Retrieve cache for this stash, or initialize if not present.
@@ -85,7 +88,7 @@ end
 --- local found, stashName = checkStashItem({"playerStash", "storageStash"}, { iron = 2, wood = 5 })
 --- ```
 function checkStashItem(stashes, itemTable)
-    if not stashes then
+    if not stashes or stashes == "" then
         return hasItem(itemTable), nil
     end
 
@@ -317,7 +320,7 @@ end
 --- ```
 function getStash(stashName)
     local stashResource = ""
-    if type(stashName) ~= "string" then
+    if stashName == "" or type(stashName) ~= "string" then
         print("^6Bridge^7: ^2Stash name was not a string ^3"..stashName.."^7(^3"..type(stashName).."^7)")
         return {}
     end
@@ -420,6 +423,10 @@ end
 --- stashRemoveItem(currentItems, "playerStash", { iron = 2, wood = 5 })
 --- ```
 function stashRemoveItem(stashItems, stashName, items)
+    if stashName == "" or stashName == nil then
+        print("^1ERROR^7: ^1stashRemoveItem triggered but stashName was empty^7")
+        return
+    end
     if type(stashName) ~= "table" then
         stashName = { stashName }
     end
