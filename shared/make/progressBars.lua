@@ -160,7 +160,7 @@ function progressBar(data)
         }) then
             result = true
         else
-            result = true
+            result = false
         end
 
     elseif Config.System.ProgressBar == "red" then
