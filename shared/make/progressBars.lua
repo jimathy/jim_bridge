@@ -150,6 +150,7 @@ function progressBar(data)
             anim = {
                 dict = data.dict,
                 clip = data.anim,
+                flag = data.flag
             },
             prop = {
                 model = data.prop and data.prop.model,
