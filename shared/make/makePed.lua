@@ -62,7 +62,7 @@ function makePed(data, coords, freeze, collision, scenario, anim, synced)
         model = data.model
         loadModel(data.model)
         ped = CreatePed(0, model, coords.x, coords.y, coords.z - 1.03, coords.w, synced and synced or false, false)
-        SetEntityAplha(ped, 0, false)
+        SetEntityAlpha(ped, 0, false)
         -- Inheritance
         SetPedHeadBlendData(ped, data.custom.faceFather, data.custom.faceMother, data.custom.raceShape, data.custom.skinFather, data.custom.skinMother, data.custom.raceSkin, data.custom.faceMix or 0, data.custom.skinMix or 0, data.custom.raceMix or 0, false)
 
@@ -116,7 +116,7 @@ function makePed(data, coords, freeze, collision, scenario, anim, synced)
         loadModel(model)
         if gameName == "rdr3" then
             ped = CreatePed(model, coords.x, coords.y, coords.z - 1.03, coords.w, synced or false, false)
-            SetEntityAplha(ped, 0, false)
+            SetEntityAlpha(ped, 0, false)
             SetEntityVisible(ped, 1) -- SetEntityVisible
             SetEntityAlpha(ped, 255, false) -- SetEntityAlpha
             SetRandomOutfitVariation(ped, true) -- Invisible without
