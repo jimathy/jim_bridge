@@ -53,13 +53,13 @@ if isServer() then
 
         if authCooldown[src] then
             debugPrint("^1Auth^7: ^3Cooldown active^7 for Player ^1"..src.."^7, ignoring additional auth request")
-            return ""
+            return AuthEvent
         end
 
         debugPrint("^1Auth^7: ^2Player Source^7: "..src.." ^2requested ^3AuthEvent^7", AuthEvent)
 
         authCooldown[src] = true
-        SetTimeout(5000, function() -- 5 second cooldown
+        SetTimeout(60000, function() -- 1 minute cooldown
             authCooldown[src] = nil
         end)
 
