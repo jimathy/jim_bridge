@@ -1,14 +1,14 @@
-2.0.20
+2.0.21
 
-- Add Full support for lation_ui
-- Add "Open Wheel" to searchCar()
-- Increase timeout for cache timer from 5 seconds to 2 minutes
-- Fix GTA progressbar erroring on playAnim()
-- Add Igredient location indicator when crafting
-- Fix JPRInv checks breaking early when caching framework info
-- Enhance doesItemExist() and add getItemLabel() function
-- Add Support for old qb-inventory config loading
-- Fix typo in cancarry when using Tgiann Inv
-- Add support for single progressBar when crafting
+- Fix toggleDuty() for ESX users
+- Rename metadata handler functions
+- Add useToolDegrade() to force limited uses for items
+- Make breakTool() smarter
+- Fix getPlayer() not checking if player data exists yet on qbcore
+- Fix inbuilt gta progressbar error when stopping animations
+- lation_ui support fixes
+- Add fade in animations for created entities
+- Fix waitForSharedLoad() not announcing when an error occurs
+- Incrase authToken timeout from 5 seconds to 1 minute
 
 https://github.com/jimathy/jim_bridge
