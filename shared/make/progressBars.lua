@@ -119,6 +119,27 @@ function progressBar(data)
                 result = false
             end, data.icon)
 
+    elseif Config.System.ProgressBar == "qs" then -- documentation left intact based on qs interface
+        local qs_success = exports['qs-interface']:ProgressBar({
+            duration = debugMode and 1000 or data.time,         -- Duration of the progress bar (in milliseconds)
+            label = data.label,               -- Text that will appear on the progress bar
+            position = 'bottom',         -- Position of the progress bar on the screen (e.g., 'top', 'bottom', 'center')
+            useWhileDead = data.dead or false, -- Whether the progress bar shows when the player is dead (true/false)
+            canCancel = data.cancel or true,       -- Whether the player can cancel the progress (true/false)
+            disable = data.disableMovement or false,   -- Whether to disable player controls during the progress (true/false)
+            anim = {                     -- Animation to be played while the progress is happening
+                dict = data.dict,
+                clip = data.anim,
+                flag = data.flag or 32   -- Optional animation flags
+            },
+            prop = nil                  -- Optional prop to show alongside the progress bar (can be nil)
+        })
+        if qs_success then
+            result = true
+        else
+            result = false
+        end
+
     elseif Config.System.ProgressBar == "esx" then
         ESX.Progressbar(data.label, debugMode and 1000 or data.time, {
             FreezePlayer = true,
