@@ -44,6 +44,12 @@ function triggerNotify(title, message, type, src)
         else
             TriggerClientEvent("QBCore:Notify", src, message, type)
         end
+    elseif Config.System.Notify == "qs" then
+        if not src then
+            exports['qs-interface']:AddNotify(message, title, 6000)
+        else
+            TriggerClientEvent('interface:notification', src, message, title, 6000)
+        end
     elseif Config.System.Notify == "ox" then
         if not src then
             TriggerEvent('ox_lib:notify', { title = title, description = message, type = type or "success" })

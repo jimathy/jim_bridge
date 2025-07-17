@@ -13,9 +13,9 @@ local Vehicles = {}
 --- ```lua
 --- local vehicle = makeVeh('adder', vector4(123.4, 567.8, 90.1, 180.0))
 --- ```
-function makeVeh(model, coords)
+function makeVeh(model, coords, synced)
 	loadModel(model)
-    local veh = CreateVehicle(model, coords.x, coords.y, coords.z, coords.w, true, false)
+    local veh = CreateVehicle(model, coords.x, coords.y, coords.z, coords.w, synced ~= false, false)
     SetVehicleHasBeenOwnedByPlayer(veh, true)
 	if gameName ~= "rdr3" then
         SetEntityAlpha(veh, 0, false)
@@ -56,7 +56,7 @@ function makeDistVehicle(data, radius, onEnter, onExit)
         coords = vec3(data.coords.x, data.coords.y, data.coords.z),
         radius = radius,
         onEnter = function()
-            vehicle = makeVeh(data.model, data.coords)
+            vehicle = makeVeh(data.model, data.coords, false)
 			if onEnter then
 				debugPrint("^6Bridge^7: ^4makeDistVehicle ^3onEnter^7() ^2running^7")
 				onEnter(vehicle)
