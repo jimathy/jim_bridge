@@ -117,7 +117,7 @@ function onResourceStart(func, thisScript)
                     debugPrint("^6Bridge^7: ^2Shared Load Detected^7.")
                     hasPrinted = true
                 end
-                func()
+                func(resourceName)
             end
         end
     end)
@@ -136,7 +136,7 @@ function onResourceStop(func, thisScript)
     debugPrint("^6Bridge^7: ^2Registering ^3onResourceStop^7()")
     AddEventHandler('onResourceStop', function(resourceName)
         if getScript() == resourceName and (thisScript or true) then
-            func()
+            func(resourceName)
         end
     end)
 end
