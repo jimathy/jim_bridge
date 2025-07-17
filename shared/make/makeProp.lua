@@ -20,7 +20,7 @@ local Props = {}
 --- }
 --- local prop = makeProp(propData, true, false)
 --- ```
-function makeProp(data, freeze, synced)
+function makeProp(data, freeze, synced, fade)
     loadModel(data.prop)
     local prop = CreateObject(data.prop, data.coords.x, data.coords.y, data.coords.z-1.03, synced and synced or false, synced and synced or false, false)
     SetEntityAlpha(veh, 0, false)
@@ -30,9 +30,11 @@ function makeProp(data, freeze, synced)
     debugPrint("^6Bridge^7: ^1Prop ^2Created^7: '^6"..prop.."^7' | ^2Hash^7: ^7'^6"..data.prop.."^7' | ^2Coord^7: "..formatCoord(data.coords))
     SetModelAsNoLongerNeeded(data.prop)
     Props[keyGen()..keyGen()] = prop
-    CreateThread(function()
-        fadeInEnt(prop)
-    end)
+    if fade ~= false then
+        CreateThread(function()
+            fadeInEnt(prop)
+        end)
+    end
     return prop
 end
 

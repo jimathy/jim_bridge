@@ -13,7 +13,7 @@ local Vehicles = {}
 --- ```lua
 --- local vehicle = makeVeh('adder', vector4(123.4, 567.8, 90.1, 180.0))
 --- ```
-function makeVeh(model, coords, synced)
+function makeVeh(model, coords, synced, fade)
 	loadModel(model)
     local veh = CreateVehicle(model, coords.x, coords.y, coords.z, coords.w, synced ~= false, false)
     SetVehicleHasBeenOwnedByPlayer(veh, true)
@@ -31,9 +31,11 @@ function makeVeh(model, coords, synced)
 	debugPrint("^6Bridge^7: ^1Veh ^2Created^7: '^6"..veh.."^7' | ^2Hash^7: ^7'^6"..model.."^7' | ^2Coord^7: "..formatCoord(coords))
 	unloadModel(model)
 	Vehicles[#Vehicles + 1] = veh
-    CreateThread(function()
-        fadeInEnt(veh)
-    end)
+    if fade ~= false then
+        CreateThread(function()
+            fadeInEnt(veh)
+        end)
+    end
 	return veh
 end
 

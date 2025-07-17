@@ -55,7 +55,7 @@ end
 -- ```lua
 -- local ped = makePed(pedData, pedCoords, true, false, nil, {'animDict', 'animName'}, true)
 -- ```
-function makePed(data, coords, freeze, collision, scenario, anim, synced)
+function makePed(data, coords, freeze, collision, scenario, anim, synced, fade)
     local ped = nil
     local model = nil
     if type(data) == "table" then
@@ -142,10 +142,11 @@ function makePed(data, coords, freeze, collision, scenario, anim, synced)
     end
     unloadModel(model)
     Peds[keyGen()..keyGen()] = ped
-
-    CreateThread(function()
-        fadeInEnt(ped)
-    end)
+    if fade ~= false then
+        CreateThread(function()
+            fadeInEnt(ped)
+        end)
+    end
     return ped
 end
 
