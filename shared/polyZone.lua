@@ -50,13 +50,23 @@ function createPoly(data)
         end
         data.thickness = 1000  -- Set a default thickness value
         Location = lib.zones.poly(data)
+
     elseif isStarted("PolyZone") then
         debugPrint("^6Bridge^7: ^2Creating new poly with ^7'^4PolyZone^7': "..data.name)
-        Location = PolyZone:Create(data.points, { name = data.name, debugPoly = data.debug })
+        Location = PolyZone:Create(data.points, {
+            name = data.name,
+            minZ = data.minZ or nil,
+            maxZ = data.maxZ or nil,
+            debugPoly = data.debug
+        })
         Location:onPlayerInOut(function(isPointInside)
-            if isPointInside then data.onEnter() else data.onExit() end
-
+            if isPointInside then
+                data.onEnter()
+            else
+                data.onExit()
+            end
         end)
+
     else
         print("^4ERROR^7: ^2No PolyZone creation script detected ^7- ^2Check ^3exports^1.^2lua^7")
     end
