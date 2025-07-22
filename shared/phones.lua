@@ -171,7 +171,7 @@ function sendPhoneInvoice(data)
             end
         },
         {
-            name = "gks-phone",
+            name = "gksphone",
             send = function(mailData)
                 -- Defensive check for required fields
                 local required = { "billedCitizenid", "amount", "job", "name", "billerCitizenid", "label" }
@@ -196,7 +196,6 @@ function sendPhoneInvoice(data)
             end
         }
     }
-
 
     -- Check each phone system in order and use the first active one.
     for _, phone in ipairs(phoneSystems) do
