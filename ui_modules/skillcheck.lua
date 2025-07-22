@@ -53,7 +53,7 @@ function gtaSkillCheck()
                     DrawRect(x - width / 2 + (highlightStart + highlightSize / 2) * width, y, highlightSize * width, height+0.001, 228, 52, 52, 255)
                     DrawRect(x - width / 2 + cursorPos * width, y, 0.002, height + 0.01, 255, 255, 255, 255)
 
-                    drawSuccessText(x, y, "Failed", 228, 52, 52)
+                    drawGTASuccessText(x, y, "Failed", 228, 52, 52)
                 end
                 return false
             end
