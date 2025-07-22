@@ -261,6 +261,6 @@ function registerShop(name, label, items, society)
     if shopResource ~= "" then
         debugPrint("^6Bridge^7: ^2Registering ^5"..shopResource.." ^3Store^7:", name, "^4Label^7: "..label)
     else
-        debugPrint("^1ERROR^7: ^1Couldn't find supported inventory to register shop^7:", name)
+    --    debugPrint("^1ERROR^7: ^1Couldn't find supported inventory to register shop^7:", name)
     end
 end
