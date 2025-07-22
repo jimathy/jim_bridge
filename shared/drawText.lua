@@ -52,7 +52,7 @@ function drawText(image, input, style, oxStyleTable)
             keybind = nil,
             icon = (image and radarTable[image] or image) or nil,
             iconColor = '#3B82F6',
-            position = 'center-left'
+            position = 'left-center'
         })
 
     elseif Config.System.drawText == "gta" then
