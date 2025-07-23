@@ -469,7 +469,7 @@ function stashRemoveItem(stashItems, stashName, items)
             end
         end
         exports[CodeMInv]:UpdateStash(stashName[1], stashItems)
-        debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3CodeM^2 stash ^7'^6"..stashName.."^7'")
+        debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3CodeM^2 stash ^7'^6"..stashName[1].."^7'")
 
     elseif isStarted(OrigenInv) then
         for k, v in pairs(items) do
