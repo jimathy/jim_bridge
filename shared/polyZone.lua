@@ -45,11 +45,15 @@ function createPoly(data)
     if isStarted(OXLibExport) then
         debugPrint("^6Bridge^7: ^2Creating new poly with ^7'^4"..OXLibExport.."^7': "..data.name)
 
-        -- Convert 2D points to 3D with a fixed Z coordinate (e.g., 12.0)
+        data.minZ = data.minZ or 12.0
+        data.maxZ = data.maxZ or 1000.0
+        data.thickness = ((data.maxZ / 2) - (data.minZ / 2)) * 2
+
+        local mid = data.maxZ - ((data.maxZ / 2) - (data.minZ / 2))
         for i = 1, #data.points do
-            data.points[i] = vec3(data.points[i].x, data.points[i].y, data.minZ or 12.0)
+            data.points[i] = vec3(data.points[i].x, data.points[i].y, mid)
         end
-        data.thickness = data.maxZ and (data.maxZ - data.minZ) or 1000 -- Try to calculate height if minZ and maxZ are available
+
         Location = lib.zones.poly(data)
 
     elseif isStarted("PolyZone") then
