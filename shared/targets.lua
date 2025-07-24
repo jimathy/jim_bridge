@@ -158,19 +158,25 @@ function createBoxTarget(data, opts, dist)
                 icon = opts[i].icon,
                 label = opts[i].label,
                 items = opts[i].item or nil,
-                groups = opts[i].job or opts[i].gang,
+                groups = opts[i].groups or opts[i].job or opts[i].gang,
                 onSelect = opts[i].onSelect or opts[i].action,
                 distance = dist,
                 canInteract = opts[i].canInteract or nil,
             }
         end
-        if not data[5].useZ then
-            local z = data[2].z + math.abs(data[5].maxZ - data[5].minZ) / 2
-            data[2] = vec3(data[2].x, data[2].y, z)
-        end
+
+        data[5].maxZ = data[5].maxZ or (data[2].z + 0.80)
+        data[5].minZ = data[5].minZ or data[2].z - 1.05
+        local thickness = ((data[5].maxZ / 2) - (data[5].minZ / 2)) * 2
+        local mid = data[5].maxZ - ((data[5].maxZ / 2) - (data[5].minZ / 2))
+
+        --if not data[5].useZ then
+        --    local z = data[2].z + math.abs(data[5].maxZ - data[5].minZ) / 2
+            data[2] = vec3(data[2].x, data[2].y, mid) -- force the coord to middle of the minZ and maxZ
+        --end
         local target = exports[OXTargetExport]:addBoxZone({
             coords = data[2],
-            size = vec3(data[4], data[3], (data[5].useZ or not data[5].maxZ) and data[2].z or math.abs(data[5].maxZ - data[5].minZ)),
+            size = vec3(data[4], data[3], thickness), -- size uses the math to determine how high it needs to be
             rotation = data[5].heading,
             debug = data[5].debugPoly,
             options = options
