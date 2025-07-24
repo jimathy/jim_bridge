@@ -111,7 +111,7 @@ function getPlayerInv(src)
         if src then
             grabInv = exports[OrigenInv]:getInventory(src)
         else
-            grabInv = exports[OrigenInv]:getInventory()
+            grabInv = exports[OrigenInv]:GetInventory()
         end
 
     elseif isStarted(CoreInv) then
