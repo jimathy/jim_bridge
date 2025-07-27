@@ -232,6 +232,7 @@ function invImg(item)
 
         elseif isStarted(PSInv) then
             imgLink = "nui://"..PSInv.."/html/images/"..(Items[item].image or "")
+
         elseif isStarted(TgiannInv) then
             imgLink = "nui://inventory_images/images/"..(Items[item].image or "")
 

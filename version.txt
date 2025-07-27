@@ -1,14 +1,15 @@
-2.0.21
+2.0.22
 
-- Fix toggleDuty() for ESX users
-- Rename metadata handler functions
-- Add useToolDegrade() to force limited uses for items
-- Make breakTool() smarter
-- Fix getPlayer() not checking if player data exists yet on qbcore
-- Fix inbuilt gta progressbar error when stopping animations
-- lation_ui support fixes
-- Add fade in animations for created entities
-- Fix waitForSharedLoad() not announcing when an error occurs
-- Incrase authToken timeout from 5 seconds to 1 minute
+- Support for qs-interface
+- Fix polyzone minZ + maxZ handling
+- Fix ox_target zone location to match qb-target
+- Fix "Waiting for script start" loop bug
+- Add condition for fading in entities
+- Fix typo breaking scripts on gta skillbar fail
+- Fix typo for gksphone invoice event
+- Fix latio_ui TextUI placement
+- Remove registerShop debug message
+- Fix typo in print when removing codem stash item
+- Fix function typo from origen inv documenation
 
 https://github.com/jimathy/jim_bridge
