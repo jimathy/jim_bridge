@@ -18,7 +18,7 @@ local Peds = {}
 -- ```lua
 -- makeDistPed(pedData, pedCoords, true, false, 'WORLD_HUMAN_STAND_IMPATIENT', nil, true)
 -- ```
-function makeDistPed(data, coords, freeze, collision, scenario, anim, synced)
+function makeDistPed(data, coords, freeze, collision, scenario, anim, synced, func)
     local zoneCoords = type(data) == "table" and data.coords or coords
     local randName = keyGen()..keyGen()
     createCirclePoly({
@@ -27,6 +27,7 @@ function makeDistPed(data, coords, freeze, collision, scenario, anim, synced)
         radius = 50.0,
         onEnter = function()
             Peds[randName] = makePed(data, coords, freeze, collision, scenario, anim, synced)
+            if func then func(Peds[randName]) end
         end,
         onExit = function()
             DeletePed(Peds[randName])
