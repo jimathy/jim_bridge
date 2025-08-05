@@ -88,6 +88,8 @@ function addItem(item, amount, info, src)
     if src then
         TriggerEvent(getScript()..":server:toggleItem", true, item, amount, src, info)
     else
+        local timeout = GetGameTimer() + 5000
+        while currentToken == nil and GetGameTimer() < timeout do Wait(100) end
         TriggerServerEvent(getScript()..":server:toggleItem", true, item, amount, nil, info, nil, currentToken)
         currentToken = nil -- clear client cached token
     end
@@ -113,7 +115,7 @@ function removeItem(item, amount, src, slot)
     end
 
     if src then
-        debugPrint(src)
+        --debugPrint(src)
         TriggerEvent(getScript()..":server:toggleItem", false, item, amount, src, nil, slot)
     else
         TriggerServerEvent(getScript()..":server:toggleItem", false, item, amount, nil, nil, slot)
@@ -211,17 +213,22 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
 
             elseif isStarted(QBInv) then
                 invName = QBInv
-                while remamount > 0 do
-                    if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1, slot) then
-                        remamount -= 1
-                    else
-                        print("^1Error removing "..item.." Amount left: "..remamount)
-                        break
-                    end
-                end
-                if Config.Crafting ~= nil and Config.Crafting.showItemBox then
+                if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, remamount, slot) then
                     TriggerClientEvent((isStarted(QBInv) and QBInvNew and "qb-" or "").."inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
+                else
+                    print("^1Error removing "..item.." Amount left: "..remamount)
                 end
+                --while remamount > 0 do
+                --    if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1, slot) then
+                --        remamount -= 1
+                --    else
+                --        print("^1Error removing "..item.." Amount left: "..remamount)
+                --        break
+                --    end
+                --end
+                --if Config.Crafting ~= nil and Config.Crafting.showItemBox then
+                --    TriggerClientEvent((isStarted(QBInv) and QBInvNew and "qb-" or "").."inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
+                --end
 
             elseif isStarted(PSInv) then
                 invName = PSInv
