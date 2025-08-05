@@ -248,10 +248,10 @@ function GenerateRandomPedData(data)
 end
 
 onPlayerUnloaded(function()
+    for k in pairs(Peds) do
+        DeletePed(Peds[k])
+    end
     for i = 1, #distPeds do
-        for k in pairs(Peds) do
-            DeletePed(Peds[k])
-        end
         removeZoneTarget(distPeds[i])
     end
     distPeds = {}
