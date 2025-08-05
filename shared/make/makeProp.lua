@@ -1,4 +1,5 @@
 local Props = {}
+local distProps = {}
 
 --- Creates a prop (object) in the game world at specified coordinates.
 ---
@@ -57,17 +58,21 @@ end
 --- }
 --- makeDistProp(propData, true, false)
 --- ```
-function makeDistProp(data, freeze, synced, range)
+function makeDistProp(data, freeze, synced, range, func)
     local name = keyGen()..keyGen()
-    createCirclePoly({
+    distProps[#distProps + 1] = createCirclePoly({
         name = name,
         coords = vec3(data.coords.x, data.coords.y, data.coords.z - 1.03),
         radius = range or 50.0,
         onEnter = function()
             Props[name] = makeProp(data, freeze, synced)
+            if func then
+                func(Props[name])
+            end
         end,
         onExit = function()
             destroyProp(Props[name])
+            Props[name] = nil
         end,
         debug = debugMode,
     })
@@ -91,6 +96,16 @@ function destroyProp(entity)
         DeleteObject(entity)
     end
 end
+
+onPlayerUnloaded(function()
+    for k in pairs(Props) do
+        DeleteObject(Props[k])
+    end
+    for i = 1, #distProps do
+        removeZoneTarget(distProps[i])
+    end
+    distProps = {}
+end)
 
 --- Cleans up all created props when the resource stops.
 onResourceStop(function()
