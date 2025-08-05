@@ -247,7 +247,7 @@ function GenerateRandomPedData(data)
     return newTable
 end
 
-onPlayerUnloaded(function()
+onPlayerUnload(function()
     for k in pairs(Peds) do
         DeletePed(Peds[k])
     end

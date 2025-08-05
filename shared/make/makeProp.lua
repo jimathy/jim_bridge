@@ -97,7 +97,7 @@ function destroyProp(entity)
     end
 end
 
-onPlayerUnloaded(function()
+onPlayerUnload(function()
     for k in pairs(Props) do
         DeleteObject(Props[k])
     end

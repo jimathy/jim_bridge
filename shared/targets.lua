@@ -503,8 +503,7 @@ end
 -- Cleanup on Resource Stop
 -------------------------------------------------------------
 
--- When the current resource stops, remove all targets.
-onResourceStop(function()
+local function CleanupTargets()
     -- Remove entity targets.
     for i = 1, #targetEntities do
         if isStarted(OXTargetExport) then
@@ -529,4 +528,13 @@ onResourceStop(function()
             exports[QBTargetExport]:RemoveZone(circleTargets[i].name)
         end
     end
+end
+
+onPlayerUnload(function()
+    CleanupTargets()
+end)
+
+-- When the current resource stops, remove all targets.
+onResourceStop(function()
+    CleanupTargets()
 end, true)
