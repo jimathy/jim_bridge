@@ -1,5 +1,6 @@
 --- A table to keep track of all created Peds.
 local Peds = {}
+local distPeds = {}
 
 --- Creates a distance-based Ped (pedestrian) that spawns when the player enters a specified area.
 --
@@ -21,7 +22,7 @@ local Peds = {}
 function makeDistPed(data, coords, freeze, collision, scenario, anim, synced, func)
     local zoneCoords = type(data) == "table" and data.coords or coords
     local randName = keyGen()..keyGen()
-    createCirclePoly({
+    distPeds[#distPeds+1] = createCirclePoly({
         name = randName,
         coords = vec3(zoneCoords.x, zoneCoords.y, zoneCoords.z - 1.03),
         radius = 50.0,
@@ -31,6 +32,7 @@ function makeDistPed(data, coords, freeze, collision, scenario, anim, synced, fu
         end,
         onExit = function()
             DeletePed(Peds[randName])
+            Peds[randName] = nil
         end,
         debug = debugMode,
     })
@@ -244,6 +246,16 @@ function GenerateRandomPedData(data)
     end
     return newTable
 end
+
+onPlayerUnloaded(function()
+    for i = 1, #distPeds do
+        for k in pairs(Peds) do
+            DeletePed(Peds[k])
+        end
+        removeZoneTarget(distPeds[i])
+    end
+    distPeds = {}
+end)
 
 --- Cleans up all created Peds when the resource stops.
 onResourceStop(function()
