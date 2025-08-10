@@ -112,7 +112,33 @@ if checkExists(Exports.OXInv) then
         else
             print("^1ERROR^7: ^1Possible table inside a table, check your items.lua^7?")
             print("^1Possible Issue found^7:")
-            print(json.encode(Items[k], {indent = true}))
+            print(json.encode(cache.Items[k], {indent = true}))
+        end
+    end
+
+elseif checkExists(Exports.TgiannInv) then
+    -- Wait for OX Inventory to start if it's not already started
+    while GetResourceState(Exports.TgiannInv) ~= "started" do Wait(100) end
+    itemResource = Exports.TgiannInv
+
+    local success, result = pcall(function()
+        return exports[Exports.TgiannInv]:Items()
+    end)
+    if success and result then
+        cache.Items = result
+    end
+
+    -- Get Weapon info and duplicate them if they are uppercase
+    -- (duplicate incase anything checks for the uppercase version)
+    for k, v in pairs(cache.Items) do
+        if type(k) == "string" then
+            if k:find("WEAPON") then
+                cache.Items[k:lower()] = cache.Items[k]
+            end
+        else
+            print("^1ERROR^7: ^1Possible table inside a table, check your items.lua^7?")
+            print("^1Possible Issue found^7:")
+            print(json.encode(cache.Items[k], {indent = true}))
         end
     end
 
