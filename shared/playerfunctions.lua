@@ -553,7 +553,7 @@ end
 --- ```
 function getPlayer(source)
     local Player = {}
-    debugPrint("^6Bridge^7: ^2Getting ^3Player^2 info^7")
+    --debugPrint("^6Bridge^7: ^2Getting ^3Player^2 info^7")
 
     if source then
         local src = tonumber(source)
