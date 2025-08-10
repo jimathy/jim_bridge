@@ -45,7 +45,7 @@ function createPoly(data)
     if isStarted(OXLibExport) then
         debugPrint("^6Bridge^7: ^2Creating new poly with ^7'^4"..OXLibExport.."^7': "..data.name)
 
-        data.minZ = data.minZ or 12.0
+        data.minZ = data.minZ or -20.0
         data.maxZ = data.maxZ or 1000.0
         data.thickness = ((data.maxZ / 2) - (data.minZ / 2)) * 2
 
