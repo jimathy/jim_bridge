@@ -5,6 +5,102 @@
     various frameworks: QB, OX, GTA, and ESX.
 ]]
 
+-- Text system handlers
+local textHandlers = {
+    qb = {
+        show = function(text, image)
+            if image then
+                text = '<img src="'..(radarTable[image] or "")..'" style="width:12px;height:12px">'..text
+            end
+            exports[QBExport]:DrawText(text, 'left')
+        end,
+        hide = function()
+            exports[QBExport]:HideText()
+        end
+    },
+
+    ox = {
+        show = function(input, image, oxStyleTable)
+            local inputCount = #input
+            for i = 1, inputCount do
+                input[i] = input[i] .. (i ~= inputCount and "   \n" or "")
+            end
+            lib.showTextUI(table.concat(input), {
+                icon = (image and radarTable[image] or image) or nil,
+                position = 'left-center',
+                style = oxStyleTable
+            })
+        end,
+        hide = function()
+            lib.hideTextUI()
+        end
+    },
+
+    lation = {
+        show = function(input, image)
+            local inputCount = #input
+            for i = 1, inputCount do
+                input[i] = input[i] .. (i ~= inputCount and "   \n" or "")
+            end
+            exports.lation_ui:showText({
+                description = table.concat(input),
+                keybind = nil,
+                icon = (image and radarTable[image] or image) or nil,
+                iconColor = '#3B82F6',
+                position = 'left-center'
+            })
+        end,
+        hide = function()
+            exports.lation_ui:hideText()
+        end
+    },
+
+    gta = {
+        show = function(input, image, style)
+            local text = ""
+            for i = 1, #input do
+                if input[i] ~= "" then
+                    text = text .. input[i] .. "\n~s~"
+                end
+            end
+            if image then
+                text = "~BLIP_" .. image .. "~ " .. text
+            end
+            DisplayHelpMsg(text:gsub("%:", ":~" .. (style or "g") .. "~"))
+        end,
+        hide = function()
+            ClearAllHelpMessages()
+        end
+    },
+
+    esx = {
+        show = function(text, image)
+            if image then
+                text = '<img src="'..(radarTable[image] or "")..'" style="width:12px;height:12px">'..text
+            end
+            ESX.TextUI(text, nil)
+        end,
+        hide = function()
+            ESX.HideUI()
+        end
+    },
+
+    red = {
+        show = function(input)
+            local text = ""
+            for i = 1, #input do
+                if input[i] ~= "" then
+                    text = text .. input[i] .. "\n~q~"
+                end
+            end
+            TriggerEvent("jim-redui:DrawText", text)
+        end,
+        hide = function()
+            TriggerEvent("jim-redui:HideText")
+        end
+    }
+}
+
 --- Displays text on the screen using the configured draw text system.
 ---
 --- Depending on Config.System.drawText, this function will use different methods to
@@ -20,73 +116,33 @@
 --- drawText("img_link", { "Test line 1", "Test Line 2" }, "~g~")
 --- ```
 function drawText(image, input, style, oxStyleTable)
-    local text = ""
     if not radarTable then radarTable = {} end
-    if Config.System.drawText == "qb" then
-        -- Concatenate lines for QB system with HTML line breaks.
+
+    local systemType = Config.System.drawText
+    local handler = textHandlers[systemType]
+
+    if not handler then return end
+
+    if systemType == "qb" or systemType == "esx" then
+        -- Concatenate lines for QB/ESX system with HTML line breaks.
+        local text = ""
         for i = 1, #input do
-            text = text..input[i].."</span>"..(input[i + 1] and "<br>" or "")
+            text = text .. input[i] .. "</span>" .. (input[i + 1] and "<br>" or "")
         end
         text = text:gsub("%:", ":<span style='color:yellow'>")
-        if image then
-            text = '<img src="'..(radarTable[image] or "")..'" style="width:12px;height:12px">'..text
-        end
-        exports[QBExport]:DrawText(text, 'left')
+        handler.show(text, image)
 
-    elseif Config.System.drawText == "ox" then
-        -- Append newline spacing to each input line.
-        local inputnum = countTable(input)
-        for k, v in pairs(input) do
-            input[k] = v..(inputnum ~= k and "   \n" or "")
-        end
-        lib.showTextUI(table.concat(input), { icon = (image and radarTable[image] or image) or nil, position = 'left-center', style = oxStyleTable })
+    elseif systemType == "ox" then
+        handler.show(input, image, oxStyleTable)
 
-    elseif Config.System.drawText == "lation" then
-        local inputnum = countTable(input)
-        for k, v in pairs(input) do
-            input[k] = v..(inputnum ~= k and "   \n" or "")
-        end
-        exports.lation_ui:showText({
-            --title = " ",
-            description = table.concat(input),
-            keybind = nil,
-            icon = (image and radarTable[image] or image) or nil,
-            iconColor = '#3B82F6',
-            position = 'left-center'
-        })
+    elseif systemType == "lation" then
+        handler.show(input, image)
 
-    elseif Config.System.drawText == "gta" then
-        -- Concatenate input lines and apply GTA style formatting.
-        for i = 1, #input do
-            if input[i] ~= "" then
-                text = text..input[i].."\n~s~"
-            end
-        end
-        if image then
-            text = "~BLIP_"..image.."~ "..text
-        end
-        DisplayHelpMsg(text:gsub("%:", ":~"..(style or "g").."~"))
+    elseif systemType == "gta" then
+        handler.show(input, image, style)
 
-    elseif Config.System.drawText == "esx" then
-        -- ESX-based text UI uses similar HTML formatting as QB.
-        for i = 1, #input do
-            text = text..input[i].."</span>"..(input[i + 1] and "<br>" or "")
-        end
-        text = text:gsub("%:", ":<span style='color:yellow'>")
-        if image then
-            text = '<img src="'..(radarTable[image] or "")..'" style="width:12px;height:12px">'..text
-        end
-        ESX.TextUI(text, nil)
-
-    elseif Config.System.drawText == "red" then
-        -- Concatenate input lines and apply GTA style formatting.
-        for i = 1, #input do
-            if input[i] ~= "" then
-                text = text..input[i].."\n~q~"
-            end
-        end
-        TriggerEvent("jim-redui:DrawText", text)
-
+    elseif systemType == "red" then
+        handler.show(input)
     end
 end
 
@@ -99,17 +155,8 @@ end
 --- hideText()
 --- ```
 function hideText()
-    if Config.System.drawText == "qb" then
-        exports[QBExport]:HideText()
-    elseif Config.System.drawText == "ox" then
-        lib.hideTextUI()
-    elseif Config.System.drawText == "lation" then
-        exports.lation_ui:hideText()
-    elseif Config.System.drawText == "gta" then
-        ClearAllHelpMessages()
-    elseif Config.System.drawText == "esx" then
-        ESX.HideUI()
-    elseif Config.System.drawText == "red" then
-        TriggerEvent("jim-redui:HideText")
+    local handler = textHandlers[Config.System.drawText]
+    if handler and handler.hide then
+        handler.hide()
     end
 end

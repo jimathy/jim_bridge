@@ -8,10 +8,79 @@
       • okok
       • qb
       • ox
+      • red (default)
       • gta (default)
+      • qs-interface
+      • lation
       • esx
 ]]
 
+local notifyFunc = {
+    okok = {
+        client = function(title, message, type)
+            TriggerEvent('okokNotify:Alert', title, message, 6000, type)
+        end,
+        server = function(title, message, type, src)
+            TriggerClientEvent('okokNotify:Alert', src, title, message, 6000, type)
+        end,
+    },
+    qb = {
+        client = function(title, message, type)
+            TriggerEvent("QBCore:Notify", message, type)
+        end,
+        server = function(title, message, type, src)
+            TriggerClientEvent("QBCore:Notify", src, message, type)
+        end,
+    },
+    qs = {
+        client = function(title, message, type)
+            exports['qs-interface']:AddNotify(message, title, 6000)
+        end,
+        server = function(title, message, type, src)
+            TriggerClientEvent('interface:notification', src, message, title, 6000)
+        end,
+    },
+    ox = {
+        client = function(title, message, type)
+            exports.ox_lib:notify({ title = title, description = message, type = type or "success" })
+        end,
+        server = function(title, message, type, src)
+            TriggerClientEvent('ox_lib:notify', src, { title = title, description = message, type = type or "success" })
+        end,
+    },
+    gta = {
+        client = function(title, message, type)
+            exports.jim_bridge:Notify(title, message, type)
+        end,
+        server = function(title, message, type, src)
+            TriggerClientEvent("jim-bridge:Notify", src, title, message, type)
+        end,
+    },
+    esx = {
+        client = function(title, message, type)
+            exports["esx_notify"]:Notify(type, 4000, message)
+        end,
+        server = function(title, message, type, src)
+            TriggerClientEvent(getScript()..":DisplayESXNotify", src, type, message)
+        end,
+    },
+    lation = {
+        client = function(title, message, type)
+            exports.lation_ui:notify({ title = title, message = message, type = type or "success", })
+        end,
+        server = function(title, message, type, src)
+            TriggerClientEvent("lation_ui:notify", src, { title = title, message = message, type = type or "success", })
+        end,
+    },
+    red = {
+        client = function(title, message, type)
+            TriggerEvent("jim-redui:Notify", title, message, type)
+        end,
+        server = function(title, message, type, src)
+            TriggerClientEvent("jim-redui:Notify", src, title, message, type)
+        end,
+    },
+}
 --- Displays notifications to the player using the configured notification system.
 ---
 --- Supports multiple notification systems based on Config.System.Notify. Can be triggered from both
@@ -32,65 +101,11 @@
 --- ```
 function triggerNotify(title, message, type, src)
     if not Config.System or not Config.System.Notify then debugPrint("Notify triggered but not set up") return end
-    if Config.System.Notify == "okok" then
-        if not src then
-            TriggerEvent('okokNotify:Alert', title, message, 6000, type)
-        else
-            TriggerClientEvent('okokNotify:Alert', src, title, message, 6000, type)
-        end
-    elseif Config.System.Notify == "qb" then
-        if not src then
-            TriggerEvent("QBCore:Notify", message, type)
-        else
-            TriggerClientEvent("QBCore:Notify", src, message, type)
-        end
-    elseif Config.System.Notify == "qs" then
-        if not src then
-            exports['qs-interface']:AddNotify(message, title, 6000)
-        else
-            TriggerClientEvent('interface:notification', src, message, title, 6000)
-        end
-    elseif Config.System.Notify == "ox" then
-        if not src then
-            TriggerEvent('ox_lib:notify', { title = title, description = message, type = type or "success" })
-        else
-            TriggerClientEvent('ox_lib:notify', src, { title = title, description = message, type = type or "success" })
-        end
-    elseif Config.System.Notify == "gta" then
-        if not src then
-            exports.jim_bridge:Notify(title, message, type)
-        else
-            TriggerClientEvent("jim-bridge:Notify", src, title, message, type)
-        end
-    elseif Config.System.Notify == "esx" then
-        if not src then
-            exports["esx_notify"]:Notify(type, 4000, message)
-        else
-            TriggerClientEvent(getScript()..":DisplayESXNotify", src, type, message)
-        end
-    elseif Config.System.Notify == "lation" then
-        if not src then
-            exports.lation_ui:notify({
-                title = title,
-                message = message,
-                type = type or "success",
-            })
-        else
-            TriggerClientEvent("lation_ui:notify", src, {
-                title = title,
-                message = message,
-                type = type or "success",
-            })
-        end
 
-    elseif Config.System.Notify == "red" then
-        if isStarted("jim-redui") then
-            if not src then
-                TriggerEvent("jim-redui:Notify", title, message, type)
-            else
-                TriggerClientEvent("jim-redui:Notify", src, title, message, type)
-            end
-        end
+    if src then
+        notifyFunc[Config.System.Notify].server(title, message, type, src)
+    else
+        notifyFunc[Config.System.Notify].client(title, message, type)
     end
 end
 
@@ -103,7 +118,6 @@ end
 --- Listens for DisplayESXNotify events and triggers the ESX notification on the client.
 ---
 --- @param type string The notification type.
---- @param title string The notification title.
 --- @param text string The notification message.
 ---
 --- @usage
