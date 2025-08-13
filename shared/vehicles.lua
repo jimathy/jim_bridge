@@ -57,7 +57,7 @@ function searchCar(vehicle)
         }
         if Vehicles then
             for k, v in pairs(Vehicles) do
-                if tonumber(v.hash) == model or GetHashKey(v.hash) == model or GetHashKey(v.model) == model then
+                if tonumber(v.hash) == model or joaat(v.hash) == model or joaat(v.model) == model then
                     debugPrint("^6Bridge^7: ^2Vehicle info found in^7 ^4Vehicles^7 ^2table^7: ^6"..(v.hash and v.hash or v.model).. " ^7(^6"..Vehicles[k].name.."^7)")
                     carInfo.name = Vehicles[k].name.." "..Vehicles[k].brand
                     carInfo.price = Vehicles[k].price

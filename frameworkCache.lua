@@ -212,7 +212,7 @@ elseif checkExists(Exports.OXCoreExport) then
     cache.Vehicles = {}
     for k, v in pairs(Ox.GetVehicleData()) do
         cache.Vehicles[k] = {
-            model = k, hash = GetHashKey(k),
+            model = k, hash = joaat(k),
             price = v.price,
             name = v.name,
             brand = v.make
@@ -225,7 +225,7 @@ elseif checkExists(Exports.ESXExport) then
     for _, v in pairs(MySQL.query.await('SELECT model, price, name FROM vehicles')) do
         cache.Vehicles[v.model] = {
             model = v.model,
-            hash = GetHashKey(v.model),
+            hash = joaat(v.model),
             price = v.price,
             name = v.name,
         }

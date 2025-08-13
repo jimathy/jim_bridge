@@ -226,9 +226,9 @@ end
 function cv(amount)
     local formatted = tostring(amount or "0")
     while true do
-        formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
-        if k == 0 then break end
-        Wait(0)
+        local newFormatted, count = formatted:gsub("^(-?%d+)(%d%d%d)", '%1,%2')
+        if count == 0 then break end
+        formatted = newFormatted
     end
     return formatted
 end
@@ -243,13 +243,14 @@ end
 --- ```
 function formatCoord(coord)
     local vecType = type(coord):gsub("tor", "")
-    local components = {
-        [1] = coord.x and ("^6"..string.format("%.1f", coord.x)) or "",
-        [2] = coord.y and ("^7, ^6"..string.format("%.1f", coord.y)) or "",
-        [3] = coord.z and ("^7, ^6"..string.format("%.1f", coord.z)) or "",
-        [4] = coord.w and ("^7, ^6"..string.format("%.1f", coord.w)) or "",
-    }
-    return "^5"..vecType.."^7("..components[1]..components[2]..components[3]..components[4].."^7)"
+    local parts = {}
+
+    if coord.x then parts[#parts + 1] = string.format("^6%.1f", coord.x) end
+    if coord.y then parts[#parts + 1] = string.format("^6%.1f", coord.y) end
+    if coord.z then parts[#parts + 1] = string.format("^6%.1f", coord.z) end
+    if coord.w then parts[#parts + 1] = string.format("^6%.1f", coord.w) end
+
+    return string.format("^5%s^7(%s^7)", vecType, table.concat(parts, "^7, "))
 end
 
 --- Calculates the center point of a list of coordinates.
@@ -261,13 +262,17 @@ end
 --- print("Center of Zones:", center)
 --- ```
 function getCenterOfZones(tbl)
+    local count = #tbl
+    if count == 0 then return vector3(0, 0, 0) end
+
     local totalX, totalY, totalZ = 0, 0, 0
-    for _, coord in ipairs(tbl) do
+    for i = 1, count do
+        local coord = tbl[i]
         totalX = totalX + coord.x
         totalY = totalY + coord.y
         totalZ = totalZ + coord.z
     end
-    local count = #tbl
+
     return vector3(totalX / count, totalY / count, totalZ / count)
 end
 
@@ -280,9 +285,9 @@ end
 --- print("Number of keys:", count)
 --- ```
 function countTable(tbl)
-    local i = 0
-    for _ in pairs(tbl) do i += 1 end
-    return i
+    local count = 0
+    for _ in pairs(tbl) do count = count + 1 end
+    return count
 end
 
 --- Returns an iterator over a table's keys in sorted order.
@@ -299,7 +304,19 @@ function pairsByKeys(t)
         print("^1Error^7: ^3Nil ^2table recieved for ^3pairsByKeys^7(), ^2setting to ^7{} ^2to prevent break^7")
         t = {}
     end
-    local a = {} for n in pairs(t) do a[#a+1] = n end table.sort(a) local i = 0 local iter = function() i += 1 if a[i] == nil then return nil else return a[i], t[a[i]] end end return iter
+
+    local keys = {}
+    for key in pairs(t) do
+        keys[#keys + 1] = key
+    end
+    table.sort(keys)
+
+    local index = 0
+    return function()
+        index = index + 1
+        local key = keys[index]
+        return key, t[key]
+    end
 end
 
 --- Creates a new table with consecutive numerical indices sorted by the 'id' field.
@@ -313,15 +330,18 @@ end
 --- end
 --- ```
 function createConsecutiveTable(originalTable)
-    local sortedEntries = {}
-    for _, entry in pairs(originalTable) do table.insert(sortedEntries, entry) end
-    table.sort(sortedEntries, function(a, b) return a.id < b.id end)
-    local newTable = {}
-    for newIndex, entry in ipairs(sortedEntries) do
-        entry.id = newIndex
-        newTable[newIndex] = entry
+    local entries = {}
+    for _, entry in pairs(originalTable) do
+        entries[#entries + 1] = entry
     end
-    return newTable
+
+    table.sort(entries, function(a, b) return a.id < b.id end)
+
+    for index, entry in ipairs(entries) do
+        entry.id = index
+    end
+
+    return entries
 end
 
 --- Concatenates a table of strings into a single string separated by newlines.
@@ -333,11 +353,7 @@ end
 --- print(combinedText)
 --- ```
 function concatenateText(tbl)
-    local result = ""
-    for i = 1, #tbl do
-        result = result..tbl[i]..(i < #tbl and "\n" or "")
-    end
-    return result
+    return table.concat(tbl, "\n")
 end
 
 --- Converts a rotation (degrees) to a direction vector.
@@ -349,11 +365,14 @@ end
 --- print(direction)
 --- ```
 function RotationToDirection(rot)
-    local adjust = math.pi / 180
+    local radianConvert = math.pi / 180
+    local rotX, rotZ = radianConvert * rot.x, radianConvert * rot.z
+    local cosX = math.abs(math.cos(rotX))
+
     return vec3(
-        -math.sin(adjust * rot.z) * math.abs(math.cos(adjust * rot.x)),
-         math.cos(adjust * rot.z) * math.abs(math.cos(adjust * rot.x)),
-         math.sin(adjust * rot.x)
+        -math.sin(rotZ) * cosX,
+        math.cos(rotZ) * cosX,
+        math.sin(rotX)
     )
 end
 
@@ -366,11 +385,9 @@ end
 --- print(bar)
 --- ```
 function basicBar(percentage)
-    local perc = math.ceil(percentage)
     local total = 10
-    local filled = math.floor((perc / 100) * total)
-    local empty = total - filled
-    return string.rep("█", filled)..string.rep("░", empty)
+    local filled = math.floor(math.min(math.max(percentage, 0), 100) / 100 * total)
+    return string.rep("█", filled) .. string.rep("░", total - filled)
 end
 
 --- Normalizes a 3D vector.
@@ -382,12 +399,8 @@ end
 --- print(normalizedVec)
 --- ```
 function normalizeVector(vec)
-    local len = math.sqrt(vec.x^2 + vec.y^2 + vec.z^2)
-    if len ~= 0 then
-        return vec3(vec.x / len, vec.y / len, vec.z / len)
-    else
-        return vec3(0, 0, 0)
-    end
+    local length = math.sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z)
+    return length > 0 and vec3(vec.x / length, vec.y / length, vec.z / length) or vec3(0, 0, 0)
 end
 
 -------------------------------------------------------------
@@ -403,16 +416,14 @@ end
 --- drawLine(vector3(100, 200, 300), vector3(150, 250, 350), vector4(255, 0, 0, 255))
 --- ```
 function drawLine(startCoords, endCoords, col)
-    if debugMode then
-        CreateThread(function()
-            local count = 1000
-            while count >= 0 do
-                DrawLine(startCoords.x, startCoords.y, startCoords.z, endCoords.x, endCoords.y, endCoords.z, col.x, col.y, col.z, col.w)
-                count -= 10
-                Wait(0)
-            end
-        end)
-    end
+    if not debugMode then return end
+
+    CreateThread(function()
+        for i = 100, 0, -1 do
+            DrawLine(startCoords.x, startCoords.y, startCoords.z, endCoords.x, endCoords.y, endCoords.z, col.x, col.y, col.z, col.w)
+            Wait(0)
+        end
+    end)
 end
 
 --- Draws a sphere at the specified coordinates (for debugging).
@@ -423,16 +434,14 @@ end
 --- drawSphere(vector3(100, 200, 300), vector4(0, 255, 0, 255))
 --- ```
 function drawSphere(coords, col)
-    if debugMode then
-        CreateThread(function()
-            local count = 1000
-            while count >= 0 do
-                DrawSphere(coords.x, coords.y, coords.z, 0.5, col.x, col.y, col.z, col.w)
-                count -= 1
-                Wait(10)
-            end
-        end)
-    end
+    if not debugMode then return end
+
+    CreateThread(function()
+        for i = 100, 0, -1 do
+            DrawSphere(coords.x, coords.y, coords.z, 0.5, col.x, col.y, col.z, col.w)
+            Wait(10)
+        end
+    end)
 end
 
 --- Performs a raycast between two coordinates and returns the results.
@@ -450,15 +459,15 @@ end
 --- end
 --- ```
 function PerformRaycast(startCoords, endCoords, entity, flags)
-    drawLine(startCoords, endCoords, vec4(0,0,255,255))
-    local val1, val2, val3, val4, val5, val6 = GetShapeTestResult(
-        StartExpensiveSynchronousShapeTestLosProbe(
-            startCoords.x, startCoords.y, startCoords.z,
-            endCoords.x, endCoords.y, endCoords.z,
-            flags or 4294967295, entity, 0
-        )
+    drawLine(startCoords, endCoords, vec4(0, 0, 255, 255))
+
+    local shapeTest = StartExpensiveSynchronousShapeTestLosProbe(
+        startCoords.x, startCoords.y, startCoords.z,
+        endCoords.x, endCoords.y, endCoords.z,
+        flags or 4294967295, entity, 0
     )
-    return val1, val2, val3, val4, val5, val6
+
+    return GetShapeTestResult(shapeTest)
 end
 
 --- Adjusts the Z-coordinate of a position to the ground level.
@@ -470,16 +479,34 @@ end
 --- print("Ground Position:", groundCoords)
 --- ```
 function adjustForGround(coords)
-    local foundGround, zPos = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z + 1.0)
+    local foundGround, groundZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z + 1.0)
+
     if foundGround then
-        if coords.w then
-            return vec4(coords.x, coords.y, zPos, coords.w)
-        else
-            return vec3(coords.x, coords.y, zPos)
-        end
-    else
-        return coords
+        return coords.w and vec4(coords.x, coords.y, groundZ, coords.w) or vec3(coords.x, coords.y, groundZ)
     end
+
+    return coords
+end
+
+local function waitForNetworkEntity(netId, converter, timeout)
+    timeout = timeout or 100
+
+    while not NetworkDoesNetworkIdExist(netId) and timeout > 0 do
+        timeout = timeout - 1
+        Wait(10)
+    end
+
+    if not NetworkDoesNetworkIdExist(netId) then return 0 end
+
+    local entity = converter(netId)
+    timeout = 100
+
+    while not DoesEntityExist(entity) and entity ~= 0 and timeout > 0 do
+        timeout = timeout - 1
+        Wait(10)
+    end
+
+    return DoesEntityExist(entity) and entity or 0
 end
 
 --- Ensures a network vehicle exists from its network ID.
@@ -493,21 +520,7 @@ end
 --- end
 --- ```
 function ensureNetToVeh(vehNetID)
-    --debugPrint("^6Bridge^7: ^3ensureNetToVeh^7: ^2Requesting NetworkDoesNetworkIdExist^7(^6"..vehNetID.."^7)")
-    local timeout = 100
-    while not NetworkDoesNetworkIdExist(vehNetID) and timeout > 0 do
-        timeout -= 1
-        Wait(10)
-    end
-    if not NetworkDoesNetworkIdExist(vehNetID) then return 0 end
-    timeout = 100
-    local vehicle = NetToVeh(vehNetID)
-    while not DoesEntityExist(vehicle) and vehicle ~= 0 and timeout > 0 do
-        timeout -= 1
-        Wait(10)
-    end
-    if not DoesEntityExist(vehicle) then return 0 end
-    return vehicle
+    return waitForNetworkEntity(vehNetID, NetToVeh)
 end
 
 --- Ensures a network entity exists from its network ID.
@@ -521,21 +534,7 @@ end
 --- end
 --- ```
 function ensureNetToEnt(entNetID)
-    --debugPrint("^6Bridge^7: ^3ensureNetToEnt^7: ^2Requesting NetworkDoesNetworkIdExist^7(^6"..entNetID.."^7)")
-    local timeout = 100
-    while not NetworkDoesNetworkIdExist(entNetID) and timeout > 0 do
-        timeout -= 1
-        Wait(10)
-    end
-    if not NetworkDoesNetworkIdExist(entNetID) then return 0 end
-    timeout = 100
-    local entity = NetworkGetEntityFromNetworkId(entNetID)
-    while not DoesEntityExist(entity) and entity ~= 0 and timeout > 0 do
-        timeout -= 1
-        Wait(10)
-    end
-    if not DoesEntityExist(entity) then return 0 end
-    return entity
+    return waitForNetworkEntity(entNetID, NetworkGetEntityFromNetworkId)
 end
 
 function sendLog(text)
@@ -580,11 +579,7 @@ RegisterNetEvent(getScript()..":server:sendlog", sendServerLog)
 -- local hungerAmount = GetRandomTiming(hunger)
 -- print(hungerAmount) -- number between 10, 20
 function GetRandomTiming(tbl)
-	if type(tbl) == "table" then
-		return math.random(tbl[1], tbl[2])
-	else
-		return tbl
-	end
+    return type(tbl) == "table" and math.random(tbl[1], tbl[2]) or tbl
 end
 
 -------------------------------------------------------------
@@ -820,9 +815,9 @@ local materials = {
 --- local matHash, matName = GetGroundMaterialAtPosition(vector3(100,200,300))
 --- print("Material:", matName)
 --- ```
-function GetGroundMaterialAtPosition(coords)
-    local endX, endY, endZ = coords.x, coords.y, coords.z - 1.0
-    local rayHandle = StartShapeTestCapsule(coords.x, coords.y, coords.z, endX, endY, endZ, 1.0, 1, playerPed, 7)
+function GetGroundMaterialAtPosition(coords, ped)
+    local endCoords = vec3(coords.x, coords.y, coords.z - 1.1)
+    local rayHandle = StartShapeTestCapsule(coords.x, coords.y, coords.z, endX, endY, endZ, 1.0, 1, Ped or PlayerPedId(), 7)
     local _, hit, _, _, materialHash, _ = GetShapeTestResultIncludingMaterial(rayHandle)
     local materialName = "Unknown"
     for k, v in pairs(materials) do
