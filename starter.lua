@@ -149,7 +149,6 @@ for _, v in pairs({ -- This is a specific load order
 
     'wrapperfunctions.lua',
     'polyZone.lua',
-    'inventories.lua',
     'itemcontrol.lua',
     'playerfunctions.lua',
     'metaHandlers.lua',
@@ -167,8 +166,6 @@ for _, v in pairs({ -- This is a specific load order
 
     -- Crafting / Shops / Stashes
     'crafting.lua',
-    'shops.lua',
-    'stashcontrol.lua',
 
     -- Kind of "other"
     'isAnimal.lua',
