@@ -173,6 +173,7 @@ function removePolyZone(Location)
         if isStarted(script.polyZoneScript) then
             debugPrint("^6Bridge^7: ^2Removing ^3"..script.polyZoneScript.." ^2Zone^7")
             script.removeZone(Location)
+            break
         end
     end
 end
