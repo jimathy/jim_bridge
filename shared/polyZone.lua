@@ -11,6 +11,65 @@
       • removePolyZone(Location) - Removes a created zone.
 ]]
 
+
+local polyCreation = {
+    {
+        polyZoneScript = OXLibExport,
+        createPoly = function(data)
+            data.minZ = data.minZ or -20.0
+            data.maxZ = data.maxZ or 1000.0
+            data.thickness = ((data.maxZ / 2) - (data.minZ / 2)) * 2
+
+            local mid = data.maxZ - ((data.maxZ / 2) - (data.minZ / 2))
+            for i = 1, #data.points do
+                data.points[i] = vec3(data.points[i].x, data.points[i].y, mid)
+            end
+
+            return lib.zones.poly(data)
+        end,
+        createCircle = function(data)
+            return lib.zones.sphere(data)
+        end,
+        removeZone = function(Location)
+            Location:remove()
+        end,
+    },
+    {
+        polyZoneScript = "PolyZone",
+        createPoly = function(data)
+            local zone = PolyZone:Create(data.points, {
+                name = data.name,
+                minZ = data.minZ or nil,
+                maxZ = data.maxZ or nil,
+                debugPoly = data.debug
+            })
+            zone:onPlayerInOut(function(isPointInside)
+                if isPointInside then
+                    data.onEnter()
+                else
+                    data.onExit()
+                end
+            end)
+            return zone
+        end,
+        createCircle = function(data)
+            local zone = CircleZone:Create(data.coords, data.radius, { name = data.name, debugPoly = debugMode })
+            zone:onPlayerInOut(function(isPointInside)
+                if isPointInside then
+                    data.onEnter()
+                else
+                    data.onExit()
+                end
+            end)
+            return zone
+        end,
+        removeZone = function(Location)
+            Location:destroy()
+        end,
+    }
+
+}
+
 -------------------------------------------------------------
 -- Polygonal Zone Creation
 -------------------------------------------------------------
@@ -41,41 +100,15 @@
 ---})
 ---```
 function createPoly(data)
-    local Location = nil
-    if isStarted(OXLibExport) then
-        debugPrint("^6Bridge^7: ^2Creating new poly with ^7'^4"..OXLibExport.."^7': "..data.name)
-
-        data.minZ = data.minZ or -20.0
-        data.maxZ = data.maxZ or 1000.0
-        data.thickness = ((data.maxZ / 2) - (data.minZ / 2)) * 2
-
-        local mid = data.maxZ - ((data.maxZ / 2) - (data.minZ / 2))
-        for i = 1, #data.points do
-            data.points[i] = vec3(data.points[i].x, data.points[i].y, mid)
+    for _, script in ipairs(polyCreation) do
+        if isStarted(script.polyZoneScript) then
+            debugPrint("^6Bridge^7: ^2Creating new poly with ^7'^4"..script.polyZoneScript.."^7': "..data.name)
+            return script.createPoly(data)
         end
-
-        Location = lib.zones.poly(data)
-
-    elseif isStarted("PolyZone") then
-        debugPrint("^6Bridge^7: ^2Creating new poly with ^7'^4PolyZone^7': "..data.name)
-        Location = PolyZone:Create(data.points, {
-            name = data.name,
-            minZ = data.minZ or nil,
-            maxZ = data.maxZ or nil,
-            debugPoly = data.debug
-        })
-        Location:onPlayerInOut(function(isPointInside)
-            if isPointInside then
-                data.onEnter()
-            else
-                data.onExit()
-            end
-        end)
-
-    else
-        print("^4ERROR^7: ^2No PolyZone creation script detected ^7- ^2Check ^3exports^1.^2lua^7")
     end
-    return Location
+
+    print("^4ERROR^7: ^2No PolyZone creation script detected ^7")
+    return nil
 end
 
 -------------------------------------------------------------
@@ -107,25 +140,16 @@ end
 --- })
 --- ```
 function createCirclePoly(data)
-    local Location = nil
-    if isStarted(OXLibExport) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Cricle^2 poly with ^7"..OXLibExport.." "..data.name)
-        Location = lib.zones.sphere(data)
-    elseif isStarted("PolyZone") then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Cricle^2 poly with ^7PolyZone ".. data.name)
-        Location = CircleZone:Create(data.coords, data.radius, { name = data.name, debugPoly = debugMode })
-        Location:onPlayerInOut(function(isPointInside)
-            if isPointInside then
-                data.onEnter()
-            else
-                data.onExit()
-            end
-        end)
-    else
-        print("^4ERROR^7: ^2No PolyZone creation script detected ^7- ^2Check ^3starter^1.^2lua^7")
+    for _, script in ipairs(polyCreation) do
+        if isStarted(script.polyZoneScript) then
+            debugPrint("^6Bridge^7: ^2Creating new ^3Cricle^2 poly with ^7"..script.polyZoneScript.." "..data.name)
+            debugPrint("^6Bridge^7: ^2Zone Stats - Coords: "..formatCoord(data.coords).." Radius: "..data.radius)
+            return script.createCircle(data)
+        end
     end
-    debugPrint("^6Bridge^7: ^2Zone Stats - Coords: "..formatCoord(data.coords).." Radius: "..data.radius)
-    return Location
+
+    print("^4ERROR^7: ^2No PolyZone creation script detected ^7")
+    return nil
 end
 
 -------------------------------------------------------------
@@ -145,11 +169,10 @@ end
 --- removePolyZone(zone)
 --- ```
 function removePolyZone(Location)
-    if isStarted(OXLibExport) then
-        debugPrint("^6Bridge^7: ^2Removing ^2poly with ^7"..OXLibExport)
-        Location:remove()
-    elseif isStarted("PolyZone") then
-        debugPrint("^6Bridge^7: ^2poly with ^7PolyZone")
-        Location:destroy()
+    for _, script in ipairs(polyCreation) do
+        if isStarted(script.polyZoneScript) then
+            debugPrint("^6Bridge^7: ^2Removing ^3"..script.polyZoneScript.." ^2Zone^7")
+            script.removeZone(Location)
+        end
     end
 end
