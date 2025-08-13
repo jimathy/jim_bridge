@@ -17,6 +17,178 @@
               the module uses DrawText3D prompts. This is experimental and may not work as expected.
 ]]
 
+local targetFunc = {
+    {
+        targetName = OXTargetExport,
+        entityTarget = function(entity, opts, dist)
+            local options = {}
+            for i = 1, #opts do
+                options[i] = {
+                    icon = opts[i].icon,
+                    label = opts[i].label,
+                    items = opts[i].item or nil,
+                    groups = opts[i].job or opts[i].gang,
+                    onSelect = opts[i].action,
+                    distance = dist,
+                    canInteract = opts[i].canInteract or nil,
+                }
+            end
+            exports[OXTargetExport]:addLocalEntity(entity, options)
+        end,
+
+        boxTarget = function(data, opts, dist)
+            local options = {}
+            for i = 1, #opts do
+                options[i] = {
+                    icon = opts[i].icon,
+                    label = opts[i].label,
+                    items = opts[i].item or nil,
+                    groups = opts[i].groups or opts[i].job or opts[i].gang,
+                    onSelect = opts[i].onSelect or opts[i].action,
+                    distance = dist,
+                    canInteract = opts[i].canInteract or nil,
+                }
+            end
+
+            data[5].maxZ = data[5].maxZ or (data[2].z + 0.80)
+            data[5].minZ = data[5].minZ or data[2].z - 1.05
+            local thickness = ((data[5].maxZ / 2) - (data[5].minZ / 2)) * 2
+            local mid = data[5].maxZ - ((data[5].maxZ / 2) - (data[5].minZ / 2))
+
+            data[2] = vec3(data[2].x, data[2].y, mid) -- force the coord to middle of the minZ and maxZ
+
+            local target = exports[OXTargetExport]:addBoxZone({
+                coords = data[2],
+                size = vec3(data[4], data[3], thickness), -- size uses the math to determine how high it needs to be
+                rotation = data[5].heading,
+                debug = data[5].debugPoly,
+                options = options
+            })
+            return target
+        end,
+
+        circleTarget = function(data, opts, dist)
+            local options = {}
+            for i = 1, #opts do
+                options[i] = {
+                    icon = opts[i].icon,
+                    label = opts[i].label,
+                    items = opts[i].item or nil,
+                    groups = opts[i].job or opts[i].gang,
+                    onSelect = opts[i].onSelect or opts[i].action,
+                    distance = dist,
+                    canInteract = opts[i].canInteract or nil,
+                }
+            end
+            local target = exports[OXTargetExport]:addSphereZone({
+                coords = data[2],
+                radius = data[3],
+                debug = data[4].debugPoly,
+                options = options
+            })
+            return target
+        end,
+
+        modelTarget = function(models, opts, dist)
+            local options = {}
+            for i = 1, #opts do
+                options[i] = {
+                    icon = opts[i].icon,
+                    label = opts[i].label,
+                    items = opts[i].item or nil,
+                    groups = opts[i].job or opts[i].gang,
+                    onSelect = opts[i].action,
+                    distance = dist,
+                    canInteract = opts[i].canInteract or nil,
+                }
+            end
+            exports[OXTargetExport]:addModel(models, options)
+        end,
+
+        removeTargetEntity = function(entity)
+            exports[OXTargetExport]:removeLocalEntity(entity, nil)
+        end,
+
+        removeTargetZone = function(target)
+            exports[OXTargetExport]:removeZone(target, true)
+        end,
+
+        removeTargetModel = function(model)
+            exports[OXTargetExport]:removeModel(model, nil)
+        end,
+    },
+
+    {
+        targetName = QBTargetExport,
+        entityTarget = function(entity, opts, dist)
+            local options = { options = opts, distance = dist }
+            exports[QBTargetExport]:AddTargetEntity(entity, options)
+        end,
+
+        boxTarget = function(data, opts, dist)
+            local options = { options = opts, distance = dist }
+            local target = exports[QBTargetExport]:AddBoxZone(data[1], data[2], data[3], data[4], data[5], options)
+            return data[1]
+        end,
+
+        circleTarget = function(data, opts, dist)
+            local options = { options = opts, distance = dist }
+            local target = exports[QBTargetExport]:AddCircleZone(data[1], data[2], data[3], data[4], options)
+            return data[1]
+        end,
+
+        modelTarget = function(models, opts, dist)
+            local options = { options = opts, distance = dist }
+            exports[QBTargetExport]:AddTargetModel(models, options)
+        end,
+
+        removeTargetEntity = function(entity)
+            exports[QBTargetExport]:RemoveTargetEntity(entity)
+        end,
+
+        removeTargetZone = function(target)
+            exports[QBTargetExport]:RemoveZone(target)
+        end,
+
+        removeTargetModel = function(model)
+            exports[QBTargetExport]:RemoveTargetModel(model, "Test")
+        end,
+    },
+
+    {
+        targetName = "jim_bridge",
+        entityTarget = function(entity, opts, dist)
+            return exports.jim_bridge:createEntityTarget(entity, opts, dist)
+        end,
+
+        boxTarget = function(data, opts, dist)
+            return exports.jim_bridge:createZoneTarget(data, opts, dist)
+        end,
+
+        circleTarget = function(data, opts, dist)
+            return exports.jim_bridge:createZoneTarget(data, opts, dist)
+        end,
+
+        modelTarget = function(models, opts, dist)
+            return exports.jim_bridge:createModelTarget(models, opts, dist)
+        end,
+
+        removeTargetEntity = function(entity)
+            exports.jim_bridge:removeEntityTarget(entity)
+        end,
+
+        removeTargetZone = function(target)
+            exports.jim_bridge:removeZoneTarget(target)
+        end,
+
+        removeTargetModel = function(model)
+            exports.jim_bridge:removeZoneTarget(model)
+        end,
+    },
+}
+
+
+
 -------------------------------------------------------------
 -- Utility Data & Tables
 -------------------------------------------------------------
@@ -63,33 +235,21 @@ function createEntityTarget(entity, opts, dist)
     -- Store the target entity for later cleanup.
     targetEntities[#targetEntities + 1] = entity
 
-    -- Fallback: Use DrawText3D if targeting systems are disabled or unavailable.
-    if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Entity ^2target with ^6"..OXTargetExport.." ^2for entity ^7"..entity)
+    -- if force target off, use jim_bridge buiilt in target functions
+    if Config.System.DontUseTarget then
         exports.jim_bridge:createEntityTarget(entity, opts, dist)
-
-    elseif isStarted(OXTargetExport) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Entity ^2target with ^6"..OXTargetExport.." ^2for entity ^7"..entity)
-        local options = {}
-        for i = 1, #opts do
-            options[i] = {
-                icon = opts[i].icon,
-                label = opts[i].label,
-                items = opts[i].item or nil,
-                groups = opts[i].job or opts[i].gang,
-                onSelect = opts[i].action,
-                distance = dist,
-                canInteract = opts[i].canInteract or nil,
-            }
-        end
-        exports[OXTargetExport]:addLocalEntity(entity, options)
-
-    elseif isStarted(QBTargetExport) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Entity ^2target with ^6"..QBTargetExport.." ^2for entity ^7"..entity)
-        local options = { options = opts, distance = dist }
-        exports[QBTargetExport]:AddTargetEntity(entity, options)
-
+        debugPrint("^6Bridge^7: ^2Creating new ^3Entity ^2target with ^6jim_bridge ^2for entity ^7"..entity)
+        return
     end
+
+    -- Check for target script and use that
+    for _, script in pairs(targetFunc) do
+        if isStarted(script.targetName) then
+            debugPrint("^6Bridge^7: ^2Creating new ^3Entity ^2target with ^6"..script.targetName.." ^2for entity ^7"..entity)
+            return script.entityTarget(entity, opts, dist)
+        end
+    end
+
 end
 
 -------------------------------------------------------------
@@ -146,52 +306,23 @@ end
 ---}, 2.0)
 ---```
 function createBoxTarget(data, opts, dist)
-    if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Box^2 target with ^6DrawText ^2 for zone ^7"..data[1])
+
+    -- if force target off, use jim_bridge buiilt in target functions
+    if Config.System.DontUseTarget then
+        debugPrint("^6Bridge^7: ^2Creating new ^3Box ^2target with ^6jim_bridge ^7"..data[1])
         return exports.jim_bridge:createZoneTarget(data, opts, dist)
-
-    elseif isStarted(OXTargetExport) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Box^2 target with ^6"..OXTargetExport.." ^2for zone ^7"..data[1])
-        local options = {}
-        for i = 1, #opts do
-            options[i] = {
-                icon = opts[i].icon,
-                label = opts[i].label,
-                items = opts[i].item or nil,
-                groups = opts[i].groups or opts[i].job or opts[i].gang,
-                onSelect = opts[i].onSelect or opts[i].action,
-                distance = dist,
-                canInteract = opts[i].canInteract or nil,
-            }
-        end
-
-        data[5].maxZ = data[5].maxZ or (data[2].z + 0.80)
-        data[5].minZ = data[5].minZ or data[2].z - 1.05
-        local thickness = ((data[5].maxZ / 2) - (data[5].minZ / 2)) * 2
-        local mid = data[5].maxZ - ((data[5].maxZ / 2) - (data[5].minZ / 2))
-
-        --if not data[5].useZ then
-        --    local z = data[2].z + math.abs(data[5].maxZ - data[5].minZ) / 2
-            data[2] = vec3(data[2].x, data[2].y, mid) -- force the coord to middle of the minZ and maxZ
-        --end
-        local target = exports[OXTargetExport]:addBoxZone({
-            coords = data[2],
-            size = vec3(data[4], data[3], thickness), -- size uses the math to determine how high it needs to be
-            rotation = data[5].heading,
-            debug = data[5].debugPoly,
-            options = options
-        })
-        boxTargets[#boxTargets + 1] = target
-        return target
-
-    elseif isStarted(QBTargetExport) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Box^2 target with ^6"..QBTargetExport.." ^2for zone ^7"..data[1])
-        local options = { options = opts, distance = dist }
-        local target = exports[QBTargetExport]:AddBoxZone(data[1], data[2], data[3], data[4], data[5], options)
-        boxTargets[#boxTargets + 1] = target
-        return data[1]
-
     end
+
+    -- Check for target script and use that
+    for _, script in pairs(targetFunc) do
+        if isStarted(script.targetName) then
+            debugPrint("^6Bridge^7: ^2Creating new ^3Box ^2target with ^6"..script.targetName.." ^7"..data[1])
+            local target = script.boxTarget(data, opts, dist)
+            boxTargets[#boxTargets + 1] = target
+            return target
+        end
+    end
+    return nil
 end
 
 -------------------------------------------------------------
@@ -231,39 +362,24 @@ end
 --- }, 2.0)
 --- ```
 function createCircleTarget(data, opts, dist)
-    if Config.System.DontUseTarget then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Circle ^2target with ^6DrawText ^2for zone ^7"..data[1])
-        return exports.jim_bridge:createZoneTarget(data, opts, dist)
 
-    elseif isStarted(OXTargetExport) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Circle ^2target with ^6"..OXTargetExport.." ^2for zone ^7"..data[1])
-        local options = {}
-        for i = 1, #opts do
-            options[i] = {
-                icon = opts[i].icon,
-                label = opts[i].label,
-                items = opts[i].item or nil,
-                groups = opts[i].job or opts[i].gang,
-                onSelect = opts[i].onSelect or opts[i].action,
-                distance = dist,
-                canInteract = opts[i].canInteract or nil,
-            }
-        end
-        local target = exports[OXTargetExport]:addSphereZone({
-            coords = data[2],
-            radius = data[3],
-            debug = data[4].debugPoly,
-            options = options
-        })
-        circleTargets[#circleTargets + 1] = target
-        return target
-    elseif isStarted(QBTargetExport) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Circle ^2target with ^6"..QBTargetExport.." ^2for zone ^7"..data[1])
-        local options = { options = opts, distance = dist }
-        local target = exports[QBTargetExport]:AddCircleZone(data[1], data[2], data[3], data[4], options)
-        circleTargets[#circleTargets + 1] = target
-        return data[1]
+    -- if force target off, use jim_bridge buiilt in target functions
+    if Config.System.DontUseTarget then
+        debugPrint("^6Bridge^7: ^2Creating new ^3Sphere ^2target with ^6jim_bridge ^7"..data[1])
+        return exports.jim_bridge:createZoneTarget(data, opts, dist)
     end
+
+    -- Check for target script and use that
+    for _, script in pairs(targetFunc) do
+        if isStarted(script.targetName) then
+            debugPrint("^6Bridge^7: ^2Creating new ^3Sphere ^2target with ^6"..script.targetName.." ^7"..data[1])
+            local target = script.circleTarget(data, opts, dist)
+            circleTargets[#circleTargets + 1] = target
+            return target
+        end
+    end
+
+    return nil
 end
 
 -------------------------------------------------------------
@@ -292,29 +408,23 @@ end
 ---}, 2.0)
 ---```
 function createModelTarget(models, opts, dist)
-    if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
-        return exports.jim_bridge:createModelTarget(models, opts, dist)
 
-    elseif isStarted(OXTargetExport) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Model^2 target with ^6"..OXTargetExport)
-        local options = {}
-        for i = 1, #opts do
-            options[i] = {
-                icon = opts[i].icon,
-                label = opts[i].label,
-                items = opts[i].item or nil,
-                groups = opts[i].job or opts[i].gang,
-                onSelect = opts[i].action,
-                distance = dist,
-                canInteract = opts[i].canInteract or nil,
-            }
-        end
-        exports[OXTargetExport]:addModel(models, options)
-    elseif isStarted(QBTargetExport) then
-        debugPrint("^6Bridge^7: ^2Creating new ^3Model^2 target with ^6"..QBTargetExport)
-        local options = { options = opts, distance = dist }
-        exports[QBTargetExport]:AddTargetModel(models, options)
+    -- if force target off, use jim_bridge buiilt in target functions
+    if Config.System.DontUseTarget then
+        debugPrint("^6Bridge^7: ^2Creating new ^3Model ^2target with ^6jim_bridge^7")
+        return exports.jim_bridge:createModelTarget(models, opts, dist)
     end
+
+    -- Check for target script and use that
+    for _, script in pairs(targetFunc) do
+        if isStarted(script.targetName) then
+            debugPrint("^6Bridge^7: ^2Creating new ^3Model ^2target with ^6"..script.targetName.."^7")
+            local target = script.modelTarget(models, opts, dist)
+            circleTargets[#circleTargets + 1] = target
+            return target
+        end
+    end
+
 end
 
 -------------------------------------------------------------
@@ -330,15 +440,19 @@ end
 --- removeEntityTarget(entityId)
 --- ```
 function removeEntityTarget(entity)
-    if isStarted(QBTargetExport) then
-        exports[QBTargetExport]:RemoveTargetEntity(entity)
-    end
-    if isStarted(OXTargetExport) then
-        exports[OXTargetExport]:removeLocalEntity(entity, nil)
-    end
-    if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
+
+    if Config.System.DontUseTarget then
         exports.jim_bridge:removeEntityTarget(entity)
     end
+
+    -- Check for target script and use that
+    for _, script in pairs(targetFunc) do
+        if isStarted(script.targetName) then
+            script.removeTargetEntity(entity)
+            break
+        end
+    end
+
 end
 
 --- Removes a previously created zone target.
@@ -351,14 +465,17 @@ end
 --- removeZoneTarget(targetObject)
 --- ```
 function removeZoneTarget(target)
-    if isStarted(QBTargetExport) then
-        exports[QBTargetExport]:RemoveZone(target)
-    end
-    if isStarted(OXTargetExport) then
-        exports[OXTargetExport]:removeZone(target, true)
-    end
-    if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
+
+    if Config.System.DontUseTarget then
         exports.jim_bridge:removeZoneTarget(target)
+    end
+
+    -- Check for target script and use that
+    for _, script in pairs(targetFunc) do
+        if isStarted(script.targetName) then
+            script.removeTargetZone(target)
+            break
+        end
     end
 end
 
@@ -371,121 +488,19 @@ end
 --- removeModelTarget(model)
 --- ```
 function removeModelTarget(model)
-    if isStarted(QBTargetExport) then
-        exports[QBTargetExport]:RemoveTargetModel(model, "Test")
+
+    if Config.System.DontUseTarget then
+        exports.jim_bridge:removeZoneTarget(model)
     end
-    if isStarted(OXTargetExport) then
-        exports[OXTargetExport]:removeModel(model, nil)
-    end
-    if Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport)) then
-        exports.jim_bridge:removeZoneTarget(target)
-    end
-end
--------------------------------------------------------------
--- Fallback: DrawText3D Targets (Experimental)
--------------------------------------------------------------
 
--- If no targeting system is detected and this is a client script, use DrawText3D for targets.
-if (Config.System.DontUseTarget or (not isStarted(OXTargetExport) and not isStarted(QBTargetExport))) and not isServer() then
-    CreateThread(function()
-        while true do
-            local ped = PlayerPedId()
-            local pedCoords = GetEntityCoords(ped)
-            local camCoords = GetGameplayCamCoord()
-            local camRot = GetGameplayCamRot(2)
-            local camForward = RotationToDirection(camRot)
-
-            local closestTarget = nil
-            local closestDist = math.huge
-            local targetEntity = nil
-
-            -- Shallow copy for safety
-            local targetsCopy = {}
-            for k, v in pairs(TextTargets) do
-                targetsCopy[k] = v
-            end
-
-            -- Detect models and update coords
-            for _, target in pairs(targetsCopy) do
-                if target.models then
-                    if not target.entity or not DoesEntityExist(target.entity) then
-                        for _, model in ipairs(target.models) do
-                            local entity = GetClosestObjectOfType(pedCoords.x, pedCoords.y, pedCoords.z, target.dist, model, false, false, false)
-                            if entity and entity ~= 0 then
-                                target.entity = entity
-                                target.coords = GetEntityCoords(entity)
-                                break
-                            end
-                        end
-                    else
-                        target.coords = GetEntityCoords(target.entity)
-                    end
-                end
-            end
-
-            -- Identify closest visible target
-            for _, target in pairs(targetsCopy) do
-                if target.coords then
-                    local dist = #(pedCoords - target.coords)
-                    local vecToTarget = target.coords - camCoords
-                    local normVec = normalizeVector(vecToTarget)
-                    local dot = camForward.x * normVec.x + camForward.y * normVec.y + camForward.z * normVec.z
-                    local isFacing = dot > 0.5
-
-                    if dist <= target.dist and isFacing then
-                        if dist < closestDist then
-                            closestDist = dist
-                            closestTarget = target
-                            targetEntity = target.entity
-                        end
-                    end
-                end
-            end
-
-            -- Render + handle input
-            for _, target in pairs(targetsCopy) do
-                if target.coords and #(pedCoords - target.coords) <= target.dist then
-                    local isClosest = (target == closestTarget)
-
-                    for _, opt in ipairs(target.options) do
-                        if IsControlJustPressed(0, opt.key) and isClosest then
-                            local canInteract = (not target.canInteract or target.canInteract())
-                            local hasItem = (not opt.item or hasItem(opt.item))
-                            local hasJob = (not opt.job or hasJob(opt.job, nil))
-
-                            if canInteract and hasItem and hasJob then
-                                if opt.onSelect then opt.onSelect(targetEntity) end
-                                if opt.action then opt.action(targetEntity) end
-                            end
-                        end
-                    end
-
-                    -- Draw each eligible text line
-                    local baseZ = target.coords.z + 1.0
-                    local lineHeight = -0.16
-                    local lineOffset = 0
-
-                    for i, opt in ipairs(target.options) do
-                        local canInteract = (not target.canInteract or target.canInteract())
-                        local hasItem = (not opt.item or hasItem(opt.item))
-                        local hasJob = (not opt.job or hasJob(opt.job, nil))
-
-                        if canInteract and hasItem and hasJob then
-                            local text = target.buttontext[i]
-                            local zOffset = lineOffset * lineHeight
-                            DrawText3D(vec3(target.coords.x, target.coords.y, baseZ + zOffset), text, isClosest)
-                            lineOffset += 1
-                        end
-                    end
-                end
-            end
-
-
-            Wait(0)
+    -- Check for target script and use that
+    for _, script in pairs(targetFunc) do
+        if isStarted(script.targetName) then
+            script.removeTargetModel(model)
+            break
         end
-    end)
+    end
 end
-
 
 function ShowFloatingHelpNotification(coord, text, highlight)
     AddTextEntry("FloatingText", text)
