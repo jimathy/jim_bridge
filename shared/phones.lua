@@ -13,102 +13,76 @@
       - jpr-phonesystem
 ]]
 
---- Sends a phone mail using the detected phone system.
---- The function iterates through a prioritized list of supported phone systems.
---- Once an active system is found (via `isStarted`), the corresponding mail function is executed.
----
---- @param data table A table containing the mail data.
----   - subject (string): The email subject.
----   - sender (string): The sender identifier.
----   - message (string): The email body content.
----   - actions (table|nil): Optional action buttons for the email.
---- @usage
---- sendPhoneMail({
----     subject = "Welcome!",
----     sender = "Admin",
----     message = "Thank you for joining our server.",
----     actions = {
----         { label = "Reply", action = replyFunction }
----     }
---- })
-function sendPhoneMail(data)
-    -- Define each supported phone system and its corresponding mail-sending function.
-    local phoneSystems = {
-        {   name = "gksphone",
-            send = function(mailData)
-                exports["gksphone"]:SendNewMail(mailData)
+local phoneFunc = {
+    {   phone = "gksphone",
+        sendMail = function(mailData)
+            exports["gksphone"]:SendNewMail(mailData)
+        end,
+        sendInvoice =
+            function(mailData)
+                -- Defensive check for required fields
+                local required = { "billedCitizenid", "amount", "job", "name", "billerCitizenid", "label" }
+                for _, field in ipairs(required) do
+                    if mailData[field] == nil then
+                        print("^1[jim-payments] ERROR:^0 Missing field '" .. field .. "' in mailData")
+                        return
+                    end
+                end
+
+                MySQL.Async.execute(
+                    'INSERT INTO gksphone_invoices (citizenid, amount, society, sender, sendercitizenid, label) VALUES (@citizenid, @amount, @society, @sender, @sendercitizenid, @label)',
+                    {
+                        ['@citizenid'] = mailData.billedCitizenid,
+                        ['@amount'] = mailData.amount,
+                        ['@society'] = mailData.job,
+                        ['@sender'] = mailData.name,
+                        ['@sendercitizenid'] = mailData.billerCitizenid,
+                        ['@label'] = mailData.label
+                    }
+                )
             end,
-        },
-        {   name = "yflip-phone",
-            send = function(mailData)
+    },
+    {   name = "yflip-phone",
+        sendMail =
+            function(mailData)
                 TriggerServerEvent(getScript()..":yflip:SendMail", mailData)
             end,
-        },
-        {   name = "qs-smartphone",
-            send = function(mailData)
+    },
+    {   name = "qs-smartphone",
+        sendMail =
+            function(mailData)
                 TriggerServerEvent('qs-smartphone:server:sendNewMail', mailData)
             end,
-        },
-        {   name = "qs-smartphone-pro",
-            send = function(mailData)
+    },
+    {   name = "qs-smartphone-pro",
+        sendMail =
+            function(mailData)
                 TriggerServerEvent('phone:sendNewMail', mailData)
             end,
-        },
-        {   name = "roadphone",
-            send = function(mailData)
+    },
+    {   name = "roadphone",
+        sendMail =
+            function(mailData)
                 -- Convert HTML line breaks to newlines for roadphone.
                 mailData.message = mailData.message:gsub("%<br>", "\n")
                 exports["roadphone"]:sendMail(mailData)
             end,
-        },
-        {   name = "lb-phone",
-            send = function(mailData)
+    },
+    {   name = "lb-phone",
+        sendMail =
+            function(mailData)
                 -- Convert HTML line breaks to newlines for lb-phone.
                 mailData.message = mailData.message:gsub("%<br>", "\n")
                 TriggerServerEvent(getScript()..":lbphone:SendMail", mailData)
             end,
-        },
-        {   name = "qb-phone",
-            send = function(mailData)
+    },
+    {   name = "qb-phone",
+        sendMail =
+            function(mailData)
                 TriggerServerEvent('qb-phone:server:sendNewMail', mailData)
             end,
-        },
-        {   name = "npwd_qbx_mail",
-            send = function(mailData)
-                TriggerServerEvent('qb-phone:server:sendNewMail', mailData)
-            end,
-        },
-        {   name = "jpr-phonesystem",
-            send = function(mailData)
-                TriggerServerEvent(getScript()..":jpr:SendMail", mailData)
-            end,
-        },
-        {   name = "ef-phone",
-            send = function(mailData)
-                TriggerServerEvent('qb-phone:server:sendNewMail', mailData)
-            end,
-        },
-    }
-
-    -- Check each phone system in order and use the first active one.
-    for _, phone in ipairs(phoneSystems) do
-        if isStarted(phone.name) then
-            debugPrint("^6Bridge^7[^3"..phone.name.."^7]: ^2Sending mail to player")
-            phone.send(data)
-            return true
-        end
-    end
-    print("^6Bridge^7: ^1ERROR ^2Sending mail to player ^7- ^2No supported phone found")
-    return false
-end
-
-function sendPhoneInvoice(data)
-    if not data.src then return end
-    -- Define each supported phone system and its corresponding mail-sending function.
-    local phoneSystems = {
-        {
-            name = "qb-phone",
-            send = function(mailData)
+        sendInvoice =
+            function(mailData)
                 -- Defensive check for required fields
                 local required = { "billedCitizenid", "amount", "job", "name", "billerCitizenid", "src" }
                 for _, field in ipairs(required) do
@@ -134,74 +108,73 @@ function sendPhoneInvoice(data)
                         end
                     end
                 )
-
                 TriggerClientEvent('qb-phone:RefreshPhone', mailData.src)
-            end
-        },
-        {
-            name = "codem-phone",
-            send = function(mailData)
-                -- Defensive check for required fields
-                local required = { "billedCitizenid", "amount", "job", "name", "billerCitizenid", "src" }
-                for _, field in ipairs(required) do
-                    if mailData[field] == nil then
-                        print("^1[jim-payments] ERROR:^0 Missing field '" .. field .. "' in mailData")
-                        return
-                    end
-                end
+            end,
+    },
+    {   name = "npwd_qbx_mail",
+        sendMail =
+            function(mailData)
+                TriggerServerEvent('qb-phone:server:sendNewMail', mailData)
+            end,
+    },
+    {   name = "jpr-phonesystem",
+        sendMail =
+            function(mailData)
+                TriggerServerEvent(getScript()..":jpr:SendMail", mailData)
+            end,
+    },
+    {   name = "ef-phone",
+        sendMail =
+            function(mailData)
+                TriggerServerEvent('qb-phone:server:sendNewMail', mailData)
+            end,
+    },
 
-                -- Safe insert with all parameters present
-                MySQL.Async.insert(
-                    'INSERT INTO phone_invoices (citizenid, amount, society, sender, sendercitizenid) VALUES (?, ?, ?, ?, ?)',
-                    {
-                        mailData.billedCitizenid,
-                        mailData.amount,
-                        mailData.job,
-                        mailData.name,
-                        mailData.billerCitizenid
-                    },
-                    function(id)
-                    --    if id then
-                    --        TriggerClientEvent('qb-phone:client:AcceptorDenyInvoice', mailData.src, id, mailData.name, mailData.job, mailData.billerCitizenid, mailData.amount, GetInvokingResource())
-                    --    end
-                    end
-                )
+}
 
 
-            end
-        },
-        {
-            name = "gksphone",
-            send = function(mailData)
-                -- Defensive check for required fields
-                local required = { "billedCitizenid", "amount", "job", "name", "billerCitizenid", "label" }
-                for _, field in ipairs(required) do
-                    if mailData[field] == nil then
-                        print("^1[jim-payments] ERROR:^0 Missing field '" .. field .. "' in mailData")
-                        return
-                    end
-                end
+--- Sends a phone mail using the detected phone system.
+--- The function iterates through a prioritized list of supported phone systems.
+--- Once an active system is found (via `isStarted`), the corresponding mail function is executed.
+---
+--- @param data table A table containing the mail data.
+---   - subject (string): The email subject.
+---   - sender (string): The sender identifier.
+---   - message (string): The email body content.
+---   - actions (table|nil): Optional action buttons for the email.
+--- @usage
+--- sendPhoneMail({
+---     subject = "Welcome!",
+---     sender = "Admin",
+---     message = "Thank you for joining our server.",
+---     actions = {
+---         { label = "Reply", action = replyFunction }
+---     }
+--- })
+function sendPhoneMail(mailData)
+    -- Check each phone system in order and use the first active one.
+    for i = 1, #phoneFunc do
+        local script = phoneFunc[i]
+        if isStarted(script.phone) and script.sendMail then
+            debugPrint("^6Bridge^7[^3"..script.phone.."^7]: ^2Sending mail to player")
+            script.sendMail(mailData)
+            return true
+        end
+    end
+    print("^6Bridge^7: ^1ERROR ^2Sending mail to player ^7- ^2No supported phone found")
+    return false
+end
 
-                MySQL.Async.execute(
-                    'INSERT INTO gksphone_invoices (citizenid, amount, society, sender, sendercitizenid, label) VALUES (@citizenid, @amount, @society, @sender, @sendercitizenid, @label)',
-                    {
-                        ['@citizenid'] = mailData.billedCitizenid,
-                        ['@amount'] = mailData.amount,
-                        ['@society'] = mailData.job,
-                        ['@sender'] = mailData.name,
-                        ['@sendercitizenid'] = mailData.billerCitizenid,
-                        ['@label'] = mailData.label
-                    }
-                )
-            end
-        }
-    }
+function sendPhoneInvoice(data)
+    if not data.src then return end
 
     -- Check each phone system in order and use the first active one.
-    for _, phone in ipairs(phoneSystems) do
-        if isStarted(phone.name) then
-            debugPrint("^6Bridge^7[^3"..phone.name.."^7]: ^2Sending mail to player^7", data.src)
-            phone.send(data)
+
+    for i = 1, #phoneFunc do
+        local script = phoneFunc[i]
+        if isStarted(script.phone) and script.sendInvoice then
+            debugPrint("^6Bridge^7[^3"..script.phone.."^7]: ^2Sending mail to player^7", data.src)
+            script.sendInvoice(data)
             return true
         end
     end

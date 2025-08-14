@@ -17,68 +17,91 @@
 
 local notifyFunc = {
     okok = {
-        client = function(title, message, type)
-            TriggerEvent('okokNotify:Alert', title, message, 6000, type)
-        end,
-        server = function(title, message, type, src)
-            TriggerClientEvent('okokNotify:Alert', src, title, message, 6000, type)
-        end,
+        client =
+            function(title, message, type)
+                TriggerEvent('okokNotify:Alert', title, message, 6000, type)
+            end,
+        server =
+            function(title, message, type, src)
+                TriggerClientEvent('okokNotify:Alert', src, title, message, 6000, type)
+            end,
     },
+
     qb = {
-        client = function(title, message, type)
-            TriggerEvent("QBCore:Notify", message, type)
-        end,
-        server = function(title, message, type, src)
-            TriggerClientEvent("QBCore:Notify", src, message, type)
-        end,
+        client =
+            function(title, message, type)
+                TriggerEvent("QBCore:Notify", message, type)
+            end,
+        server =
+            function(title, message, type, src)
+                TriggerClientEvent("QBCore:Notify", src, message, type)
+            end,
     },
+
     qs = {
-        client = function(title, message, type)
-            exports['qs-interface']:AddNotify(message, title, 6000)
-        end,
-        server = function(title, message, type, src)
-            TriggerClientEvent('interface:notification', src, message, title, 6000)
-        end,
+        client =
+            function(title, message, type)
+                exports['qs-interface']:AddNotify(message, title, 6000)
+            end,
+        server =
+            function(title, message, type, src)
+                TriggerClientEvent('interface:notification', src, message, title, 6000)
+            end,
     },
+
     ox = {
-        client = function(title, message, type)
-            exports.ox_lib:notify({ title = title, description = message, type = type or "success" })
-        end,
-        server = function(title, message, type, src)
-            TriggerClientEvent('ox_lib:notify', src, { title = title, description = message, type = type or "success" })
-        end,
+        client =
+            function(title, message, type)
+                exports.ox_lib:notify({ title = title, description = message, type = type or "success" })
+            end,
+        server =
+            function(title, message, type, src)
+                TriggerClientEvent('ox_lib:notify', src, { title = title, description = message, type = type or "success" })
+            end,
     },
-    gta = {
-        client = function(title, message, type)
-            exports.jim_bridge:Notify(title, message, type)
-        end,
-        server = function(title, message, type, src)
-            TriggerClientEvent("jim-bridge:Notify", src, title, message, type)
-        end,
-    },
+
     esx = {
-        client = function(title, message, type)
-            exports["esx_notify"]:Notify(type, 4000, message)
-        end,
-        server = function(title, message, type, src)
-            TriggerClientEvent(getScript()..":DisplayESXNotify", src, type, message)
-        end,
+        client =
+            function(title, message, type)
+                exports["esx_notify"]:Notify(type, 4000, message)
+            end,
+        server =
+            function(title, message, type, src)
+                TriggerClientEvent(getScript()..":DisplayESXNotify", src, type, message)
+            end,
     },
+
     lation = {
-        client = function(title, message, type)
-            exports.lation_ui:notify({ title = title, message = message, type = type or "success", })
-        end,
-        server = function(title, message, type, src)
-            TriggerClientEvent("lation_ui:notify", src, { title = title, message = message, type = type or "success", })
-        end,
+        client =
+            function(title, message, type)
+                exports.lation_ui:notify({ title = title, message = message, type = type or "success", })
+            end,
+        server =
+            function(title, message, type, src)
+                TriggerClientEvent("lation_ui:notify", src, { title = title, message = message, type = type or "success", })
+            end,
     },
+
+    gta = {
+        client =
+            function(title, message, type)
+                exports.jim_bridge:Notify(title, message, type)
+            end,
+        server =
+            function(title, message, type, src)
+                TriggerClientEvent("jim-bridge:Notify", src, title, message, type)
+            end,
+    },
+
     red = {
-        client = function(title, message, type)
-            TriggerEvent("jim-redui:Notify", title, message, type)
-        end,
-        server = function(title, message, type, src)
-            TriggerClientEvent("jim-redui:Notify", src, title, message, type)
-        end,
+        client =
+            function(title, message, type)
+                TriggerEvent("jim-redui:Notify", title, message, type)
+            end,
+        server =
+            function(title, message, type, src)
+                TriggerClientEvent("jim-redui:Notify", src, title, message, type)
+            end,
     },
 }
 --- Displays notifications to the player using the configured notification system.

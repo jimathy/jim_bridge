@@ -73,8 +73,6 @@ function checkExportExists(resource, export)
     end
 end
 
-
-
 -------------------------------------------------------------
 -- Debugging and JSON Utilities
 -------------------------------------------------------------

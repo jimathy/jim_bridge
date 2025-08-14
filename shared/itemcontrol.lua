@@ -1306,7 +1306,8 @@ function hasItem(items, amount, src)
         if not doesItemExist(item) then
             print("^4ERROR^7: ^2Script can't find ingredient item in Shared Items - ^1"..item.."^7")
         end
-        for k, inv in ipairs(InvFunc) do
+        for i = 1, #InvFunc do
+            local inv = InvFunc[i]
             if isStarted(inv.invName) then
                 local hasItem, count = inv.hasItem(item, amt, src, grabInv)
 
@@ -1344,7 +1345,8 @@ function getPlayerInv(src)
     local grabInv = nil
     local foundInv = ""
 
-    for _, inv in ipairs(InvFunc) do
+    for i = 1, #InvFunc do
+        local inv = InvFunc[i]
         if isStarted(inv.invName) then
             foundInv = inv.invName
             grabInv = inv.getPlayerInv(src)
@@ -1380,7 +1382,8 @@ end
 function invImg(item)
     local imgLink = ""
     if item ~= "" and doesItemExist(item) then
-        for _, inv in ipairs(InvFunc) do
+        for i = 1, #InvFunc do
+            local inv = InvFunc[i]
             if isStarted(inv.invName) then
                 imgLink = inv.invImg(item)
                 break
@@ -1535,10 +1538,10 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
     local src = (newsrc and tonumber(newsrc)) or source
 
     -- Only server resources may set newsrc; clients cannot.
-    if newsrc ~= nil and source ~= 0 then
-        debugPrint("^1DENY^7: client tried to set newsrc")
-        return
-    end
+    --if newsrc ~= nil and source ~= 0 then
+    --    debugPrint("^1DENY^7: client tried to set newsrc")
+    --    return
+    --end
 
     if (give == true or give == 1) then
         if newsrc == nil then -- this must be coming from client this would be blank
@@ -1558,7 +1561,8 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
             dupeWarn(src, item, amount)
 
         else
-            for _, inv in ipairs(InvFunc) do
+            for i = 1, #InvFunc do
+                local inv = InvFunc[i]
                 if isStarted(inv.invName) then
                     invName = inv.invName
                     inv.removeItem(src, item, remamount)
@@ -1586,7 +1590,8 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
         end
     else
         local amountToAdd = amount or 1
-        for _, inv in ipairs(InvFunc) do
+        for i = 1, #InvFunc do
+            local inv = InvFunc[i]
             if isStarted(inv.invName) then
                 invName = inv.invName
                 inv.addItem(src, item, amountToAdd, info, slot)
@@ -1734,7 +1739,8 @@ end
 --- ```
 RegisterNetEvent(getScript()..":server:setItemMetaData", function(data, src)
     local src = src or source
-    for _, inv in pairs(InvFunc) do
+    for i = 1, #InvFunc do
+        local inv = InvFunc[i]
         if isStarted(inv.invName) then
             inv.setItemMetadata(data, src)
             break
@@ -1811,7 +1817,8 @@ end
 --- end
 function canCarry(itemTable, src)
     local resultTable = {}
-    for _, inv in pairs(InvFunc) do
+    for i = 1, #InvFunc do
+        local inv = InvFunc[i]
         if isStarted(inv.invName) then
             return inv.canCarry(itemTable, src)
         end
@@ -1851,7 +1858,8 @@ end
 
 function getMaxInvWeight()
     local weight = 0
-    for _, inv in pairs(InvFunc) do
+    for i = 1, #InvFunc do
+        local inv = InvFunc[i]
         if isStarted(inv.invName) then
             weight = inv.getMaxInvWeight()
             break
@@ -2106,7 +2114,8 @@ end
 function openStash(data)
     if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
 
-    for _, inv in pairs(InvFunc) do
+    for i = 1, #InvFunc do
+        local inv = InvFunc[i]
         if isStarted(inv.invName) then
             inv.openStash(data)
             lookEnt(data.coords)
@@ -2147,7 +2156,8 @@ RegisterNetEvent(getScript()..":server:openServerStash", function(data)
 end)
 
 function clearStash(stashId)
-    for _, inv in pairs(InvFunc) do
+    for i = 1, #InvFunc do
+        local inv = InvFunc[i]
         if isStarted(inv.invName) then
             debugPrint("^5Bridge^7: ^2Clearing ^3"..inv.invName.."^2 Stash^7:", stashId)
             inv.clearStash(stashId)
@@ -2180,7 +2190,8 @@ function getStash(stashName)
     end
 
     local stashItems, items = {}, {}
-    for _, inv in pairs(InvFunc) do
+    for i = 1, #InvFunc do
+        local inv = InvFunc[i]
         if isStarted(inv.invName) then
             debugPrint("^6Bridge^7: ^2Retrieving ^3"..inv.invName.." ^2Stash^7:", stashName)
             stashItems = inv.getStash(stashName)
@@ -2240,7 +2251,8 @@ function stashRemoveItem(stashItems, stashName, items)
         stashName = { stashName }
     end
 
-    for _, inv in pairs(InvFunc) do
+    for i = 1, #InvFunc do
+        local inv = InvFunc[i]
         if isStarted(inv.invName) then
             inv.stashRemoveItem(stashItems, stashName[1], items)
             return
@@ -2327,7 +2339,8 @@ end
 --- )
 --- ```
 function registerStash(name, label, slots, weight, owner, coords)
-    for _, inv in pairs(InvFunc) do
+    for i = 1, #InvFunc do
+        local inv = InvFunc[i]
         if isStarted(inv.invName) then
             inv.registerStash(name, label, slots, weight, owner, coords)
             return
@@ -2543,7 +2556,8 @@ function openShop(data)
         lookEnt(data.coords)
     end
 
-    for _, inv in ipairs(InvFunc) do
+    for i = 1, #InvFunc do
+        local inv = InvFunc[i]
         if isStarted(inv.invName) then
             inv.openShop(data)
             lookEnt(data.coords)
@@ -2553,7 +2567,8 @@ function openShop(data)
 end
 
 RegisterNetEvent(getScript()..':server:openServerShop', function(shopName)
-    for _, inv in ipairs(InvFunc) do
+    for i = 1, #InvFunc do
+        local inv = InvFunc[i]
         if isStarted(inv.invName) then
             inv.serverOpenShop(shopName)
             break
@@ -2575,7 +2590,8 @@ end)
 function registerShop(name, label, items, society)
     local shopResource = ""
 
-    for _, inv in ipairs(InvFunc) do
+    for i = 1, #InvFunc do
+        local inv = InvFunc[i]
         if isStarted(inv.invName) then
                 shopResource = inv.invName
                 inv.registerShop(name, label, items, society)

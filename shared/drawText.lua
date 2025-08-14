@@ -8,96 +8,108 @@
 -- Text system handlers
 local textHandlers = {
     qb = {
-        show = function(text, image)
-            if image then
-                text = '<img src="'..(radarTable[image] or "")..'" style="width:12px;height:12px">'..text
-            end
-            exports[QBExport]:DrawText(text, 'left')
-        end,
-        hide = function()
-            exports[QBExport]:HideText()
-        end
+        show =
+            function(text, image)
+                if image then
+                    text = '<img src="'..(radarTable[image] or "")..'" style="width:12px;height:12px">'..text
+                end
+                exports[QBExport]:DrawText(text, 'left')
+            end,
+        hide =
+            function()
+                exports[QBExport]:HideText()
+            end,
     },
 
     ox = {
-        show = function(input, image, oxStyleTable)
-            local inputCount = #input
-            for i = 1, inputCount do
-                input[i] = input[i] .. (i ~= inputCount and "   \n" or "")
-            end
-            lib.showTextUI(table.concat(input), {
-                icon = (image and radarTable[image] or image) or nil,
-                position = 'left-center',
-                style = oxStyleTable
-            })
-        end,
-        hide = function()
-            lib.hideTextUI()
-        end
+        show =
+            function(input, image, oxStyleTable)
+                local inputCount = #input
+                for i = 1, inputCount do
+                    input[i] = input[i] .. (i ~= inputCount and "   \n" or "")
+                end
+                lib.showTextUI(table.concat(input), {
+                    icon = (image and radarTable[image] or image) or nil,
+                    position = 'left-center',
+                    style = oxStyleTable
+                })
+            end,
+        hide =
+            function()
+                lib.hideTextUI()
+            end,
     },
 
     lation = {
-        show = function(input, image)
-            local inputCount = #input
-            for i = 1, inputCount do
-                input[i] = input[i] .. (i ~= inputCount and "   \n" or "")
-            end
-            exports.lation_ui:showText({
-                description = table.concat(input),
-                keybind = nil,
-                icon = (image and radarTable[image] or image) or nil,
-                iconColor = '#3B82F6',
-                position = 'left-center'
-            })
-        end,
-        hide = function()
-            exports.lation_ui:hideText()
-        end
-    },
-
-    gta = {
-        show = function(input, image, style)
-            local text = ""
-            for i = 1, #input do
-                if input[i] ~= "" then
-                    text = text .. input[i] .. "\n~s~"
+        show =
+            function(input, image)
+                local inputCount = #input
+                for i = 1, inputCount do
+                    input[i] = input[i] .. (i ~= inputCount and "   \n" or "")
                 end
-            end
-            if image then
-                text = "~BLIP_" .. image .. "~ " .. text
-            end
-            DisplayHelpMsg(text:gsub("%:", ":~" .. (style or "g") .. "~"))
-        end,
-        hide = function()
-            ClearAllHelpMessages()
-        end
+                exports.lation_ui:showText({
+                    description = table.concat(input),
+                    keybind = nil,
+                    icon = (image and radarTable[image] or image) or nil,
+                    iconColor = '#3B82F6',
+                    position = 'left-center'
+                })
+            end,
+        hide =
+            function()
+                exports.lation_ui:hideText()
+            end,
     },
 
     esx = {
-        show = function(text, image)
-            if image then
-                text = '<img src="'..(radarTable[image] or "")..'" style="width:12px;height:12px">'..text
-            end
-            ESX.TextUI(text, nil)
-        end,
-        hide = function()
-            ESX.HideUI()
-        end
+        show =
+            function(text, image)
+                if image then
+                    text = '<img src="'..(radarTable[image] or "")..'" style="width:12px;height:12px">'..text
+                end
+                ESX.TextUI(text, nil)
+            end,
+        hide =
+            function()
+                ESX.HideUI()
+            end,
+    },
+
+    gta = {
+        show =
+            function(input, image, style)
+                local text = ""
+                for i = 1, #input do
+                    if input[i] ~= "" then
+                        text = text .. input[i] .. "\n~s~"
+                    end
+                end
+                if image then
+                    text = "~BLIP_" .. image .. "~ " .. text
+                end
+                DisplayHelpMsg(text:gsub("%:", ":~" .. (style or "g") .. "~"))
+            end,
+        hide =
+            function()
+                ClearAllHelpMessages()
+            end,
     },
 
     red = {
-        show = function(input)
-            local text = ""
-            for i = 1, #input do
-                if input[i] ~= "" then
-                    text = text .. input[i] .. "\n~q~"
+        show =
+            function(input)
+                local text = ""
+                for i = 1, #input do
+                    if input[i] ~= "" then
+                        text = text .. input[i] .. "\n~q~"
+                    end
                 end
-            end
-            TriggerEvent("jim-redui:DrawText", text)
-        end,
-        hide = function()
-            TriggerEvent("jim-redui:HideText")
-        end
+                TriggerEvent("jim-redui:DrawText", text)
+            end,
+        hide =
+            function()
+                TriggerEvent("jim-redui:HideText")
+            end,
     }
 }
 

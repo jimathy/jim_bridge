@@ -247,7 +247,6 @@ function useDoor(data)
     Wait(100)
 end
 
-
 function openBossMenu(isGang, group)
     if isStarted("qb-management") then
         if isGang then
