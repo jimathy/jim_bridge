@@ -16,577 +16,394 @@ validTokens = {}
 
 -- Function Compatability Table
 local InvFunc = {
-    {
-        invName = OXInv,
-        removeItem = function(src, item, remamount)
-            exports[OXInv]:RemoveItem(src, item, remamount, nil)
-        end,
-        addItem = function(src, item, amountToAdd, info, slot)
-            exports[OXInv]:AddItem(src, item, amountToAdd, info, slot)
-        end,
-        setItemMetadata = function(data, src)
-            exports[OXInv]:SetMetadata(src, data.slot, data.metadata)
-        end,
-        canCarry = function(itemTable, src)
-            local resultTable = {}
-            for k, v in pairs(itemTable) do
-                resultTable[k] = exports[OXInv]:CanCarryItem(src, k, v)
-            end
-        end,
-        getMaxInvWeight = function()
-            return exports[OXInv]:GetPlayerMaxWeight()
-        end,
-        getPlayerInv = function(src)
-            local grabInv = nil
-            if src then
-                grabInv = exports[OXInv]:GetInventoryItems(src)
-            else
-                grabInv = exports[OXInv]:GetPlayerItems()
-            end
-            return grabInv
-        end,
-        invImg = function(item)
-            return "nui://"..OXInv.."/web/images/"..(Items[item].image or "")
-        end,
-        openShop = function(data)
-            exports[OXInv]:openInventory('shop', { type = data.shop })
-        end,
-        registerShop = function(name, label, items, society)
-            exports[OXInv]:RegisterShop(name, {
-                name = label,
-                inventory = items,
-                society = society,
-            })
-            debugPrint("^6Bridge^7: ^2Registering ^5"..OXInv.." ^3Store^7:", name, "^4Label^7: "..label)
-        end,
-        openStash = function(data)
-            exports[OXInv]:openInventory('stash', data.stash)
-        end,
-        clearStash = function(stashId)
-            exports[OXInv]:ClearInventory(stashId)
-        end,
-        getStash = function(stashName)
-            local stash = exports[OXInv]:Inventory(stashName)
-            -- Add fallback if ox can't find the stash and returns a boolean
-            return type(stash) == "table" and stash.items or {}
-        end,
-        stashAddItem = function(stashItems, stashName, items)
-
-        end,
-        stashRemoveItem = function(stashItems, stashName, items)
-            for k, v in pairs(items) do
-                for _, name in pairs(stashName) do
-                    local success = exports[OXInv]:RemoveItem(name, k, v)
-                    if success then
-                        debugPrint("^6Bridge^7: ^2Removing ^3"..OXInv.." ^2Stash item^7:", k, v)
-                        break
-                    end
-                end
-            end
-        end,
-        registerStash = function(name, label, slots, weight, owner, coords)
-            exports[OXInv]:RegisterStash(name, label, slots or 50, weight or 4000000, owner or nil)
-            debugPrint("^6Bridge^7: ^2Registering ^4"..OXInv.." ^3Stash^7:", name, "^4Label^7: "..label)
-        end,
-    },
-    {
-        invName = QSInv,
-        removeItem = function(src, item, remamount)
-            exports[QSInv]:RemoveItem(src, item, remamount)
-        end,
-        addItem = function(src, item, amountToAdd, info, slot)
-            exports[QSInv]:AddItem(src, item, amountToAdd, slot, info)
-        end,
-        setItemMetadata = function(data, src)
-            exports[QSInv]:SetItemMetadata(src, data.slot, data.metadata)
-        end,
-        canCarry = function(itemTable, src)
-            local resultTable = {}
-            for k, v in pairs(itemTable) do
-                resultTable[k] = exports[QSInv]:CanCarryItem(src, k, v)
-            end
-        end,
-        getMaxInvWeight = function()
-            return InventoryWeight
-        end,
-        getPlayerInv = function(src)
-            local grabInv = nil
-            if src then
-                grabInv = exports[QSInv]:GetInventory(src)
-            else
-                grabInv = exports[QSInv]:getUserInventory()
-            end
-            return grabInv
-        end,
-        invImg = function(item)
-            return "nui://"..QSInv.."/html/images/"..(Items[item].image or "")
-        end,
-        openShop = function(data)
-            TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
-        end,
-        registerShop = function(name, label, items, society)
-            --
-        end,
-        openStash = function(data)
-            TriggerEvent("inventory:client:SetCurrentStash", data.stash)
-            TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, {
-                slots = data.slots or 50,
-                maxWeight = data.maxWeight or 600000
-            })
-        end,
-        clearStash = function(stashId)
-            exports[QSInv]:ClearOtherInventory('stash', stashId)
-        end,
-        getStash = function(stashName)
-            return exports[QSInv]:GetStashItems(stashName)
-        end,
-        stashAddItem = function(stashItems, stashName, items)
-
-        end,
-        stashRemoveItem = function(stashItems, stashName, items)
-            for k, v in pairs(items) do
-                exports[QSInv]:RemoveItemIntoStash(stashName, k, v)
-                debugPrint("^6Bridge^7: ^2Removing ^3"..QSInv.." ^2Stash item^7:", k, v)
-            end
-        end,
-        registerStash = function(name, label, slots, weight, owner, coords)
-            --
-        end,
-    },
-    {
-        invName = CoreInv,
-        removeItem = function(src, item, remamount)
-            exports[CoreInv]:removeItem(src, item, remamount)
-        end,
-        addItem = function(src, item, amountToAdd, info, slot)
-            exports[CoreInv]:addItem(src, item, amountToAdd, info)
-        end,
-        setItemMetadata = function(data, src)
-            exports[CoreInv]:setMetadata(src, data.slot, data.metadata)
-        end,
-        canCarry = function(itemTable, src)
-            local resultTable = {}
-            for k, v in pairs(itemTable) do
-                resultTable[k] = exports[CoreInv]:canCarry(src, k, v)
-            end
-        end,
-        getMaxInvWeight = function()
-            return InventoryWeight
-        end,
-        getPlayerInv = function(src)
-            local grabInv = nil
-            if src then
-                grabInv = exports[CoreInv]:getInventory(src)
-            else
-                grabInv = exports[CoreInv]:getInventory()
-            end
-            return grabInv
-        end,
-        invImg = function(item)
-            return "nui://"..CoreInv.."/html/img/"..(Items[item].image or "")
-        end,
-        openShop = function(data)
-            --
-        end,
-        registerShop = function(name, label, items, society)
-            --
-        end,
-        openStash = function(data)
-            TriggerServerEvent('core_inventory:server:openInventory', data.stash, 'stash')
-        end,
-        clearStash = function(stashId)
-            exports[CoreInv]:clearInventory("stash-"..stashId)
-        end,
-        getStash = function(stashName)
-            return exports[CoreInv]:getInventory(stashName)
-        end,
-        stashAddItem = function(stashItems, stashName, items)
-
-        end,
-        stashRemoveItem = function(stashItems, stashName, items)
-            for k, v in pairs(items) do
-                exports[CoreInv]:removeItemExact(stashName, k, v)
-                debugPrint("^6Bridge^7: ^2Removing ^3"..CoreInv.." ^2Stash item^7:", k, v)
-            end
-        end,
-        registerStash = function(name, label, slots, weight, owner, coords)
-            --
-        end,
-    },
-    {
-        invName = OrigenInv,
-        removeItem = function(src, item, remamount)
-            exports[OrigenInv]:removeItem(src, item, remamount)
-        end,
-        addItem = function(src, item, amountToAdd, info, slot)
-            exports[OrigenInv]:addItem(src, item, amountToAdd, info, slot)
-        end,
-        setItemMetadata = function(data, src)
-            exports[OrigenInv]:setMetadata(src, data.slot, data.metadata)
-        end,
-        canCarry = function(itemTable, src)
-            local resultTable = {}
-            for k, v in pairs(itemTable) do
-                resultTable[k] = exports[OrigenInv]:canCarryItem(src, k, v)
-            end
-            return resultTable
-        end,
-        getMaxInvWeight = function()
-            return InventoryWeight
-        end,
-        getPlayerInv = function(src)
-            local grabInv = nil
-            if src then
-                grabInv = exports[OXInv]:GetInventoryItems(src)
-            else
-                grabInv = exports[OXInv]:GetPlayerItems()
-            end
-            return grabInv
-        end,
-        invImg = function(item)
-            return "nui://"..OrigenInv.."/html/img/"..(Items[item].image or "")
-        end,
-        openShop = function(data)
-            --
-        end,
-        registerShop = function(name, label, items, society)
-            --
-        end,
-        openStash = function(data)
-            exports[OrigenInv]:openInventory('stash', data.stash, { label = data.label })
-        end,
-        clearStash = function(stashId)
-            exports[OrigenInv]:ClearInventory(stashId)
-        end,
-        getStash = function(stashName)
-            return exports[OrigenInv]:getInventory(stashName)
-        end,
-        stashAddItem = function(stashItems, stashName, items)
-
-        end,
-        stashRemoveItem = function(stashItems, stashName, items)
-            for k, v in pairs(items) do
-                exports[OrigenInv]:RemoveFromStash(stashName, k, v)
-                debugPrint("^6Bridge^7: ^2Removing ^3"..OrigenInv.." ^2Stash item^7:", k, v)
-            end
-        end,
-        registerStash = function(name, label, slots, weight, owner, coords)
-            exports[OrigenInv]:registerStash(name, label, slots or 50, weight or 4000000)
-            debugPrint("^6Bridge^7: ^2Registering ^4"..OrigenInv.." ^3Stash^7:", name, "^4Label^7: "..label)
-        end,
-    },
-    {
-        invName = CodeMInv,
-        removeItem = function(src, item, remamount)
-            exports[CodeMInv]:RemoveItem(src, item, remamount)
-        end,
-        addItem = function(src, item, amountToAdd, info, slot)
-            exports[CodeMInv]:AddItem(src, item, amountToAdd, slot, info)
-        end,
-        setItemMetadata = function(data, src)
-            exports[CodeMInv]:SetItemMetadata(src, data.slot, data.metadata)
-        end,
-        canCarry = function(itemTable, src)
-            local resultTable = {}
-            local items = getPlayerInv(src)
-            local totalWeight = 0
-            if not items then return false end
-            for _, item in pairs(items) do
-                totalWeight += (item.weight * item.amount)
-            end
-            for k, v in pairs(itemTable) do
-                local itemInfo = Items[k]
-                if not itemInfo then
-                    resultTable[k] = true
+    {   invName = OXInv,
+        removeItem =
+            function(src, item, remamount)
+                exports[OXInv]:RemoveItem(src, item, remamount, nil)
+            end,
+        addItem =
+            function(src, item, amountToAdd, info, slot)
+                exports[OXInv]:AddItem(src, item, amountToAdd, info, slot)
+            end,
+        setItemMetadata =
+            function(data, src)
+                exports[OXInv]:SetMetadata(src, data.slot, data.metadata)
+            end,
+        hasItem =
+            function(item, amount, src)
+                if src then
+                    local serverItemCheck = exports[OXInv]:GetItem(src, item, nil, true) or 0
+                    return serverItemCheck >= amount, serverItemCheck
                 else
-                    resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight
+                    local localItemCheck = exports[OXInv]:GetItemCount(item) or 0
+                    return localItemCheck >= amount, localItemCheck
                 end
-            return resultTable
-            end
-        end,
-        getMaxInvWeight = function()
-            return InventoryWeight
-        end,
-        getPlayerInv = function(src)
-            local grabInv = nil
-            if src then
-                grabInv = exports[CodeMInv]:GetInventory(getPlayer(src).citizenId, src)
-            else
-                grabInv = exports[CodeMInv]:getUserInventory()
-            end
-            return grabInv
-        end,
-        invImg = function(item)
-            return "nui://"..CodeMInv.."/html/itemimages/"..(Items[item].image or "")
-        end,
-        openShop = function(data)
-            TriggerEvent("codem-inventory:openshop", data.shop)
-        end,
-        registerShop = function(name, label, items, society)
-            --
-        end,
-        openStash = function(data)
-            TriggerServerEvent('codem-inventory:server:openstash', data.stash, data.slots, data.maxWeight, data.label)
-        end,
-        clearStash = function(stashId)
-            exports[CodeMInv]:ClearInventory(stashId)
-        end,
-        getStash = function(stashName)
-            return exports[CodeMInv]:GetStashItems(stashName)
-        end,
-        stashAddItem = function(stashItems, stashName, items)
+            end,
+        canCarry =
+            function(itemTable, src)
+                local resultTable = {}
+                for k, v in pairs(itemTable) do
+                    resultTable[k] = exports[OXInv]:CanCarryItem(src, k, v)
+                end
+                return resultTable
+            end,
+        getMaxInvWeight =
+            function()
+                return exports[OXInv]:GetPlayerMaxWeight()
+            end,
+        getPlayerInv =
+            function(src)
+                local grabInv = nil
+                if src then
+                    grabInv = exports[OXInv]:GetInventoryItems(src)
+                else
+                    grabInv = exports[OXInv]:GetPlayerItems()
+                end
+                return grabInv
+            end,
+        invImg =
+            function(item)
+                return "nui://"..OXInv.."/web/images/"..(Items[item].image or "")
+            end,
+        openShop =
+            function(data)
+                exports[OXInv]:openInventory('shop', { type = data.shop })
+            end,
+        registerShop =
+            function(name, label, items, society)
+                exports[OXInv]:RegisterShop(name, {
+                    name = label,
+                    inventory = items,
+                    society = society,
+                })
+                debugPrint("^6Bridge^7: ^2Registering ^5"..OXInv.." ^3Store^7:", name, "^4Label^7: "..label)
+            end,
+        openStash =
+            function(data)
+                exports[OXInv]:openInventory('stash', data.stash)
+            end,
+        clearStash =
+            function(stashId)
+                exports[OXInv]:ClearInventory(stashId)
+            end,
+        getStash =
+            function(stashName)
+                local stash = exports[OXInv]:Inventory(stashName)
+                -- Add fallback if ox can't find the stash and returns a boolean
+                return type(stash) == "table" and stash.items or {}
+            end,
+        stashAddItem =
+            function(stashItems, stashName, items)
 
-        end,
-        stashRemoveItem = function(stashItems, stashName, items)
-            for k, v in pairs(items) do
-                for l in pairs(stashItems) do
-                    if stashItems[l].name == k then
-                        if (stashItems[l].amount - v) <= 0 then
-                            stashItems[l] = nil
-                        else
-                            debugPrint("^6Bridge^7: ^2Removing ^3"..CodeMInv.." ^2Stash item^7:", k, v)
-                            stashItems[l].amount -= v
+            end,
+        stashRemoveItem =
+            function(stashItems, stashName, items)
+                for k, v in pairs(items) do
+                    for _, name in pairs(stashName) do
+                        local success = exports[OXInv]:RemoveItem(name, k, v)
+                        if success then
+                            debugPrint("^6Bridge^7: ^2Removing ^3"..OXInv.." ^2Stash item^7:", k, v)
+                            break
                         end
                     end
                 end
-            end
-            exports[CodeMInv]:UpdateStash(stashName, stashItems)
-        end,
-        registerStash = function(name, label, slots, weight, owner, coords)
-            --
-        end,
+            end,
+        registerStash =
+            function(name, label, slots, weight, owner, coords)
+                exports[OXInv]:RegisterStash(name, label, slots or 50, weight or 4000000, owner or nil)
+                debugPrint("^6Bridge^7: ^2Registering ^4"..OXInv.." ^3Stash^7:", name, "^4Label^7: "..label)
+            end,
     },
-    {
-        invName = TgiannInv,
-        removeItem = function(src, item, remamount)
-                exports[TgiannInv]:RemoveItem(src, item, remamount)
-        end,
-        addItem = function(src, item, amountToAdd, info, slot)
-            exports[TgiannInv]:AddItem(src, item, amountToAdd, slot, info)
-        end,
-        setItemMetadata = function(data, src)
-            exports[TgiannInv]:UpdateItemMetadata(src, data.item, data.slot, data.metadata)
-        end,
-        canCarry = function(itemTable, src)
-            local resultTable = {}
-            for k, v in pairs(itemTable) do
-                resultTable[k] = exports[TgiannInv]:CanCarryItem(src, k, v)
-            end
-            return resultTable
-        end,
-        getMaxInvWeight = function()
-            return InventoryWeight
-        end,
-        getPlayerInv = function(src)
-            local grabInv = nil
-            if src then
-                grabInv = exports[TgiannInv]:GetPlayerItems(src)
-            else
-                grabInv = exports[TgiannInv]:GetPlayerItems()
-            end
-            return grabInv
-        end,
-        invImg = function(item)
-            return "nui://inventory_images/images/"..(Items[item].image or "")
-        end,
-        openShop = function(data)
-            TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
-        end,
-        registerShop = function(name, label, items, society)
-            exports[TgiannInv]:RegisterShop(name, items)
-            debugPrint("^6Bridge^7: ^2Registering ^5"..TgiannInv.." ^3Store^7:", name, "^4Label^7: "..label)
-        end,
-        openStash = function(data)
-            TriggerServerEvent(getScript()..':server:openServerStash', {
-                stashName = data.stash,
-                label = data.label,
-                maxweight = data.maxWeight or 600000,
-                slots = data.slots or 40
-            })
-        end,
-        clearStash = function(stashId)
-            exports[TgiannInv]:DeleteInventory("stash", stashId)
-        end,
-        getStash = function(stashName)
-            return exports[TgiannInv]:GetSecondaryInventoryItems("stash", stashName)
-        end,
-        stashAddItem = function(stashItems, stashName, items)
 
-        end,
-        stashRemoveItem = function(stashItems, stashName, items)
-            for k, v in pairs(items) do
-                local itemData = exports[TgiannInv]:GetItemByNameFromSecondaryInventory("stash", stashName, k)
-                exports[TgiannInv]:RemoveItemFromSecondaryInventory("stash", stashName, k, v, itemData.slot, nil)
-                debugPrint("^6Bridge^7: ^2Removing ^3"..TgiannInv.." ^2Stash item^7:", k, v)
-            end
-        end,
-        registerStash = function(name, label, slots, weight, owner, coords)
-            exports[TgiannInv]:RegisterStash(name, label, slots or 50, weight or 4000000)
-            debugPrint("^6Bridge^7: ^2Registering ^4"..TgiannInv.." ^3Stash^7:", name, "^4Label^7: "..label)
-        end,
-    },
-    {
-        invName = JPRInv,
-        removeItem = function(src, item, remamount)
-            while remamount > 0 do
-                if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1, slot) then
-                    remamount -= 1
+    {   invName = QSInv,
+        removeItem =
+            function(src, item, remamount)
+                exports[QSInv]:RemoveItem(src, item, remamount)
+            end,
+        addItem =
+            function(src, item, amountToAdd, info, slot)
+                exports[QSInv]:AddItem(src, item, amountToAdd, slot, info)
+            end,
+        setItemMetadata =
+            function(data, src)
+                exports[QSInv]:SetItemMetadata(src, data.slot, data.metadata)
+            end,
+        hasItem =
+            function(item, amount, src)
+                if src then
+                    local serverItemCheck = exports[QSInv]:GetItemTotalAmount(src, item) or 0
+                    return serverItemCheck >= amount, serverItemCheck
                 else
-                    print("^1Error removing "..item.." Amount left: "..remamount)
-                    break
+                    local localItemCheck = exports[QSInv]:Search(item) or 0
+                    return localItemCheck >= amount, localItemCheck
                 end
-            end
-            if Config.Crafting ~= nil and Config.Crafting.showItemBox then
-                TriggerClientEvent("inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
-            end
-        end,
-        addItem = function(src, item, amountToAdd, info, slot)
-            if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
-                if Config.Crafting ~= nil and Config.Crafting.showItemBox then
-                    TriggerClientEvent("ps-inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
+            end,
+        canCarry =
+            function(itemTable, src)
+                local resultTable = {}
+                for k, v in pairs(itemTable) do
+                    resultTable[k] = exports[QSInv]:CanCarryItem(src, k, v)
                 end
-            end
-        end,
-        setItemMetadata = function(data, src)
-            local Player = Core.Functions.GetPlayer(src)
-            Player.PlayerData.items[data.slot].info = data.metadata
-            if data.metadata.durability then
-                Player.PlayerData.items[data.slot].description = "HP : "..data.metadata.durability
-            end
-            Player.Functions.SetInventory(Player.PlayerData.items)
-        end,
-        canCarry = function(itemTable, src)
-            local resultTable = {}
-            local items = getPlayerInv(src)
-            local totalWeight = 0
-            if not items then return false end
-            for _, item in pairs(items) do
-                totalWeight += (item.weight * item.amount)
-            end
-            for k, v in pairs(itemTable) do
-                local itemInfo = Items[k]
-                if not itemInfo then
-                    resultTable[k] = true
-                else
-                    resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight
-                end
-            end
-            return resultTable
-        end,
-        getMaxInvWeight = function()
-            if checkExportExists(JPRInv, "GetMaxWeight") then
-                return exports[JPRInv]:GetMaxWeight()
-            else
+                return resultTable
+            end,
+        getMaxInvWeight =
+            function()
                 return InventoryWeight
-            end
-        end,
-        getPlayerInv = function(src)
-            local grabInv = nil
-            if src then
-                grabInv = Core.Functions.GetPlayer(src).PlayerData.items
-            else
-                grabInv = Core.Functions.GetPlayerData().items
-            end
-            return grabInv
-        end,
-        invImg = function(item)
-            return "nui://"..JPRInv.."/html/images/"..(Items[item].image or "")
-        end,
-        openShop = function(data)
-            TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
-            TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
-        end,
-        registerShop = function(name, label, items, society)
-            --
-        end,
-        openStash = function(data)
-            if QBInvNew then
-                TriggerServerEvent(getScript()..':server:openServerStash', {
-                    stashName = data.stash,
-                    label = data.label,
-                    maxweight = data.maxWeight or 600000,
-                    slots = data.slots or 40
-                })
-            else
+            end,
+        getPlayerInv =
+            function(src)
+                local grabInv = nil
+                if src then
+                    grabInv = exports[QSInv]:GetInventory(src)
+                else
+                    grabInv = exports[QSInv]:getUserInventory()
+                end
+                return grabInv
+            end,
+        invImg =
+            function(item)
+                return "nui://"..QSInv.."/html/images/"..(Items[item].image or "")
+            end,
+        openShop =
+            function(data)
+                TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
+            end,
+        registerShop =
+            function(name, label, items, society)
+                --
+            end,
+        openStash =
+            function(data)
                 TriggerEvent("inventory:client:SetCurrentStash", data.stash)
                 TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, {
                     slots = data.slots or 50,
                     maxWeight = data.maxWeight or 600000
                 })
-            end
-        end,
-        clearStash = function(stashId)
-            MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
-                ['stash'] = stashId,
-                ['items'] = json.encode({})
-            })
-        end,
-        getStash = function(stashName)
-            local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
-            if result then
-                return json.decode(result)
-            else
-                return {}
-            end
-        end,
-        stashAddItem = function(stashItems, stashName, items)
+            end,
+        clearStash =
+            function(stashId)
+                exports[QSInv]:ClearOtherInventory('stash', stashId)
+            end,
+        getStash =
+            function(stashName)
+                return exports[QSInv]:GetStashItems(stashName)
+            end,
+        stashAddItem =
+            function(stashItems, stashName, items)
+                --
+            end,
+        stashRemoveItem =
+            function(stashItems, stashName, items)
+                for k, v in pairs(items) do
+                    exports[QSInv]:RemoveItemIntoStash(stashName, k, v)
+                    debugPrint("^6Bridge^7: ^2Removing ^3"..QSInv.." ^2Stash item^7:", k, v)
+                end
+            end,
+        registerStash =
+            function(name, label, slots, weight, owner, coords)
+                --
+            end,
+    },
 
-        end,
-        stashRemoveItem = function(stashItems, stashName, items)
-            if not stashItems or not next(stashItems) then
-                stashItems = getStash(stashName)
-            end
-            for k, v in pairs(items) do
-                for l in pairs(stashItems) do
-                    if stashItems[l].name == k then
-                        if (stashItems[l].amount - v) <= 0 then
-                            stashItems[l] = nil
-                        else
-                            debugPrint("^6Bridge^7: ^2Removing ^3"..JPRInv.." ^2Stash item^7:", k, v)
-                            stashItems[l].amount -= v
-                        end
+    {   invName = CoreInv,
+        removeItem =
+            function(src, item, remamount)
+                exports[CoreInv]:removeItem(src, item, remamount)
+            end,
+        addItem =
+            function(src, item, amountToAdd, info, slot)
+                exports[CoreInv]:addItem(src, item, amountToAdd, info)
+            end,
+        setItemMetadata =
+            function(data, src)
+                exports[CoreInv]:setMetadata(src, data.slot, data.metadata)
+            end,
+        hasItem =
+            function(item, amount, src)
+                if src then
+                    local serverItemCheck = exports[CoreInv]:getItemCount(src, item) or 0
+                    return serverItemCheck >= amount, serverItemCheck
+                else
+                    local localItemCheck = exports[CoreInv]:getItemCount(item) or 0
+                    return localItemCheck >= amount, localItemCheck
+                end
+            end,
+        canCarry =
+            function(itemTable, src)
+                local resultTable = {}
+                for k, v in pairs(itemTable) do
+                    resultTable[k] = exports[CoreInv]:canCarry(src, k, v)
+                end
+                return resultTable
+            end,
+        getMaxInvWeight =
+            function()
+                return InventoryWeight
+            end,
+        getPlayerInv =
+            function(src)
+                local grabInv = nil
+                if src then
+                    grabInv = exports[CoreInv]:getInventory(src)
+                else
+                    grabInv = exports[CoreInv]:getInventory()
+                end
+                return grabInv
+            end,
+        invImg =
+            function(item)
+                return "nui://"..CoreInv.."/html/img/"..(Items[item].image or "")
+            end,
+        openShop =
+            function(data)
+                --
+            end,
+        registerShop =
+            function(name, label, items, society)
+                --
+            end,
+        openStash =
+            function(data)
+                TriggerServerEvent('core_inventory:server:openInventory', data.stash, 'stash')
+            end,
+        clearStash =
+            function(stashId)
+                exports[CoreInv]:clearInventory("stash-"..stashId)
+            end,
+        getStash =
+            function(stashName)
+                return exports[CoreInv]:getInventory(stashName)
+            end,
+        stashAddItem =
+            function(stashItems, stashName, items)
+                --
+            end,
+        stashRemoveItem =
+            function(stashItems, stashName, items)
+                for k, v in pairs(items) do
+                    exports[CoreInv]:removeItemExact(stashName, k, v)
+                    debugPrint("^6Bridge^7: ^2Removing ^3"..CoreInv.." ^2Stash item^7:", k, v)
+                end
+            end,
+        registerStash =
+            function(name, label, slots, weight, owner, coords)
+                --
+            end,
+    },
+
+    {   invName = OrigenInv,
+        removeItem =
+            function(src, item, remamount)
+                exports[OrigenInv]:removeItem(src, item, remamount)
+            end,
+        addItem =
+            function(src, item, amountToAdd, info, slot)
+                exports[OrigenInv]:addItem(src, item, amountToAdd, info, slot)
+            end,
+        setItemMetadata =
+            function(data, src)
+                exports[OrigenInv]:setMetadata(src, data.slot, data.metadata)
+            end,
+        hasItem =
+            function(item, amount, src)
+                if src then
+                    local serverItemCheck = exports[OrigenInv]:getItemCount(src, item, false, false) or 0
+                    return serverItemCheck >= amount, serverItemCheck
+                else
+                    local localItemCheck = exports[OrigenInv]:Search('count', item) or 0
+                    return localItemCheck >= amount, localItemCheck
+                end
+            end,
+        canCarry =
+            function(itemTable, src)
+                local resultTable = {}
+                for k, v in pairs(itemTable) do
+                    resultTable[k] = exports[OrigenInv]:canCarryItem(src, k, v)
+                end
+                return resultTable
+            end,
+        getMaxInvWeight =
+            function()
+                return InventoryWeight
+            end,
+        getPlayerInv =
+            function(src)
+                local grabInv = nil
+                if src then
+                    grabInv = exports[OXInv]:GetInventoryItems(src)
+                else
+                    grabInv = exports[OXInv]:GetPlayerItems()
+                end
+                return grabInv
+            end,
+        invImg =
+            function(item)
+                return "nui://"..OrigenInv.."/html/img/"..(Items[item].image or "")
+            end,
+        openShop =
+            function(data)
+                --
+            end,
+        registerShop =
+            function(name, label, items, society)
+                --
+            end,
+        openStash =
+            function(data)
+                exports[OrigenInv]:openInventory('stash', data.stash, { label = data.label })
+            end,
+        clearStash =
+            function(stashId)
+                exports[OrigenInv]:ClearInventory(stashId)
+            end,
+        getStash =
+            function(stashName)
+                return exports[OrigenInv]:getInventory(stashName)
+            end,
+        stashAddItem =
+            function(stashItems, stashName, items)
+                --
+            end,
+        stashRemoveItem =
+            function(stashItems, stashName, items)
+                for k, v in pairs(items) do
+                    exports[OrigenInv]:RemoveFromStash(stashName, k, v)
+                    debugPrint("^6Bridge^7: ^2Removing ^3"..OrigenInv.." ^2Stash item^7:", k, v)
+                end
+            end,
+        registerStash =
+            function(name, label, slots, weight, owner, coords)
+                exports[OrigenInv]:registerStash(name, label, slots or 50, weight or 4000000)
+                debugPrint("^6Bridge^7: ^2Registering ^4"..OrigenInv.." ^3Stash^7:", name, "^4Label^7: "..label)
+            end,
+    },
+
+    {   invName = CodeMInv,
+        removeItem =
+            function(src, item, remamount)
+                exports[CodeMInv]:RemoveItem(src, item, remamount)
+            end,
+        addItem =
+            function(src, item, amountToAdd, info, slot)
+                exports[CodeMInv]:AddItem(src, item, amountToAdd, slot, info)
+            end,
+        setItemMetadata =
+            function(data, src)
+                exports[CodeMInv]:SetItemMetadata(src, data.slot, data.metadata)
+            end,
+        hasItem =
+            function(item, amount, src, invCache)
+                local count = 0
+                for _, itemData in pairs(invCache) do
+                    if itemData and itemData.name == item then
+                        count += (itemData.amount or itemData.count or 1)
                     end
                 end
-            end
-            debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3JPR^2 stash '^6"..stashName.."^7'")
-            MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
-                ['stash'] = stashName,
-                ['items'] = json.encode(stashItems)
-            })
-        end,
-        registerStash = function(name, label, slots, weight, owner, coords)
-            --
-        end,
-    },
-    {
-        invName = QBInv,
-        removeItem = function(src, item, remamount)
-            if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, remamount, slot) then
-                TriggerClientEvent((isStarted(QBInv) and QBInvNew and "qb-" or "").."inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
-            else
-                print("^1Error removing "..item.." Amount left: "..remamount)
-            end
-        end,
-        addItem = function(src, item, amountToAdd, info, slot)
-            if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
-                TriggerClientEvent((isStarted(QBInv) and QBInvNew and "qb-" or "").."inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
-            end
-        end,
-        setItemMetadata = function(data, src)
-            local Player = Core.Functions.GetPlayer(src)
-            Player.PlayerData.items[data.slot].info = data.metadata
-            if data.metadata.durability then
-                Player.PlayerData.items[data.slot].description = "HP : "..data.metadata.durability
-            end
-            Player.Functions.SetInventory(Player.PlayerData.items)
-        end,
-        canCarry = function(itemTable, src)
-            local resultTable = {}
-            if QBInvNew then
-                for k, v in pairs(itemTable) do
-                    resultTable[k] = exports[QBInv]:CanAddItem(src, k, v)
-                end
-            else
+                return count >= amount, count
+            end,
+        canCarry =
+            function(itemTable, src)
+                local resultTable = {}
                 local items = getPlayerInv(src)
                 local totalWeight = 0
                 if not items then return false end
@@ -601,93 +418,302 @@ local InvFunc = {
                         resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight
                     end
                 end
-            end
-            return resultTable
-        end,
-        getMaxInvWeight = function()
-            if checkExportExists(QBInv, "GetMaxWeight") then
-                return exports[QBInv]:GetMaxWeight()
-            else
+                return resultTable
+            end,
+        getMaxInvWeight =
+            function()
                 return InventoryWeight
-            end
-        end,
-        getPlayerInv = function(src)
-            local grabInv = nil
-            if src then
-                grabInv = Core.Functions.GetPlayer(src).PlayerData.items
-            else
-                grabInv = Core.Functions.GetPlayerData().items
-            end
-            return grabInv
-        end,
-        invImg = function(item)
-            return "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
-        end,
-        openShop = function(data)
-            TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
-            TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
-        end,
-        registerShop = function(name, label, items, society)
-            if checkExportExists(QBInv, "CreateShop") then
-                exports[QBInv]:CreateShop({
-                    name = name,
-                    label = label,
-                    slots = #items,
-                    items = items,
-                    society = society,
-                })
-                debugPrint("^6Bridge^7: ^2Registering ^5"..QBInv.." ^3Store^7:", name, "^4Label^7: "..label)
-            end
-        end,
-        openStash = function(data)
-            if QBInvNew then
+            end,
+        getPlayerInv =
+            function(src)
+                local grabInv = nil
+                if src then
+                    grabInv = exports[CodeMInv]:GetInventory(getPlayer(src).citizenId, src)
+                else
+                    grabInv = exports[CodeMInv]:getUserInventory()
+                end
+                return grabInv
+            end,
+        invImg =
+            function(item)
+                return "nui://"..CodeMInv.."/html/itemimages/"..(Items[item].image or "")
+            end,
+        openShop =
+            function(data)
+                TriggerEvent("codem-inventory:openshop", data.shop)
+            end,
+        registerShop =
+            function(name, label, items, society)
+                --
+            end,
+        openStash =
+            function(data)
+                TriggerServerEvent('codem-inventory:server:openstash', data.stash, data.slots, data.maxWeight, data.label)
+            end,
+        clearStash =
+            function(stashId)
+                exports[CodeMInv]:ClearInventory(stashId)
+            end,
+        getStash =
+            function(stashName)
+                return exports[CodeMInv]:GetStashItems(stashName)
+            end,
+        stashAddItem =
+            function(stashItems, stashName, items)
+                --
+            end,
+        stashRemoveItem =
+            function(stashItems, stashName, items)
+                for k, v in pairs(items) do
+                    for l in pairs(stashItems) do
+                        if stashItems[l].name == k then
+                            if (stashItems[l].amount - v) <= 0 then
+                                stashItems[l] = nil
+                            else
+                                debugPrint("^6Bridge^7: ^2Removing ^3"..CodeMInv.." ^2Stash item^7:", k, v)
+                                stashItems[l].amount -= v
+                            end
+                        end
+                    end
+                end
+                exports[CodeMInv]:UpdateStash(stashName, stashItems)
+            end,
+        registerStash =
+            function(name, label, slots, weight, owner, coords)
+                --
+            end,
+    },
+
+    {   invName = TgiannInv,
+        removeItem =
+            function(src, item, remamount)
+                exports[TgiannInv]:RemoveItem(src, item, remamount)
+            end,
+        addItem =
+            function(src, item, amountToAdd, info, slot)
+                exports[TgiannInv]:AddItem(src, item, amountToAdd, slot, info)
+            end,
+        setItemMetadata =
+            function(data, src)
+                exports[TgiannInv]:UpdateItemMetadata(src, data.item, data.slot, data.metadata)
+            end,
+        hasItem =
+            function(item, amount, src)
+                if src then
+                    local serverItemCheck = exports[TgiannInv]:GetItem(src, item, nil, true) or 0
+                    return serverItemCheck >= amount, serverItemCheck
+                else
+                    local localItemCheck = exports[TgiannInv]:GetItemCount(item) or 0
+                    return localItemCheck >= amount, localItemCheck
+                end
+            end,
+        canCarry =
+            function(itemTable, src)
+                local resultTable = {}
+                for k, v in pairs(itemTable) do
+                    resultTable[k] = exports[TgiannInv]:CanCarryItem(src, k, v)
+                end
+                return resultTable
+            end,
+        getMaxInvWeight =
+            function()
+                return InventoryWeight
+            end,
+        getPlayerInv =
+            function(src)
+                local grabInv = nil
+                if src then
+                    grabInv = exports[TgiannInv]:GetPlayerItems(src)
+                else
+                    grabInv = exports[TgiannInv]:GetPlayerItems()
+                end
+                return grabInv
+            end,
+        invImg =
+            function(item)
+                return "nui://inventory_images/images/"..(Items[item].image or "")
+            end,
+        openShop =
+            function(data)
+                TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
+            end,
+        registerShop =
+            function(name, label, items, society)
+                exports[TgiannInv]:RegisterShop(name, items)
+                debugPrint("^6Bridge^7: ^2Registering ^5"..TgiannInv.." ^3Store^7:", name, "^4Label^7: "..label)
+            end,
+        openStash =
+            function(data)
                 TriggerServerEvent(getScript()..':server:openServerStash', {
                     stashName = data.stash,
                     label = data.label,
                     maxweight = data.maxWeight or 600000,
                     slots = data.slots or 40
                 })
-            else
-                TriggerEvent("inventory:client:SetCurrentStash", data.stash)
-                TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, {
-                    slots = data.slots or 50,
-                    maxWeight = data.maxWeight or 600000
+            end,
+        clearStash =
+            function(stashId)
+                exports[TgiannInv]:DeleteInventory("stash", stashId)
+            end,
+        getStash =
+            function(stashName)
+                return exports[TgiannInv]:GetSecondaryInventoryItems("stash", stashName)
+            end,
+        stashAddItem =
+            function(stashItems, stashName, items)
+                --
+            end,
+        stashRemoveItem =
+            function(stashItems, stashName, items)
+                for k, v in pairs(items) do
+                    local itemData = exports[TgiannInv]:GetItemByNameFromSecondaryInventory("stash", stashName, k)
+                    exports[TgiannInv]:RemoveItemFromSecondaryInventory("stash", stashName, k, v, itemData.slot, nil)
+                    debugPrint("^6Bridge^7: ^2Removing ^3"..TgiannInv.." ^2Stash item^7:", k, v)
+                end
+            end,
+        registerStash =
+            function(name, label, slots, weight, owner, coords)
+                exports[TgiannInv]:RegisterStash(name, label, slots or 50, weight or 4000000)
+                debugPrint("^6Bridge^7: ^2Registering ^4"..TgiannInv.." ^3Stash^7:", name, "^4Label^7: "..label)
+            end,
+    },
+
+    {   invName = JPRInv,
+        removeItem =
+            function(src, item, remamount)
+                while remamount > 0 do
+                    if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1, slot) then
+                        remamount -= 1
+                    else
+                        print("^1Error removing "..item.." Amount left: "..remamount)
+                        break
+                    end
+                end
+                if Config.Crafting ~= nil and Config.Crafting.showItemBox then
+                    TriggerClientEvent("inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
+                end
+            end,
+        addItem =
+            function(src, item, amountToAdd, info, slot)
+                if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
+                    if Config.Crafting ~= nil and Config.Crafting.showItemBox then
+                        TriggerClientEvent("ps-inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
+                    end
+                end
+            end,
+        setItemMetadata =
+            function(data, src)
+                local Player = Core.Functions.GetPlayer(src)
+                Player.PlayerData.items[data.slot].info = data.metadata
+                if data.metadata.durability then
+                    Player.PlayerData.items[data.slot].description = "HP : "..data.metadata.durability
+                end
+                Player.Functions.SetInventory(Player.PlayerData.items)
+            end,
+        hasItem =
+            function(item, amount, src, invCache)
+                local count = 0
+                for _, itemData in pairs(invCache) do
+                    if itemData and itemData.name == item then
+                        count += (itemData.amount or itemData.count or 1)
+                    end
+                end
+                return count >= amount, count
+            end,
+        canCarry =
+            function(itemTable, src)
+                local resultTable = {}
+                local items = getPlayerInv(src)
+                local totalWeight = 0
+                if not items then return false end
+                for _, item in pairs(items) do
+                    totalWeight += (item.weight * item.amount)
+                end
+                for k, v in pairs(itemTable) do
+                    local itemInfo = Items[k]
+                    if not itemInfo then
+                        resultTable[k] = true
+                    else
+                        resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight
+                    end
+                end
+                return resultTable
+            end,
+        getMaxInvWeight =
+            function()
+                if checkExportExists(JPRInv, "GetMaxWeight") then
+                    return exports[JPRInv]:GetMaxWeight()
+                else
+                    return InventoryWeight
+                end
+            end,
+        getPlayerInv =
+            function(src)
+                local grabInv = nil
+                if src then
+                    grabInv = Core.Functions.GetPlayer(src).PlayerData.items
+                else
+                    grabInv = Core.Functions.GetPlayerData().items
+                end
+                return grabInv
+            end,
+        invImg =
+            function(item)
+                return "nui://"..JPRInv.."/html/images/"..(Items[item].image or "")
+            end,
+        openShop =
+            function(data)
+                TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
+                TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
+            end,
+        registerShop =
+            function(name, label, items, society)
+                exports[JPRInv]:CreateShop({
+                    name = name,
+                    label = label,
+                    slots = #items,
+                    items = items
                 })
-            end
-        end,
-        clearStash = function(stashId)
-            if QBInvNew then
-                exports[QBInv]:ClearStash(stashId)
-            else
+            end,
+        openStash =
+            function(data)
+                if QBInvNew then
+                    TriggerServerEvent(getScript()..':server:openServerStash', {
+                        stashName = data.stash,
+                        label = data.label,
+                        maxweight = data.maxWeight or 600000,
+                        slots = data.slots or 40
+                    })
+                else
+                    TriggerEvent("inventory:client:SetCurrentStash", data.stash)
+                    TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, {
+                        slots = data.slots or 50,
+                        maxWeight = data.maxWeight or 600000
+                    })
+                end
+            end,
+        clearStash =
+            function(stashId)
                 MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
                     ['stash'] = stashId,
                     ['items'] = json.encode({})
                 })
-            end
-        end,
-        getStash = function(stashName)
-            if QBInvNew then
-                local result = exports[QBInv]:GetInventory(stashName) or {}
-                return result.items or {}
-            else
+            end,
+        getStash =
+            function(stashName)
                 local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
                 if result then
                     return json.decode(result)
                 else
                     return {}
                 end
-            end
-        end,
-        stashAddItem = function(stashItems, stashName, items)
-
-        end,
-        stashRemoveItem = function(stashItems, stashName, items)
-            if QBInvNew then
-                for k, v in pairs(items) do
-                    exports[QBInv]:RemoveItem(stashName, k, v, false, 'crafting')
-                    debugPrint("^6Bridge^7: ^2Removing ^3"..QBInv.." ^2Stash item^7:", k, v)
-                end
-            else
+            end,
+        stashAddItem =
+            function(stashItems, stashName, items)
+                --
+            end,
+        stashRemoveItem =
+            function(stashItems, stashName, items)
                 if not stashItems or not next(stashItems) then
                     stashItems = getStash(stashName)
                 end
@@ -697,260 +723,491 @@ local InvFunc = {
                             if (stashItems[l].amount - v) <= 0 then
                                 stashItems[l] = nil
                             else
-                                debugPrint("^6Bridge^7: ^2Removing ^3"..QBInv.." ^2Stash item^7:", k, v)
+                                debugPrint("^6Bridge^7: ^2Removing ^3"..JPRInv.." ^2Stash item^7:", k, v)
                                 stashItems[l].amount -= v
                             end
                         end
                     end
                 end
-                debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash '^6"..stashName.."^7'")
+                debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3JPR^2 stash '^6"..stashName.."^7'")
                 MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
                     ['stash'] = stashName,
                     ['items'] = json.encode(stashItems)
                 })
-            end
-        end,
-        registerStash = function(name, label, slots, weight, owner, coords)
-            --
-        end,
+            end,
+        registerStash =
+            function(name, label, slots, weight, owner, coords)
+                --
+            end,
     },
-    {
-        invName = PSInv,
-        removeItem = function(src, item, remamount)
-            while remamount > 0 do
-                if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1, slot) then
-                    remamount -= 1
+
+    {   invName = QBInv,
+        removeItem =
+            function(src, item, remamount)
+                if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, remamount, slot) then
+                    TriggerClientEvent((isStarted(QBInv) and QBInvNew and "qb-" or "").."inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
                 else
                     print("^1Error removing "..item.." Amount left: "..remamount)
-                    break
                 end
-            end
-            if Config.Crafting ~= nil and Config.Crafting.showItemBox then
-                TriggerClientEvent("inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
-            end
-        end,
-        addItem = function(src, item, amountToAdd, info, slot)
-            if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
-                if Config.Crafting ~= nil and Config.Crafting.showItemBox then
-                    TriggerClientEvent("ps-inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
+            end,
+        addItem =
+            function(src, item, amountToAdd, info, slot)
+                if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
+                    TriggerClientEvent((isStarted(QBInv) and QBInvNew and "qb-" or "").."inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
                 end
-            end
-        end,
-        setItemMetadata = function(data, src)
-            --debugPrint(src, data.item, 1, data.slot)
-            local Player = Core.Functions.GetPlayer(src)
-            Player.PlayerData.items[data.slot].info = data.metadata
-            if data.metadata.durability then
-                Player.PlayerData.items[data.slot].description = "HP : "..data.metadata.durability
-            end
-            Player.Functions.SetInventory(Player.PlayerData.items)
-        end,
-        canCarry = function(itemTable, src)
-            local resultTable = {}
-            local items = getPlayerInv(src)
-            local totalWeight = 0
-            if not items then return false end
-            for _, item in pairs(items) do
-                totalWeight += (item.weight * item.amount)
-            end
-            for k, v in pairs(itemTable) do
-                local itemInfo = Items[k]
-                if not itemInfo then
-                    resultTable[k] = true
+            end,
+        setItemMetadata =
+            function(data, src)
+                local Player = Core.Functions.GetPlayer(src)
+                Player.PlayerData.items[data.slot].info = data.metadata
+                if data.metadata.durability then
+                    Player.PlayerData.items[data.slot].description = "HP : "..data.metadata.durability
+                end
+                Player.Functions.SetInventory(Player.PlayerData.items)
+            end,
+        hasItem =
+            function(item, amount, src, invCache)
+                local count = 0
+                for _, itemData in pairs(invCache) do
+                    if itemData and itemData.name == item then
+                        count += (itemData.amount or itemData.count or 1)
+                    end
+                end
+                return count >= amount, count
+            end,
+        canCarry =
+            function(itemTable, src)
+                local resultTable = {}
+                if QBInvNew then
+                    for k, v in pairs(itemTable) do
+                        resultTable[k] = exports[QBInv]:CanAddItem(src, k, v)
+                    end
                 else
-                    resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight
+                    local items = getPlayerInv(src)
+                    local totalWeight = 0
+                    if not items then return false end
+                    for _, item in pairs(items) do
+                        totalWeight += (item.weight * item.amount)
+                    end
+                    for k, v in pairs(itemTable) do
+                        local itemInfo = Items[k]
+                        if not itemInfo then
+                            resultTable[k] = true
+                        else
+                            resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight
+                        end
+                    end
                 end
-            end
-            return resultTable
-        end,
-        getMaxInvWeight = function()
-            if checkExportExists(PSInv, "GetMaxWeight") then
-                return exports[PSInv]:GetMaxWeight()
-            else
-                return InventoryWeight
-            end
-        end,
-        getPlayerInv = function(src)
-            local grabInv = nil
-            if src then
-                grabInv = Core.Functions.GetPlayer(src).PlayerData.items
-            else
-                grabInv = Core.Functions.GetPlayerData().items
-            end
-            return grabInv
-        end,
-        invImg = function(item)
-            return "nui://"..PSInv.."/html/images/"..(Items[item].image or "")
-        end,
-        openShop = function(data)
-            TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
-            TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
-        end,
-        registerShop = function(name, label, items, society)
-            if checkExportExists(PSInv, "CreateShop") then
-                exports[PSInv]:CreateShop({
+                return resultTable
+            end,
+        getMaxInvWeight =
+            function()
+                if checkExportExists(QBInv, "GetMaxWeight") then
+                    return exports[QBInv]:GetMaxWeight()
+                else
+                    return InventoryWeight
+                end
+            end,
+        getPlayerInv =
+            function(src)
+                local grabInv = nil
+                if src then
+                    grabInv = Core.Functions.GetPlayer(src).PlayerData.items
+                else
+                    grabInv = Core.Functions.GetPlayerData().items
+                end
+                return grabInv
+            end,
+        invImg =
+            function(item)
+                return "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
+            end,
+        openShop =
+            function(data)
+                TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
+                TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
+            end,
+        registerShop =
+            function(name, label, items, society)
+                if checkExportExists(QBInv, "CreateShop") then
+                    exports[QBInv]:CreateShop({
+                        name = name,
+                        label = label,
+                        slots = #items,
+                        items = items,
+                        society = society,
+                    })
+                    debugPrint("^6Bridge^7: ^2Registering ^5"..QBInv.." ^3Store^7:", name, "^4Label^7: "..label)
+                end
+            end,
+        openStash =
+            function(data)
+                if QBInvNew then
+                    TriggerServerEvent(getScript()..':server:openServerStash', {
+                        stashName = data.stash,
+                        label = data.label,
+                        maxweight = data.maxWeight or 600000,
+                        slots = data.slots or 40
+                    })
+                else
+                    TriggerEvent("inventory:client:SetCurrentStash", data.stash)
+                    TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, {
+                        slots = data.slots or 50,
+                        maxWeight = data.maxWeight or 600000
+                    })
+                end
+            end,
+        clearStash =
+            function(stashId)
+                if QBInvNew then
+                    exports[QBInv]:ClearStash(stashId)
+                else
+                    MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+                        ['stash'] = stashId,
+                        ['items'] = json.encode({})
+                    })
+                end
+            end,
+        getStash =
+            function(stashName)
+                if QBInvNew then
+                    local result = exports[QBInv]:GetInventory(stashName) or {}
+                    return result.items or {}
+                else
+                    local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
+                    if result then
+                        return json.decode(result)
+                    else
+                        return {}
+                    end
+                end
+            end,
+        stashAddItem =
+            function(stashItems, stashName, items)
+                --
+            end,
+        stashRemoveItem =
+            function(stashItems, stashName, items)
+                if QBInvNew then
+                    for k, v in pairs(items) do
+                        exports[QBInv]:RemoveItem(stashName, k, v, false, 'crafting')
+                        debugPrint("^6Bridge^7: ^2Removing ^3"..QBInv.." ^2Stash item^7:", k, v)
+                    end
+                else
+                    if not stashItems or not next(stashItems) then
+                        stashItems = getStash(stashName)
+                    end
+                    for k, v in pairs(items) do
+                        for l in pairs(stashItems) do
+                            if stashItems[l].name == k then
+                                if (stashItems[l].amount - v) <= 0 then
+                                    stashItems[l] = nil
+                                else
+                                    debugPrint("^6Bridge^7: ^2Removing ^3"..QBInv.." ^2Stash item^7:", k, v)
+                                    stashItems[l].amount -= v
+                                end
+                            end
+                        end
+                    end
+                    debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash '^6"..stashName.."^7'")
+                    MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+                        ['stash'] = stashName,
+                        ['items'] = json.encode(stashItems)
+                    })
+                end
+            end,
+        registerStash =
+            function(name, label, slots, weight, owner, coords)
+                --
+            end,
+    },
+
+    {   invName = PSInv,
+        removeItem =
+            function(src, item, remamount)
+                while remamount > 0 do
+                    if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1, slot) then
+                        remamount -= 1
+                    else
+                        print("^1Error removing "..item.." Amount left: "..remamount)
+                        break
+                    end
+                end
+                if Config.Crafting ~= nil and Config.Crafting.showItemBox then
+                    TriggerClientEvent("inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
+                end
+            end,
+        addItem =
+            function(src, item, amountToAdd, info, slot)
+                if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
+                    if Config.Crafting ~= nil and Config.Crafting.showItemBox then
+                        TriggerClientEvent("ps-inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
+                    end
+                end
+            end,
+        setItemMetadata =
+            function(data, src)
+                --debugPrint(src, data.item, 1, data.slot)
+                local Player = Core.Functions.GetPlayer(src)
+                Player.PlayerData.items[data.slot].info = data.metadata
+                if data.metadata.durability then
+                    Player.PlayerData.items[data.slot].description = "HP : "..data.metadata.durability
+                end
+                Player.Functions.SetInventory(Player.PlayerData.items)
+            end,
+        hasItem =
+            function(item, amount, src, invCache)
+                local count = 0
+                for _, itemData in pairs(invCache) do
+                    if itemData and itemData.name == item then
+                        count += (itemData.amount or itemData.count or 1)
+                    end
+                end
+                return count >= amount, count
+            end,
+        canCarry =
+            function(itemTable, src)
+                local resultTable = {}
+                local items = getPlayerInv(src)
+                local totalWeight = 0
+                if not items then return false end
+                for _, item in pairs(items) do
+                    totalWeight += (item.weight * item.amount)
+                end
+                for k, v in pairs(itemTable) do
+                    local itemInfo = Items[k]
+                    if not itemInfo then
+                        resultTable[k] = true
+                    else
+                        resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight
+                    end
+                end
+                return resultTable
+            end,
+        getMaxInvWeight =
+            function()
+                if checkExportExists(PSInv, "GetMaxWeight") then
+                    return exports[PSInv]:GetMaxWeight()
+                else
+                    return InventoryWeight
+                end
+            end,
+        getPlayerInv =
+            function(src)
+                local grabInv = nil
+                if src then
+                    grabInv = Core.Functions.GetPlayer(src).PlayerData.items
+                else
+                    grabInv = Core.Functions.GetPlayerData().items
+                end
+                return grabInv
+            end,
+        invImg =
+            function(item)
+                return "nui://"..PSInv.."/html/images/"..(Items[item].image or "")
+            end,
+        openShop =
+            function(data)
+                TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
+                TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
+            end,
+        registerShop =
+            function(name, label, items, society)
+                if checkExportExists(PSInv, "CreateShop") then
+                    exports[PSInv]:CreateShop({
+                        name = name,
+                        label = label,
+                        slots = #items,
+                        items = items,
+                        society = society,
+                    })
+                    debugPrint("^6Bridge^7: ^2Registering ^5"..PSInv.." ^3Store^7:", name, "^4Label^7: "..label)
+                end
+            end,
+        openStash =
+            function(data)
+                if QBInvNew then
+                    TriggerServerEvent(getScript()..':server:openServerStash', {
+                        stashName = data.stash,
+                        label = data.label,
+                        maxweight = data.maxWeight or 600000,
+                        slots = data.slots or 40
+                    })
+                else
+                    TriggerEvent("ps-inventory:client:SetCurrentStash", data.stash)
+                    TriggerEvent("inventory:client:SetCurrentStash", data.stash)
+                    TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, {
+                        slots = data.slots or 50,
+                        maxWeight = data.maxWeight or 600000
+                    })
+                end
+            end,
+        clearStash =
+            function(stashId)
+                MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+                    ['stash'] = stashId,
+                    ['items'] = json.encode({})
+                })
+            end,
+        getStash =
+            function(stashName)
+                local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
+                if result then
+                    return json.decode(result)
+                else
+                    return {}
+                end
+            end,
+        stashAddItem =
+            function(stashItems, stashName, items)
+
+            end,
+        stashRemoveItem =
+            function(stashItems, stashName, items)
+                if not stashItems or not next(stashItems) then
+                    stashItems = getStash(stashName)
+                end
+                for k, v in pairs(items) do
+                    for l in pairs(stashItems) do
+                        if stashItems[l].name == k then
+                            if (stashItems[l].amount - v) <= 0 then
+                                stashItems[l] = nil
+                            else
+                                debugPrint("^6Bridge^7: ^2Removing ^3"..PSInv.." ^2Stash item^7:", k, v)
+                                stashItems[l].amount -= v
+                            end
+                        end
+                    end
+                end
+                debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3PS^2 stash ^7'^6"..stashName.."^7'")
+                MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+                    ['stash'] = stashName,
+                    ['items'] = json.encode(stashItems)
+                })
+            end,
+        registerStash =
+            function(name, label, slots, weight, owner, coords)
+                --
+            end,
+    },
+
+    {   invName = RSGInv,
+        removeItem =
+            function(src, item, remamount)
+                while remamount > 0 do
+                    if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1, slot) then
+                        remamount -= 1
+                    else
+                        print("^1Error removing "..item.." Amount left: "..remamount)
+                        break
+                    end
+                end
+                if Config.Crafting ~= nil and Config.Crafting.showItemBox then
+                    TriggerClientEvent("rsg-inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
+                end
+            end,
+        addItem =
+            function(src, item, amountToAdd, info, slot)
+                if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
+                    TriggerClientEvent("rsg-inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
+                end
+            end,
+        setItemMetadata =
+            function(data, src)
+                local Player = Core.Functions.GetPlayer(src)
+                Player.PlayerData.items[data.slot].info = data.metadata
+                if data.metadata.durability then
+                    Player.PlayerData.items[data.slot].description = "HP : "..data.metadata.durability
+                end
+                Player.Functions.SetInventory(Player.PlayerData.items)
+            end,
+        hasItem =
+            function(item, amount, src, invCache)
+                local count = 0
+                for _, itemData in pairs(invCache) do
+                    if itemData and itemData.name == item then
+                        count += (itemData.amount or itemData.count or 1)
+                    end
+                end
+                return count >= amount, count
+            end,
+        canCarry =
+            function(itemTable, src)
+                local resultTable = {}
+                for k, v in pairs(itemTable) do
+                    resultTable[k] = exports[OXInv]:CanCarryItem(src, k, v)
+                end
+                return resultTable
+            end,
+        getMaxInvWeight =
+            function()
+                if checkExportExists(RSGInv, "GetMaxWeight") then
+                    return exports[RSGInv]:GetMaxWeight()
+                else
+                    return InventoryWeight
+                end
+            end,
+        getPlayerInv =
+            function(src)
+                local grabInv = nil
+                if src then
+                    grabInv = Core.Functions.GetPlayer(src).PlayerData.items
+                else
+                    grabInv = Core.Functions.GetPlayerData().items
+                end
+                return grabInv
+            end,
+        invImg =
+            function(item)
+                return "nui://"..RSGInv.."/html/images/"..(Items[item].image or "")
+            end,
+        openShop =
+            function(data)
+                TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
+            end,
+        registerShop =
+            function(name, label, items, society)
+                exports[RSGInv]:CreateShop({
                     name = name,
                     label = label,
                     slots = #items,
                     items = items,
                     society = society,
                 })
-                debugPrint("^6Bridge^7: ^2Registering ^5"..PSInv.." ^3Store^7:", name, "^4Label^7: "..label)
-            end
-        end,
-        openStash = function(data)
-            if QBInvNew then
+                debugPrint("^6Bridge^7: ^2Registering ^5"..RSGInv.." ^3Store^7:", name, "^4Label^7: "..label)
+            end,
+        openStash =
+            function(data)
                 TriggerServerEvent(getScript()..':server:openServerStash', {
                     stashName = data.stash,
                     label = data.label,
                     maxweight = data.maxWeight or 600000,
                     slots = data.slots or 40
                 })
-            else
-                TriggerEvent("ps-inventory:client:SetCurrentStash", data.stash)
-                TriggerEvent("inventory:client:SetCurrentStash", data.stash)
-                TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, {
-                    slots = data.slots or 50,
-                    maxWeight = data.maxWeight or 600000
-                })
-            end
-        end,
-        clearStash = function(stashId)
-            MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
-                ['stash'] = stashId,
-                ['items'] = json.encode({})
-            })
-        end,
-        getStash = function(stashName)
-            local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
-            if result then
-                return json.decode(result)
-            else
-                return {}
-            end
-        end,
-        stashAddItem = function(stashItems, stashName, items)
+            end,
+        clearStash =
+            function(stashId)
+                exports[RSGInv]:ClearStash(stashId)
+            end,
+        getStash =
+            function(stashName)
+                return exports[RSGInv]:GetInventory(stashName)
+            end,
+        stashAddItem =
+            function(stashItems, stashName, items)
 
-        end,
-        stashRemoveItem = function(stashItems, stashName, items)
-            if not stashItems or not next(stashItems) then
-                stashItems = getStash(stashName)
-            end
-            for k, v in pairs(items) do
-                for l in pairs(stashItems) do
-                    if stashItems[l].name == k then
-                        if (stashItems[l].amount - v) <= 0 then
-                            stashItems[l] = nil
-                        else
-                            debugPrint("^6Bridge^7: ^2Removing ^3"..PSInv.." ^2Stash item^7:", k, v)
-                            stashItems[l].amount -= v
-                        end
-                    end
+            end,
+        stashRemoveItem =
+            function(stashItems, stashName, items)
+                for k, v in pairs(items) do
+                    exports[RSGInv]:RemoveItem(stashName, k, v, false, 'crafting')
+                    debugPrint("^6Bridge^7: ^2Removing ^3"..RSGInv.." ^2Stash item^7:", k, v)
                 end
-            end
-            debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3PS^2 stash ^7'^6"..stashName.."^7'")
-            MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
-                ['stash'] = stashName,
-                ['items'] = json.encode(stashItems)
-            })
-        end,
-        registerStash = function(name, label, slots, weight, owner, coords)
-            --
-        end,
-    },
-    {
-        invName = RSGInv,
-        removeItem = function(src, item, remamount)
-            while remamount > 0 do
-                if Core.Functions.GetPlayer(src).Functions.RemoveItem(item, 1, slot) then
-                    remamount -= 1
-                else
-                    print("^1Error removing "..item.." Amount left: "..remamount)
-                    break
-                end
-            end
-            if Config.Crafting ~= nil and Config.Crafting.showItemBox then
-                TriggerClientEvent("rsg-inventory:client:ItemBox", src, Items[item], "remove", amount or 1)
-            end
-        end,
-        addItem = function(src, item, amountToAdd, info, slot)
-            if Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info) then
-                TriggerClientEvent("rsg-inventory:client:ItemBox", src, Items[item], "add", amountToAdd)
-            end
-        end,
-        setItemMetadata = function(data, src)
-            local Player = Core.Functions.GetPlayer(src)
-            Player.PlayerData.items[data.slot].info = data.metadata
-            if data.metadata.durability then
-                Player.PlayerData.items[data.slot].description = "HP : "..data.metadata.durability
-            end
-            Player.Functions.SetInventory(Player.PlayerData.items)
-        end,
-        canCarry = function(itemTable, src)
-            local resultTable = {}
-            for k, v in pairs(itemTable) do
-                resultTable[k] = exports[OXInv]:CanCarryItem(src, k, v)
-            end
-            return resultTable
-        end,
-        getMaxInvWeight = function()
-            if checkExportExists(RSGInv, "GetMaxWeight") then
-                return exports[RSGInv]:GetMaxWeight()
-            else
-                return InventoryWeight
-            end
-        end,
-        getPlayerInv = function(src)
-            local grabInv = nil
-            if src then
-                grabInv = Core.Functions.GetPlayer(src).PlayerData.items
-            else
-                grabInv = Core.Functions.GetPlayerData().items
-            end
-            return grabInv
-        end,
-        invImg = function(item)
-            return "nui://"..RSGInv.."/html/images/"..(Items[item].image or "")
-        end,
-        openShop = function(data)
-            TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
-        end,
-        registerShop = function(name, label, items, society)
-            exports[RSGInv]:CreateShop({
-                name = name,
-                label = label,
-                slots = #items,
-                items = items,
-                society = society,
-            })
-            debugPrint("^6Bridge^7: ^2Registering ^5"..RSGInv.." ^3Store^7:", name, "^4Label^7: "..label)
-        end,
-        openStash = function(data)
-            TriggerServerEvent(getScript()..':server:openServerStash', {
-                stashName = data.stash,
-                label = data.label,
-                maxweight = data.maxWeight or 600000,
-                slots = data.slots or 40
-            })
-        end,
-        clearStash = function(stashId)
-            exports[RSGInv]:ClearStash(stashId)
-        end,
-        getStash = function(stashName)
-            return exports[RSGInv]:GetInventory(stashName)
-        end,
-        stashAddItem = function(stashItems, stashName, items)
-
-        end,
-        stashRemoveItem = function(stashItems, stashName, items)
-            for k, v in pairs(items) do
-                exports[RSGInv]:RemoveItem(stashName, k, v, false, 'crafting')
-                debugPrint("^6Bridge^7: ^2Removing ^3"..RSGInv.." ^2Stash item^7:", k, v)
-            end
-        end,
-        registerStash = function(name, label, slots, weight, owner, coords)
-            --
-        end,
+            end,
+        registerStash =
+            function(name, label, slots, weight, owner, coords)
+                --
+            end,
     },
 }
 
@@ -1000,34 +1257,30 @@ function hasItem(items, amount, src)
     local grabInv, foundInv = getPlayerInv(src)
     if type(items) ~= "table" then items = { [items] = amount and amount or 1, } end
 
-    if grabInv then
-        local hasTable = {}
-        for item, amt in pairs(items) do
-            if not Items[item] then print("^4ERROR^7: ^2Script can't find ingredient item in Shared Items - ^1"..item.."^7") end
+    local hasTable = {}
+    for item, amt in pairs(items) do
+        if not doesItemExist(item) then
+            print("^4ERROR^7: ^2Script can't find ingredient item in Shared Items - ^1"..item.."^7")
+        end
+        for k, inv in ipairs(InvFunc) do
+            if isStarted(inv.invName) then
+                local hasItem, count = inv.hasItem(item, amt, src, grabInv)
 
-            local count = 0
-            for _, itemData in pairs(grabInv) do
-                --jsonPrint(itemData)
-                if itemData and itemData.name == item then
-                    count += (itemData.amount or itemData.count or 1)
-                end
-            end
-            foundInv = foundInv:gsub("%-", "^7-^6"):gsub("%_", "^7_^6")
-            local foundMessage = "^6Bridge^7: ^3hasItem^7[^6"..foundInv.."^7]: "..tostring(item).." ^3"..count.."^7/^3"..amt
-            if count >= amt then foundMessage = foundMessage.." ^5FOUND^7" else foundMessage = foundMessage .." ^1NOT FOUND^7" end
-            debugPrint(foundMessage)
-            hasTable[item] = { hasItem = count >= amt, count = count }
-        end
-        for k, v in pairs(hasTable) do
-            if not v.hasItem then
-                return false, hasTable
+                local foundMessage = "^6Bridge^7: ^3hasItem^7[^6"..foundInv.."^7]: "..tostring(item).." ^3"..count.."^7/^3"..amt
+                if count >= amt then foundMessage = foundMessage.." ^5FOUND^7" else foundMessage = foundMessage .." ^1NOT FOUND^7" end
+                debugPrint(foundMessage)
+
+                hasTable[item] = { hasItem = hasItem, count = count }
+                break
             end
         end
-        return true, hasTable
     end
-    -- if can't find inventory, return false
-    print("^1Error^7: ^1Can't find players inventory for some reason")
-    return false, {}
+    for k, v in pairs(hasTable) do
+        if not v.hasItem then
+            return false, hasTable
+        end
+    end
+    return true, hasTable
 end
 
 --- Retrieves a player's inventory based on the active inventory system.
@@ -1516,8 +1769,7 @@ function canCarry(itemTable, src)
     local resultTable = {}
     for _, inv in pairs(InvFunc) do
         if isStarted(inv.invName) then
-            resultTable = inv.canCarry(itemTable, src)
-            break
+            return inv.canCarry(itemTable, src)
         end
     end
     return resultTable
@@ -2000,7 +2252,11 @@ function stashhasItem(stashItems, items, amount)
         hasTable[item] = { hasItem = (count >= requiredAmount), count = count }
     end
 
-    for k, v in pairs(hasTable) do if v.hasItem == false then return false, hasTable end end
+    for k, v in pairs(hasTable) do
+        if v.hasItem == false then
+            return false, hasTable
+        end
+    end
 
     return true, hasTable
 end
