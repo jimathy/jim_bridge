@@ -69,6 +69,9 @@ local InvFunc = {
             function(data)
                 exports[OXInv]:openInventory('shop', { type = data.shop })
             end,
+        serverOpenShop = function(shopName)
+            --
+        end,
         registerShop =
             function(name, label, items, society)
                 exports[OXInv]:RegisterShop(name, {
@@ -168,6 +171,9 @@ local InvFunc = {
             function(data)
                 TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
             end,
+        serverOpenShop = function(shopName)
+            --
+        end,
         registerShop =
             function(name, label, items, society)
                 --
@@ -258,6 +264,10 @@ local InvFunc = {
             function(data)
                 --
             end,
+        serverOpenShop =
+            function(shopName)
+                --
+            end,
         registerShop =
             function(name, label, items, society)
                 --
@@ -342,6 +352,10 @@ local InvFunc = {
             end,
         openShop =
             function(data)
+                --
+            end,
+        serverOpenShop =
+            function(shopName)
                 --
             end,
         registerShop =
@@ -442,6 +456,10 @@ local InvFunc = {
             function(data)
                 TriggerEvent("codem-inventory:openshop", data.shop)
             end,
+        serverOpenShop =
+            function(shopName)
+                --
+            end,
         registerShop =
             function(name, label, items, society)
                 --
@@ -536,6 +554,10 @@ local InvFunc = {
         openShop =
             function(data)
                 TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
+            end,
+        serverOpenShop =
+            function(shopName)
+                exports[TgiannInv]:OpenShop(source, shopName)
             end,
         registerShop =
             function(name, label, items, society)
@@ -666,6 +688,12 @@ local InvFunc = {
                 TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
                 TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
             end,
+        serverOpenShop =
+            function(shopName)
+                if checkExportExists(JPRInv, "OpenShop") then
+                    exports[JPRInv]:OpenShop(source, shopName)
+                end
+            end,
         registerShop =
             function(name, label, items, society)
                 exports[JPRInv]:CreateShop({
@@ -701,11 +729,11 @@ local InvFunc = {
             end,
         getStash =
             function(stashName)
-                local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
-                if result then
-                    return json.decode(result)
+                if checkExportExists(JPRInv, "GetStashItems") then
+                    return exports[JPRInv]:GetStashItems(stashName) or {}
                 else
-                    return {}
+                    local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
+                    return result and json.decode(result) or {}
                 end
             end,
         stashAddItem =
@@ -778,7 +806,7 @@ local InvFunc = {
         canCarry =
             function(itemTable, src)
                 local resultTable = {}
-                if QBInvNew then
+                if checkExportExists(QBInv, "CanAddItem") then
                     for k, v in pairs(itemTable) do
                         resultTable[k] = exports[QBInv]:CanAddItem(src, k, v)
                     end
@@ -827,6 +855,12 @@ local InvFunc = {
                 TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
                 TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
             end,
+        serverOpenShop =
+            function(shopName)
+                if checkExportExists(QBInv, "OpenShop") then
+                    exports[QBInv]:OpenShop(source, shopName)
+                end
+            end,
         registerShop =
             function(name, label, items, society)
                 if checkExportExists(QBInv, "CreateShop") then
@@ -859,7 +893,7 @@ local InvFunc = {
             end,
         clearStash =
             function(stashId)
-                if QBInvNew then
+                if checkExportExists(QBInv, "ClearStash") then
                     exports[QBInv]:ClearStash(stashId)
                 else
                     MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
@@ -888,7 +922,7 @@ local InvFunc = {
             end,
         stashRemoveItem =
             function(stashItems, stashName, items)
-                if QBInvNew then
+                if checkExportExists(QBInv, "RemoveItem") then
                     for k, v in pairs(items) do
                         exports[QBInv]:RemoveItem(stashName, k, v, false, 'crafting')
                         debugPrint("^6Bridge^7: ^2Removing ^3"..QBInv.." ^2Stash item^7:", k, v)
@@ -1010,6 +1044,12 @@ local InvFunc = {
             function(data)
                 TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
                 TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
+            end,
+        serverOpenShop =
+            function(shopName)
+                if checkExportExists(PSInv, "OpenShop") then
+                    exports[PSInv]:OpenShop(source, shopName)
+                end
             end,
         registerShop =
             function(name, label, items, society)
@@ -1164,6 +1204,10 @@ local InvFunc = {
         openShop =
             function(data)
                 TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
+            end,
+        serverOpenShop =
+            function(shopName)
+                exports[RSGInv]:OpenShop(source, shopName)
             end,
         registerShop =
             function(name, label, items, society)
@@ -2508,18 +2552,12 @@ function openShop(data)
     end
 end
 
-RegisterNetEvent(getScript()..':server:openServerShop', function(data)
-    if isStarted(QBInv) and checkExportExists(QBInv, "OpenShop") then
-        exports[QBInv]:OpenShop(source, data)
-    end
-    if isStarted(PSInv) and checkExportExists(PSInv, "OpenShop") then
-        exports[PSInv]:OpenShop(source, data)
-    end
-    if isStarted(TgiannInv) then
-        exports[TgiannInv]:OpenShop(source, data)
-    end
-    if isStarted(RSGInv) then
-        exports[RSGInv]:OpenShop(source, data)
+RegisterNetEvent(getScript()..':server:openServerShop', function(shopName)
+    for _, inv in ipairs(InvFunc) do
+        if isStarted(inv.invName) then
+            inv.serverOpenShop(shopName)
+            break
+        end
     end
 end)
 
