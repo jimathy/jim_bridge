@@ -10,7 +10,7 @@ local metaDataFunc = {
     {   framework = QBXExport,
         GetPlayer =
             function(src)
-                return exports[QBXExport]:GetCoreObject().Functions.GetPlayer(src)
+                return exports[QBXExport]:GetPlayer(src)
             end,
         GetPlayerMetadata =
             function(Player, dataToCheck)
