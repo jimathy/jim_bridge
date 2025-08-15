@@ -52,7 +52,7 @@ function CheckBridgeVersion()
                         print((line:find("http") and "^7" or "^5")..line)
                     end
                     print("^1----------------------------------------------------------------------^7")
-                    SetTimeout(1200000, function()
+                    SetTimeout(3600000, function()
                         CheckBridgeVersion()
                     end)
                 else

@@ -87,7 +87,7 @@ function CheckVersion()
                             end
                         end
                         print("^1----------------------------------------------------------------------^7")
-                        SetTimeout(1200000, function() CheckVersion() end)
+                        SetTimeout(3600000, function() CheckVersion() end)
                     else
                         print("^7'^3"..script.."^7' - ^5You are running a newer version ^7(^3"..currentVersionRaw.."^7 ← ^3"..newestVersion.."^7)")
                     end
