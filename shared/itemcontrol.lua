@@ -66,8 +66,8 @@ local InvFunc = {
                 return "nui://"..OXInv.."/web/images/"..(Items[item].image or "")
             end,
         openShop =
-            function(data)
-                exports[OXInv]:openInventory('shop', { type = data.shop })
+            function(name, label, items)
+                exports[OXInv]:openInventory('shop', { type = name })
             end,
         serverOpenShop = function(shopName)
             --
@@ -168,8 +168,8 @@ local InvFunc = {
                 return "nui://"..QSInv.."/html/images/"..(Items[item].image or "")
             end,
         openShop =
-            function(data)
-                TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
+            function(name, label, items)
+                TriggerServerEvent("inventory:server:OpenInventory", "shop", label, items)
             end,
         serverOpenShop = function(shopName)
             --
@@ -261,7 +261,7 @@ local InvFunc = {
                 return "nui://"..CoreInv.."/html/img/"..(Items[item].image or "")
             end,
         openShop =
-            function(data)
+            function(name, label, items)
                 --
             end,
         serverOpenShop =
@@ -351,7 +351,7 @@ local InvFunc = {
                 return "nui://"..OrigenInv.."/html/img/"..(Items[item].image or "")
             end,
         openShop =
-            function(data)
+            function(name, label, items)
                 --
             end,
         serverOpenShop =
@@ -453,8 +453,8 @@ local InvFunc = {
                 return "nui://"..CodeMInv.."/html/itemimages/"..(Items[item].image or "")
             end,
         openShop =
-            function(data)
-                TriggerEvent("codem-inventory:openshop", data.shop)
+            function(name, label, items)
+                TriggerEvent("codem-inventory:openshop", name)
             end,
         serverOpenShop =
             function(shopName)
@@ -552,8 +552,8 @@ local InvFunc = {
                 return "nui://inventory_images/images/"..(Items[item].image or "")
             end,
         openShop =
-            function(data)
-                TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
+            function(name, label, items)
+                TriggerServerEvent(getScript()..':server:openServerShop', name)
             end,
         serverOpenShop =
             function(shopName)
@@ -684,9 +684,9 @@ local InvFunc = {
                 return "nui://"..JPRInv.."/html/images/"..(Items[item].image or "")
             end,
         openShop =
-            function(data)
-                TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
-                TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
+            function(name, label, items)
+                TriggerServerEvent(getScript()..':server:openServerShop', name)
+                TriggerServerEvent("inventory:server:OpenInventory", "shop", label, items)
             end,
         serverOpenShop =
             function(shopName)
@@ -851,9 +851,9 @@ local InvFunc = {
                 return "nui://"..QBInv.."/html/images/"..(Items[item].image or "")
             end,
         openShop =
-            function(data)
-                TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
-                TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
+            function(name, label, items)
+                TriggerServerEvent(getScript()..':server:openServerShop', name)
+                TriggerServerEvent("inventory:server:OpenInventory", "shop", label, items)
             end,
         serverOpenShop =
             function(shopName)
@@ -1041,9 +1041,9 @@ local InvFunc = {
                 return "nui://"..PSInv.."/html/images/"..(Items[item].image or "")
             end,
         openShop =
-            function(data)
-                TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
-                TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
+            function(name, label, items)
+                TriggerServerEvent(getScript()..':server:openServerShop', name)
+                TriggerServerEvent("inventory:server:OpenInventory", "shop", label, items)
             end,
         serverOpenShop =
             function(shopName)
@@ -1202,8 +1202,8 @@ local InvFunc = {
                 return "nui://"..RSGInv.."/html/images/"..(Items[item].image or "")
             end,
         openShop =
-            function(data)
-                TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
+            function(name, label, items)
+                TriggerServerEvent(getScript()..':server:openServerShop', name)
             end,
         serverOpenShop =
             function(shopName)
@@ -2093,6 +2093,14 @@ end
 -------------------------------------------------------------
 -- Stash Opening Functions
 -------------------------------------------------------------
+---
+local stashExploitCheck = {}
+
+if isServer() then
+    createCallback(getScript()..":getRegisteredStashLocations", function(src, stashName)
+        return stashExploitCheck[stashName]
+    end)
+end
 
 --- Opens a stash using the active inventory system.
 ---
@@ -2113,6 +2121,15 @@ end
 --- ```
 function openStash(data)
     if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
+
+    --local exploitCheck = triggerCallback(getScript()..":getRegisteredStashLocations", data.stash)
+    --if not exploitCheck then
+    --    print("^3Warning^7: ^2This isn't a registered stash^1, refusing call^7")
+    --    return
+    --end
+    --if not distExploitCheck(exploitCheck) then
+    --    return
+    --end
 
     for i = 1, #InvFunc do
         local inv = InvFunc[i]
@@ -2138,6 +2155,15 @@ end
 -- Messy but not much else I can do about it.
 RegisterNetEvent(getScript()..":server:openServerStash", function(data)
     local src = source
+
+    --if not stashExploitCheck[data.stashName] then
+    --    print("^3Warning^7: ^1Source^7: ^3"..src.." ^1Tried to open a shop^7: ^2This isn't a registered stash^1, refusing call^7")
+    --    return
+    --end
+    --if not distExploitCheck(stashExploitCheck[data.stashName]) then
+    --    return
+    --end
+
     if isStarted(TgiannInv) then
         exports[TgiannInv]:OpenInventory(source, 'stash', data.stashName, data)
     end
@@ -2346,6 +2372,12 @@ function registerStash(name, label, slots, weight, owner, coords)
             return
         end
     end
+    if coords then
+        stashExploitCheck[name] = stashExploitCheck[name] or {}
+        stashExploitCheck[name][#stashExploitCheck[name]+1] = coords
+    else
+        print("^3Warning^7: ^1Stash ^4"..name.." ^1doesn^7'^1t have coords^7, ^1this is exploitable^7, ^1add coords to ^3regiterStash^7()")
+    end
 end
 
 if isServer() then
@@ -2395,6 +2427,13 @@ end)
 -- Selling Menu and Animation
 -------------------------------------------------------------
 
+local sellShopExploitCheck = {}
+if isServer() then
+    createCallback(getScript()..":getRegisteredSellShopLocation", function(src, name)
+        return sellShopExploitCheck[name] or nil
+    end)
+end
+
 --- Opens a selling menu with available items and prices.
 ---
 --- @param data table Contains selling menu data:
@@ -2417,6 +2456,16 @@ end)
 --- ```
 function sellMenu(data)
     local origData = data
+
+    --local exploitCheck = triggerCallback(getScript()..":getRegisteredSellShopLocation", data.name)
+    --if not exploitCheck then
+    --    print("^3Warning^7: ^2This isn't a registered store^1, refusing call^7")
+    --    return
+    --end
+    --if not distExploitCheck(exploitCheck) then
+    --    return
+    --end
+
     local Menu = {}
     if data.sellTable.Items then
         local itemList = {}
@@ -2431,7 +2480,9 @@ function sellMenu(data)
                     txt = (Loc and Loc[Config.Lan]) and Loc[Config.Lan].info["sell_all"]..v.." "..Loc[Config.Lan].info["sell_each"]
                     or "Sell ALL at $"..v.." each",
                     onSelect = function()
-                        sellAnim({ item = k, price = v, ped = data.ped, onBack = function() sellMenu(data) end })
+
+                        local token = triggerCallback(AuthEvent)
+                        sellAnim({ item = k, price = v, ped = data.ped, onBack = function() sellMenu(data) end }, token)
                     end,
                 }
             end
@@ -2481,7 +2532,7 @@ end
 ---     onBack = function() sellMenu(data) end,
 --- })
 --- ```
-function sellAnim(data)
+function sellAnim(data, token)
     if not hasItem(data.item, 1) then
         triggerNotify(nil, Loc[Config.Lan].error["dont_have"].." "..Items[data.item].label, "error")
         return
@@ -2500,7 +2551,7 @@ function sellAnim(data)
         end
     end
 
-    TriggerServerEvent(getScript().."Sellitems", data)
+    TriggerServerEvent(getScript()..":Sellitems", data, token)
     lookEnt(data.ped)
     local dict = "mp_common"
     playAnim(dict, "givetake2_a", 0.3, 48)
@@ -2513,22 +2564,62 @@ function sellAnim(data)
     end
 end
 
+local bannedItems = {
+    money = true,
+    cash = true,
+    bank = true,
+    crypto = true,
+    blackmoney = true,
+    dirty_money = true,
+    markedbills = true
+}
+
 --- Server event handler for processing item sales.
 --- Removes sold items from inventory and funds the player based on the sale.
-RegisterNetEvent(getScript().."Sellitems", function(data)
+RegisterNetEvent(getScript()..":Sellitems", function(data, token)
     local src = source
+
+    if not checkToken(src, token, "item", "cash") then
+        return
+    end
+    -- Check bannedItems list
+    for k, v in pairs(bannedItems) do
+        if data.item == k then
+            dupeWarn(src, data.item, "^3Source^7: "..src.." ^1Tried to spawn banned item with sell items function")
+            return
+        end
+    end
+
     local hasItems, hasTable = hasItem(data.item, 1, src)
     if hasItems then
         removeItem(data.item, hasTable[data.item].count, src)
+        print((hasTable[data.item].count * data.price), data.price)
         fundPlayer((hasTable[data.item].count * data.price), "cash", src)
     else
         triggerNotify(nil, Loc[Config.Lan].error["dont_have"].." "..Items[data.item].label, "error", src)
     end
 end)
 
+function registerSellShop(name, coords)
+    if coords and type(coords) == "vector3" then
+        print("Registered Sell Shop "..name.." Correctly")
+        sellShopExploitCheck[name] = sellShopExploitCheck[name] or {}
+        sellShopExploitCheck[name][#sellShopExploitCheck[name]+1] = coords
+    end
+end
+
 -------------------------------------------------------------
 -- Shop Interface
 -------------------------------------------------------------
+
+-- Keep a local cache of all registered shops coords, if they are actually registering in the inventory or not
+local shopExploitCheck = {}
+
+if isServer() then
+    createCallback(getScript()..":getRegisteredShopLocation", function(src, name)
+        return shopExploitCheck[name] or nil
+    end)
+end
 
 --- Opens a shop interface for the player.
 ---
@@ -2548,8 +2639,18 @@ end)
 --- })
 --- ```
 function openShop(data)
-    jsonPrint(data)
+    --jsonPrint(data)
     if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
+
+    -- If shop has registered coords, limit players from being too far away from it when opening
+    --local exploitCheck = triggerCallback(getScript()..":getRegisteredShopLocation", data.shop)
+    --if not exploitCheck then
+    --    print("^3Warning^7: ^2This isn't a registered store^1, refusing call^7")
+    --    return
+    --end
+    --if not distExploitCheck(exploitCheck) then
+    --    return
+    --end
 
     if Config.General.JimShops then
         TriggerServerEvent("jim-shops:ShopOpen", "shop", data.items.label, data.items)
@@ -2559,14 +2660,26 @@ function openShop(data)
     for i = 1, #InvFunc do
         local inv = InvFunc[i]
         if isStarted(inv.invName) then
-            inv.openShop(data)
+            inv.openShop(data.shop, data.items.label, data.items)
             lookEnt(data.coords)
             break
         end
     end
+
 end
 
 RegisterNetEvent(getScript()..':server:openServerShop', function(shopName)
+    local src = source
+
+    -- If shop has registered coords, limit players from being too far away from it when opening
+    --if not shopExploitCheck[data.shop] then
+    --    print("^3Warning^7: ^1Source^7: ^3"..src.." ^1Tried to open a shop^7: ^2This isn't a registered store^1, refusing call^7")
+    --    return
+    --end
+    --if not distExploitCheck(shopExploitCheck[data.shop]) then
+    --    return
+    --end
+
     for i = 1, #InvFunc do
         local inv = InvFunc[i]
         if isStarted(inv.invName) then
@@ -2574,10 +2687,10 @@ RegisterNetEvent(getScript()..':server:openServerShop', function(shopName)
             break
         end
     end
+
 end)
 
 --- Registers a shop with the active inventory system.
---- Supports either OXInv or QBInv (with QBInvNew flag).
 ---
 --- @param name string Unique shop identifier.
 --- @param label string Display name for the shop.
@@ -2587,16 +2700,25 @@ end)
 --- ```lua
 --- registerShop("weaponShop", "Weapon Shop", weaponItems, "society_weapons")
 --- ```
-function registerShop(name, label, items, society)
+function registerShop(name, label, items, society, coords)
     local shopResource = ""
 
     for i = 1, #InvFunc do
         local inv = InvFunc[i]
         if isStarted(inv.invName) then
-                shopResource = inv.invName
-                inv.registerShop(name, label, items, society)
+            shopResource = inv.invName
+            inv.registerShop(name, label, items, society)
             break
         end
+    end
+
+    -- If received coords, pass them to distance check cache
+    if coords and type(coords) == "vector3" then
+        --print("Registered Shop Correctly")
+        shopExploitCheck[name] = shopExploitCheck[name] or {}
+        shopExploitCheck[name][#shopExploitCheck[name]+1] = coords
+    else
+        print("^3Warning^7: ^1Store ^4"..name.." ^1doesn^7'^1t have coords^7, ^1this is exploitable^7, ^1add coords to ^3regiterShop^7()")
     end
 
     if shopResource ~= "" then
