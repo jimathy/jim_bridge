@@ -201,7 +201,7 @@ local InvFunc = {
         stashRemoveItem =
             function(stashItems, stashName, items)
                 for k, v in pairs(items) do
-                    exports[QSInv]:RemoveItemIntoStash(stashName, k, v)
+                    exports[QSInv]:RemoveItemIntoStash(stashName[1], k, v)
                     debugPrint("^6Bridge^7: ^2Removing ^3"..QSInv.." ^2Stash item^7:", k, v)
                 end
             end,
@@ -291,7 +291,7 @@ local InvFunc = {
         stashRemoveItem =
             function(stashItems, stashName, items)
                 for k, v in pairs(items) do
-                    exports[CoreInv]:removeItemExact(stashName, k, v)
+                    exports[CoreInv]:removeItemExact(stashName[1], k, v)
                     debugPrint("^6Bridge^7: ^2Removing ^3"..CoreInv.." ^2Stash item^7:", k, v)
                 end
             end,
@@ -381,7 +381,7 @@ local InvFunc = {
         stashRemoveItem =
             function(stashItems, stashName, items)
                 for k, v in pairs(items) do
-                    exports[OrigenInv]:RemoveFromStash(stashName, k, v)
+                    exports[OrigenInv]:RemoveFromStash(stashName[1], k, v)
                     debugPrint("^6Bridge^7: ^2Removing ^3"..OrigenInv.." ^2Stash item^7:", k, v)
                 end
             end,
@@ -494,7 +494,7 @@ local InvFunc = {
                         end
                     end
                 end
-                exports[CodeMInv]:UpdateStash(stashName, stashItems)
+                exports[CodeMInv]:UpdateStash(stashName[1], stashItems)
             end,
         registerStash =
             function(name, label, slots, weight, owner, coords)
@@ -588,8 +588,8 @@ local InvFunc = {
         stashRemoveItem =
             function(stashItems, stashName, items)
                 for k, v in pairs(items) do
-                    local itemData = exports[TgiannInv]:GetItemByNameFromSecondaryInventory("stash", stashName, k)
-                    exports[TgiannInv]:RemoveItemFromSecondaryInventory("stash", stashName, k, v, itemData.slot, nil)
+                    local itemData = exports[TgiannInv]:GetItemByNameFromSecondaryInventory("stash", stashName[1], k)
+                    exports[TgiannInv]:RemoveItemFromSecondaryInventory("stash", stashName[1], k, v, itemData.slot, nil)
                     debugPrint("^6Bridge^7: ^2Removing ^3"..TgiannInv.." ^2Stash item^7:", k, v)
                 end
             end,
@@ -743,7 +743,7 @@ local InvFunc = {
         stashRemoveItem =
             function(stashItems, stashName, items)
                 if not stashItems or not next(stashItems) then
-                    stashItems = getStash(stashName)
+                    stashItems = getStash(stashName[1])
                 end
                 for k, v in pairs(items) do
                     for l in pairs(stashItems) do
@@ -757,9 +757,9 @@ local InvFunc = {
                         end
                     end
                 end
-                debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3JPR^2 stash '^6"..stashName.."^7'")
+                debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3JPR^2 stash '^6"..stashName[1].."^7'")
                 MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
-                    ['stash'] = stashName,
+                    ['stash'] = stashName[1],
                     ['items'] = json.encode(stashItems)
                 })
             end,
@@ -924,12 +924,12 @@ local InvFunc = {
             function(stashItems, stashName, items)
                 if checkExportExists(QBInv, "RemoveItem") then
                     for k, v in pairs(items) do
-                        exports[QBInv]:RemoveItem(stashName, k, v, false, 'crafting')
+                        exports[QBInv]:RemoveItem(stashName[1], k, v, false, 'crafting')
                         debugPrint("^6Bridge^7: ^2Removing ^3"..QBInv.." ^2Stash item^7:", k, v)
                     end
                 else
                     if not stashItems or not next(stashItems) then
-                        stashItems = getStash(stashName)
+                        stashItems = getStash(stashName[1])
                     end
                     for k, v in pairs(items) do
                         for l in pairs(stashItems) do
@@ -943,9 +943,9 @@ local InvFunc = {
                             end
                         end
                     end
-                    debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash '^6"..stashName.."^7'")
+                    debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QB^2 stash '^6"..stashName[1].."^7'")
                     MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
-                        ['stash'] = stashName,
+                        ['stash'] = stashName[1],
                         ['items'] = json.encode(stashItems)
                     })
                 end
@@ -1105,7 +1105,7 @@ local InvFunc = {
         stashRemoveItem =
             function(stashItems, stashName, items)
                 if not stashItems or not next(stashItems) then
-                    stashItems = getStash(stashName)
+                    stashItems = getStash(stashName[1])
                 end
                 for k, v in pairs(items) do
                     for l in pairs(stashItems) do
@@ -1119,9 +1119,9 @@ local InvFunc = {
                         end
                     end
                 end
-                debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3PS^2 stash ^7'^6"..stashName.."^7'")
+                debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3PS^2 stash ^7'^6"..stashName[1].."^7'")
                 MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
-                    ['stash'] = stashName,
+                    ['stash'] = stashName[1],
                     ['items'] = json.encode(stashItems)
                 })
             end,
@@ -1244,7 +1244,7 @@ local InvFunc = {
         stashRemoveItem =
             function(stashItems, stashName, items)
                 for k, v in pairs(items) do
-                    exports[RSGInv]:RemoveItem(stashName, k, v, false, 'crafting')
+                    exports[RSGInv]:RemoveItem(stashName[1], k, v, false, 'crafting')
                     debugPrint("^6Bridge^7: ^2Removing ^3"..RSGInv.." ^2Stash item^7:", k, v)
                 end
             end,
@@ -2280,7 +2280,7 @@ function stashRemoveItem(stashItems, stashName, items)
     for i = 1, #InvFunc do
         local inv = InvFunc[i]
         if isStarted(inv.invName) then
-            inv.stashRemoveItem(stashItems, stashName[1], items)
+            inv.stashRemoveItem(stashItems, stashName, items)
             return
         end
     end
