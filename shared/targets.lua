@@ -18,172 +18,190 @@
 ]]
 
 local targetFunc = {
-    {
-        targetName = OXTargetExport,
-        entityTarget = function(entity, opts, dist)
-            local options = {}
-            for i = 1, #opts do
-                options[i] = {
-                    icon = opts[i].icon,
-                    label = opts[i].label,
-                    items = opts[i].item or nil,
-                    groups = opts[i].job or opts[i].gang,
-                    onSelect = opts[i].action,
-                    distance = dist,
-                    canInteract = opts[i].canInteract or nil,
-                }
-            end
-            exports[OXTargetExport]:addLocalEntity(entity, options)
-        end,
+    {   targetName = OXTargetExport,
+        entityTarget =
+            function(entity, opts, dist)
+                local options = {}
+                for i = 1, #opts do
+                    options[i] = {
+                        icon = opts[i].icon,
+                        label = opts[i].label,
+                        items = opts[i].item or nil,
+                        groups = opts[i].job or opts[i].gang,
+                        onSelect = opts[i].action,
+                        distance = dist,
+                        canInteract = opts[i].canInteract or nil,
+                    }
+                end
+                exports[OXTargetExport]:addLocalEntity(entity, options)
+            end,
 
-        boxTarget = function(data, opts, dist)
-            local options = {}
-            for i = 1, #opts do
-                options[i] = {
-                    icon = opts[i].icon,
-                    label = opts[i].label,
-                    items = opts[i].item or nil,
-                    groups = opts[i].groups or opts[i].job or opts[i].gang,
-                    onSelect = opts[i].onSelect or opts[i].action,
-                    distance = dist,
-                    canInteract = opts[i].canInteract or nil,
-                }
-            end
+        boxTarget =
+            function(data, opts, dist)
+                local options = {}
+                for i = 1, #opts do
+                    options[i] = {
+                        icon = opts[i].icon,
+                        label = opts[i].label,
+                        items = opts[i].item or nil,
+                        groups = opts[i].groups or opts[i].job or opts[i].gang,
+                        onSelect = opts[i].onSelect or opts[i].action,
+                        distance = dist,
+                        canInteract = opts[i].canInteract or nil,
+                    }
+                end
 
-            data[5].maxZ = data[5].maxZ or (data[2].z + 0.80)
-            data[5].minZ = data[5].minZ or data[2].z - 1.05
-            local thickness = ((data[5].maxZ / 2) - (data[5].minZ / 2)) * 2
-            local mid = data[5].maxZ - ((data[5].maxZ / 2) - (data[5].minZ / 2))
+                data[5].maxZ = data[5].maxZ or (data[2].z + 0.80)
+                data[5].minZ = data[5].minZ or data[2].z - 1.05
+                local thickness = ((data[5].maxZ / 2) - (data[5].minZ / 2)) * 2
+                local mid = data[5].maxZ - ((data[5].maxZ / 2) - (data[5].minZ / 2))
 
-            data[2] = vec3(data[2].x, data[2].y, mid) -- force the coord to middle of the minZ and maxZ
+                data[2] = vec3(data[2].x, data[2].y, mid) -- force the coord to middle of the minZ and maxZ
 
-            local target = exports[OXTargetExport]:addBoxZone({
-                coords = data[2],
-                size = vec3(data[4], data[3], thickness), -- size uses the math to determine how high it needs to be
-                rotation = data[5].heading,
-                debug = data[5].debugPoly,
-                options = options
-            })
-            return target
-        end,
+                local target = exports[OXTargetExport]:addBoxZone({
+                    coords = data[2],
+                    size = vec3(data[4], data[3], thickness), -- size uses the math to determine how high it needs to be
+                    rotation = data[5].heading,
+                    debug = data[5].debugPoly,
+                    options = options
+                })
+                return target
+            end,
 
-        circleTarget = function(data, opts, dist)
-            local options = {}
-            for i = 1, #opts do
-                options[i] = {
-                    icon = opts[i].icon,
-                    label = opts[i].label,
-                    items = opts[i].item or nil,
-                    groups = opts[i].job or opts[i].gang,
-                    onSelect = opts[i].onSelect or opts[i].action,
-                    distance = dist,
-                    canInteract = opts[i].canInteract or nil,
-                }
-            end
-            local target = exports[OXTargetExport]:addSphereZone({
-                coords = data[2],
-                radius = data[3],
-                debug = data[4].debugPoly,
-                options = options
-            })
-            return target
-        end,
+        circleTarget =
+            function(data, opts, dist)
+                local options = {}
+                for i = 1, #opts do
+                    options[i] = {
+                        icon = opts[i].icon,
+                        label = opts[i].label,
+                        items = opts[i].item or nil,
+                        groups = opts[i].job or opts[i].gang,
+                        onSelect = opts[i].onSelect or opts[i].action,
+                        distance = dist,
+                        canInteract = opts[i].canInteract or nil,
+                    }
+                end
+                local target = exports[OXTargetExport]:addSphereZone({
+                    coords = data[2],
+                    radius = data[3],
+                    debug = data[4].debugPoly,
+                    options = options
+                })
+                return target
+            end,
 
-        modelTarget = function(models, opts, dist)
-            local options = {}
-            for i = 1, #opts do
-                options[i] = {
-                    icon = opts[i].icon,
-                    label = opts[i].label,
-                    items = opts[i].item or nil,
-                    groups = opts[i].job or opts[i].gang,
-                    onSelect = opts[i].action,
-                    distance = dist,
-                    canInteract = opts[i].canInteract or nil,
-                }
-            end
-            exports[OXTargetExport]:addModel(models, options)
-        end,
+        modelTarget =
+            function(models, opts, dist)
+                local options = {}
+                for i = 1, #opts do
+                    options[i] = {
+                        icon = opts[i].icon,
+                        label = opts[i].label,
+                        items = opts[i].item or nil,
+                        groups = opts[i].job or opts[i].gang,
+                        onSelect = opts[i].action,
+                        distance = dist,
+                        canInteract = opts[i].canInteract or nil,
+                    }
+                end
+                exports[OXTargetExport]:addModel(models, options)
+            end,
 
-        removeTargetEntity = function(entity)
-            exports[OXTargetExport]:removeLocalEntity(entity, nil)
-        end,
+        removeTargetEntity =
+            function(entity)
+                exports[OXTargetExport]:removeLocalEntity(entity, nil)
+            end,
 
-        removeTargetZone = function(target)
-            exports[OXTargetExport]:removeZone(target, true)
-        end,
+        removeTargetZone =
+            function(target)
+                exports[OXTargetExport]:removeZone(target, true)
+            end,
 
-        removeTargetModel = function(model)
-            exports[OXTargetExport]:removeModel(model, nil)
-        end,
+        removeTargetModel =
+            function(model)
+                exports[OXTargetExport]:removeModel(model, nil)
+            end,
     },
 
-    {
-        targetName = QBTargetExport,
-        entityTarget = function(entity, opts, dist)
-            local options = { options = opts, distance = dist }
-            exports[QBTargetExport]:AddTargetEntity(entity, options)
-        end,
+    {   targetName = QBTargetExport,
+        entityTarget =
+            function(entity, opts, dist)
+                local options = { options = opts, distance = dist }
+                exports[QBTargetExport]:AddTargetEntity(entity, options)
+            end,
 
-        boxTarget = function(data, opts, dist)
-            local options = { options = opts, distance = dist }
-            local target = exports[QBTargetExport]:AddBoxZone(data[1], data[2], data[3], data[4], data[5], options)
-            return data[1]
-        end,
+        boxTarget =
+            function(data, opts, dist)
+                local options = { options = opts, distance = dist }
+                local target = exports[QBTargetExport]:AddBoxZone(data[1], data[2], data[3], data[4], data[5], options)
+                return data[1]
+            end,
 
-        circleTarget = function(data, opts, dist)
-            local options = { options = opts, distance = dist }
-            local target = exports[QBTargetExport]:AddCircleZone(data[1], data[2], data[3], data[4], options)
-            return data[1]
-        end,
+        circleTarget =
+            function(data, opts, dist)
+                local options = { options = opts, distance = dist }
+                local target = exports[QBTargetExport]:AddCircleZone(data[1], data[2], data[3], data[4], options)
+                return data[1]
+            end,
 
-        modelTarget = function(models, opts, dist)
-            local options = { options = opts, distance = dist }
-            exports[QBTargetExport]:AddTargetModel(models, options)
-        end,
+        modelTarget =
+            function(models, opts, dist)
+                local options = { options = opts, distance = dist }
+                exports[QBTargetExport]:AddTargetModel(models, options)
+            end,
 
-        removeTargetEntity = function(entity)
-            exports[QBTargetExport]:RemoveTargetEntity(entity)
-        end,
+        removeTargetEntity =
+            function(entity)
+                exports[QBTargetExport]:RemoveTargetEntity(entity)
+            end,
 
-        removeTargetZone = function(target)
-            exports[QBTargetExport]:RemoveZone(target)
-        end,
+        removeTargetZone =
+            function(target)
+                exports[QBTargetExport]:RemoveZone(target)
+            end,
 
-        removeTargetModel = function(model)
-            exports[QBTargetExport]:RemoveTargetModel(model, "Test")
-        end,
+        removeTargetModel =
+            function(model)
+                exports[QBTargetExport]:RemoveTargetModel(model, "Test")
+            end,
     },
 
-    {
-        targetName = "jim_bridge",
-        entityTarget = function(entity, opts, dist)
-            return exports.jim_bridge:createEntityTarget(entity, opts, dist)
-        end,
+    {   targetName = "jim_bridge",
+        entityTarget =
+            function(entity, opts, dist)
+                return exports.jim_bridge:createEntityTarget(entity, opts, dist)
+            end,
 
-        boxTarget = function(data, opts, dist)
-            return exports.jim_bridge:createZoneTarget(data, opts, dist)
-        end,
+        boxTarget =
+            function(data, opts, dist)
+                return exports.jim_bridge:createZoneTarget(data, opts, dist)
+            end,
 
-        circleTarget = function(data, opts, dist)
-            return exports.jim_bridge:createZoneTarget(data, opts, dist)
-        end,
+        circleTarget =
+            function(data, opts, dist)
+                return exports.jim_bridge:createZoneTarget(data, opts, dist)
+            end,
 
-        modelTarget = function(models, opts, dist)
-            return exports.jim_bridge:createModelTarget(models, opts, dist)
-        end,
+        modelTarget =
+            function(models, opts, dist)
+                return exports.jim_bridge:createModelTarget(models, opts, dist)
+            end,
 
-        removeTargetEntity = function(entity)
-            exports.jim_bridge:removeEntityTarget(entity)
-        end,
+        removeTargetEntity =
+            function(entity)
+                exports.jim_bridge:removeEntityTarget(entity)
+            end,
 
-        removeTargetZone = function(target)
-            exports.jim_bridge:removeZoneTarget(target)
-        end,
+        removeTargetZone =
+            function(target)
+                exports.jim_bridge:removeZoneTarget(target)
+            end,
 
-        removeTargetModel = function(model)
-            exports.jim_bridge:removeZoneTarget(model)
-        end,
+        removeTargetModel =
+            function(model)
+                exports.jim_bridge:removeZoneTarget(model)
+            end,
     },
 }
 
@@ -243,7 +261,8 @@ function createEntityTarget(entity, opts, dist)
     end
 
     -- Check for target script and use that
-    for _, script in pairs(targetFunc) do
+    for i = 1, #targetFunc do
+        local script = targetFunc[i]
         if isStarted(script.targetName) then
             debugPrint("^6Bridge^7: ^2Creating new ^3Entity ^2target with ^6"..script.targetName.." ^2for entity ^7"..entity)
             return script.entityTarget(entity, opts, dist)
@@ -314,7 +333,8 @@ function createBoxTarget(data, opts, dist)
     end
 
     -- Check for target script and use that
-    for _, script in pairs(targetFunc) do
+    for i = 1, #targetFunc do
+        local script = targetFunc[i]
         if isStarted(script.targetName) then
             debugPrint("^6Bridge^7: ^2Creating new ^3Box ^2target with ^6"..script.targetName.." ^7"..data[1])
             local target = script.boxTarget(data, opts, dist)
@@ -370,7 +390,8 @@ function createCircleTarget(data, opts, dist)
     end
 
     -- Check for target script and use that
-    for _, script in pairs(targetFunc) do
+    for i = 1, #targetFunc do
+        local script = targetFunc[i]
         if isStarted(script.targetName) then
             debugPrint("^6Bridge^7: ^2Creating new ^3Sphere ^2target with ^6"..script.targetName.." ^7"..data[1])
             local target = script.circleTarget(data, opts, dist)
@@ -416,7 +437,8 @@ function createModelTarget(models, opts, dist)
     end
 
     -- Check for target script and use that
-    for _, script in pairs(targetFunc) do
+    for i = 1, #targetFunc do
+        local script = targetFunc[i]
         if isStarted(script.targetName) then
             debugPrint("^6Bridge^7: ^2Creating new ^3Model ^2target with ^6"..script.targetName.."^7")
             local target = script.modelTarget(models, opts, dist)
@@ -446,7 +468,8 @@ function removeEntityTarget(entity)
     end
 
     -- Check for target script and use that
-    for _, script in pairs(targetFunc) do
+    for i = 1, #targetFunc do
+        local script = targetFunc[i]
         if isStarted(script.targetName) then
             script.removeTargetEntity(entity)
             break
@@ -471,7 +494,8 @@ function removeZoneTarget(target)
     end
 
     -- Check for target script and use that
-    for _, script in pairs(targetFunc) do
+    for i = 1, #targetFunc do
+        local script = targetFunc[i]
         if isStarted(script.targetName) then
             script.removeTargetZone(target)
             break
@@ -494,7 +518,8 @@ function removeModelTarget(model)
     end
 
     -- Check for target script and use that
-    for _, script in pairs(targetFunc) do
+    for i = 1, #targetFunc do
+        local script = targetFunc[i]
         if isStarted(script.targetName) then
             script.removeTargetModel(model)
             break

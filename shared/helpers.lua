@@ -73,8 +73,6 @@ function checkExportExists(resource, export)
     end
 end
 
-
-
 -------------------------------------------------------------
 -- Debugging and JSON Utilities
 -------------------------------------------------------------
@@ -581,6 +579,67 @@ RegisterNetEvent(getScript()..":server:sendlog", sendServerLog)
 function GetRandomTiming(tbl)
     return type(tbl) == "table" and math.random(tbl[1], tbl[2]) or tbl
 end
+
+-------------------------------------------------------------
+-- Player Movement
+-------------------------------------------------------------
+
+--- Instantly turns an entity to face a target (entity or coordinates) without animation.
+---
+--- @param ent number|nil The Ped to turn (defaults to player's Ped if nil).
+--- @param ent2 number|vector3|nil The target entity or coordinates to face.
+---
+--- @usage
+--- ```lua
+--- instantLookEnt(nil, vector3(200.0, 300.0, 40.0))
+--- instantLookEnt(ped1, ped2)
+--- ```
+function instantLookEnt(ent, ent2)
+    local ped = ent or PlayerPedId()
+    local p1 = GetEntityCoords(ped, true)
+    local p2 = type(ent2) == "vector3" and ent2 or GetEntityCoords(ent2, true)
+
+    local dx = p2.x - p1.x
+    local dy = p2.y - p1.y
+    local heading = GetHeadingFromVector_2d(dx, dy)
+
+    debugPrint("^6Bridge^7: ^1Forced ^2Turning Player to^7: '^6"..formatCoord(p2).."^7'")
+    SetEntityHeading(ped, heading)
+end
+
+--- Makes the player look towards a specific target with an animated turn.
+---
+--- If the player is not already facing the target (entity or coordinates), a turning animation is triggered.
+---
+--- @param entity number|vector3|vector4|nil The target to look at.
+---
+--- @usage
+--- ```lua
+--- lookEnt(vector3(200.0, 300.0, 40.0))
+--- lookEnt(pedEntity)
+--- ```
+function lookEnt(entity)
+    local ped = PlayerPedId()
+    if entity then
+        if type(entity) == "vector3" or type(entity) == "vector4" then
+            if not IsPedHeadingTowardsPosition(ped, entity.xyz, 30.0) then
+                TaskTurnPedToFaceCoord(ped, entity.xyz, 1500)
+                debugPrint("^6Bridge^7: ^2Turning Player to^7: '^6"..formatCoord(entity).."^7'")
+                Wait(1500)
+            end
+        else
+            if DoesEntityExist(entity) then
+                local entCoords = GetEntityCoords(entity)
+                if not IsPedHeadingTowardsPosition(ped, entCoords, 30.0) then
+                    TaskTurnPedToFaceCoord(ped, entCoords, 1500)
+                    debugPrint("^6Bridge^7: ^2Turning Player to^7: '^6"..entity.."^7' - '"..formatCoord(entCoords).."^7'")
+                    Wait(1500)
+                end
+            end
+        end
+    end
+end
+
 
 -------------------------------------------------------------
 -- Material and Prop Functions

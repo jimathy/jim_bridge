@@ -116,3 +116,29 @@ else
         TriggerServerEvent(getScript()..":clearAuthEventRequest")
     end, true)
 end
+
+function distExploitCheck(table, src)
+
+    if not table then
+        --print("^1Error^7: ^1This wasn^7'^1t reigstered correctly or this is an exploit attempt^1")
+        return false
+    end
+
+    local ped = src and GetPlayerPed(src) or PlayerPedId()
+    local srcCoords = GetEntityCoords(ped)
+    local allow = false
+
+    for i = 1, #table do
+        if #(table[i]  - srcCoords) <= 10 then
+            return true
+        else
+            allow = false
+        end
+    end
+
+    if not allow then
+        debugPrint(src and ("^1Src ^3"..src.." ").."^1Tried to open a registered shop/stash from over the distance limit^7")
+        return false
+    end
+
+end

@@ -124,10 +124,12 @@ function craftingMenu(data)
                         itemTable[l] = b
                     end
 
-                    while not canCarryTable do Wait(0) end
+                    while not canCarryTable do
+                        Wait(10)
+                    end
                     disable = not checkStashItem(data.stashName, itemTable)
                     setheader = ((metadata and metadata.label) or (Items[tostring(k)] and Items[tostring(k)].label) or "error - "..tostring(k))
-                               ..(Recipes[i]["amount"] > 1 and " x"..Recipes[i]["amount"] or "")
+                                ..(Recipes[i]["amount"] > 1 and " x"..Recipes[i]["amount"] or "")
 
                     local statusEmoji = disable and " " or not canCarryTable[k] and " 📦" or " ✔️"
                     local isNew = (Recipes[i]["hasCrafted"] ~= nil and craftedItems[k] == nil) and "✨ " or ""

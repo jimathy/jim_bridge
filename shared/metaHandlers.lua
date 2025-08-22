@@ -6,6 +6,82 @@
     for getting and setting metadata.
 ]]
 
+local metaDataFunc = {
+    {   framework = QBXExport,
+        GetPlayer =
+            function(src)
+                return exports[QBXExport]:GetPlayer(src)
+            end,
+        GetPlayerMetadata =
+            function(Player, dataToCheck)
+                return Player.PlayerData.metadata[dataToCheck]
+            end,
+        SetPlayerMetadata =
+            function(Player, key, value)
+                return Player.Functions.SetMetaData(key, value)
+            end,
+    },
+
+    {   framework = QBExport,
+        GetPlayer =
+            function(src)
+                return exports[QBExport]:GetCoreObject().Functions.GetPlayer(src)
+            end,
+        GetPlayerMetadata =
+            function(Player, dataToCheck)
+                return Player.PlayerData.metadata[dataToCheck]
+            end,
+        SetPlayerMetadata =
+            function(Player, key, value)
+                return Player.Functions.SetMetaData(key, value)
+            end,
+    },
+
+    {   framework = ESXExport,
+        GetPlayer =
+            function(src)
+                return ESX.GetPlayerFromId(src)
+            end,
+        GetPlayerMetadata =
+            function(Player, dataToCheck)
+                return Player.getMeta(dataToCheck)
+            end,
+        SetPlayerMetadata =
+            function(Player, key, value)
+                return Player.set(key, value)
+            end,
+    },
+
+    {   framework = OXCoreExport,
+        GetPlayer =
+            function(src)
+                return exports[OXCoreExport]:GetPlayer(src)
+            end,
+        GetPlayerMetadata =
+            function(Player, dataToCheck)
+                return Player.get(dataToCheck)
+            end,
+        SetPlayerMetadata =
+            function(Player, key, value)
+                return Player.set(key, value)
+            end,
+    },
+
+    {   framework = RSGExport,
+        GetPlayer = function(src)
+            exports[RSGExport]:GetCoreObject().Functions.GetPlayer(source)
+        end,
+        GetPlayerMetadata = function(Player, dataToCheck)
+            return Player.PlayerData.metadata[dataToCheck]
+        end,
+        SetPlayerMetadata = function(Player, key, value)
+            return Player.Functions.SetMetaData(key, value)
+        end,
+    },
+
+}
+
+
 -------------------------------------------------------------
 -- Player Retrieval
 -------------------------------------------------------------
@@ -20,26 +96,11 @@
 --- local player = GetPlayer(playerId)
 --- ```
 function GetPlayer(source)
-    if isStarted(QBExport) then
-        debugPrint("^6Bridge^7: ^3GetPlayer^7() QBExport")
-        return exports[QBExport]:GetCoreObject().Functions.GetPlayer(source)
-
-    elseif isStarted(QBXExport) then
-        debugPrint("^6Bridge^7: ^3GetPlayer^7() QBOXExport")
-        return exports[QBXExport]:GetCoreObject().Functions.GetPlayer(source)
-
-    elseif isStarted(ESXExport) then
-        debugPrint("^6Bridge^7: ^3GetPlayer^7() ESXExport")
-        return ESX.GetPlayerFromId(source)
-
-    elseif isStarted(OXCoreExport) then
-        debugPrint("^6Bridge^7: ^3GetPlayer^7() OXCoreExport")
-        return exports[OXCoreExport]:GetPlayer(source)
-
-    elseif isStarted(RSGExport) then
-        debugPrint("^6Bridge^7: ^3GetPlayer^7() RSGExport")
-        return exports[RSGExport]:GetCoreObject().Functions.GetPlayer(source)
-
+    for i = 1, #metaDataFunc do
+        local framework = metaDataFunc[i]
+        if isStarted(framework.framework) then
+            return framework.GetPlayer(source)
+        end
     end
     return nil
 end
@@ -61,26 +122,19 @@ end
 --- local myMeta = getPlayerMetadata(player, "myKey")
 --- ```
 function getPlayerMetadata(player, key)
+    -- Assume this is client side and callback to server to get the data
     if not player then
         debugPrint("^6Bridge^7: ^3GetMetadata^7() calling server: "..key)
         return triggerCallback(getScript()..":server:GetMetadata", key)
     else
-        if isStarted(QBExport) or isStarted(QBXExport) then
-            debugPrint("^6Bridge^7: ^3GetMetadata^7() QBExport/QBXExport", key)
-            return player.PlayerData.metadata[key]
+        -- else grab server metadata about the player
+        for i = 1, #metaDataFunc do
+            local framework = metaDataFunc[i]
+            if isStarted(framework.framework) then
 
-        elseif isStarted(ESXExport) then
-            debugPrint("^6Bridge^7: ^3GetMetadata^7() ESXExport", key)
-            return player.getMeta(key)
-
-        elseif isStarted(OXCoreExport) then
-            debugPrint("^6Bridge^7: ^3GetMetadata^7() OXCoreExport", key)
-            return player.get(key)
-
-        elseif isStarted(RSGExport) then
-            debugPrint("^6Bridge^7: ^3GetMetadata^7() RSGExport", key)
-            return player.PlayerData.metadata[key]
-
+                debugPrint("^6Bridge^7: ^3GetMetadata^7() ^3"..framework.framework.."^7", key)
+                return framework.GetPlayerMetadata(player, key)
+            end
         end
     end
     return nil
@@ -123,34 +177,22 @@ end)
 --- setPlayerMetadata(player, "myKey", "newValue")
 --- ```
 function setPlayerMetadata(player, key, value)
-    debugPrint("^6Bridge^7: ^3SetMetadata^7() setting metadata for key: "..key)
-    if isStarted(QBExport) or isStarted(QBXExport) then
-        debugPrint("^6Bridge^7: ^3SetMetadata^7() using QBExport/QBXExport")
-        player.Functions.SetMetaData(key, value)
-
-    elseif isStarted(ESXExport) then
-        debugPrint("^6Bridge^7: ^3SetMetadata^7() using ESXExport")
-        player.setMeta(key, value)
-
-    elseif isStarted(OXCoreExport) then
-        debugPrint("^6Bridge^7: ^3SetMetadata^7() using OXCoreExport")
-        player.set(key, value)
-
-    elseif isStarted(RSGExport) then
-        debugPrint("^6Bridge^7: ^3SetMetadata^7() using RSGExport")
-        player.Functions.SetMetaData(key, value)
-
+    debugPrint("^6Bridge^7: ^3SetMetadata^7() setting metadata^7...")
+    for i = 1, #metaDataFunc do
+        local framework = metaDataFunc[i]
+        if isStarted(framework.framework) then
+            debugPrint("^6Bridge^7: ^3SetMetadata^7() ^3"..framework.framework.."^7", key, value)
+            return framework.GetPlayerMetadata(player, key)
+        end
     end
+    debugPrint("^6Bridge^7: ^1Error setting metadata^7, ^1framework not supported^7?")
 end
 
 -- Register a server callback for setting metadata.
 createCallback(getScript()..":server:setPlayerMetadata", function(source, key, value)
-    debugPrint("SetMetadata callback triggered for source:", source, "key:", key, "value:", value)
-    local player = GetPlayer(source)
-    --[[if not player then
-        print("Error setting metadata: player not found for source "..tostring(source))
-        return false
-    end]]
+    local src = source
+    debugPrint("SetMetadata callback triggered for source:", src, "key:", key, "value:", value)
+    local player = GetPlayer(src)
     setPlayerMetadata(player, key, value)
     print("Metadata set successfully.", key)
     return true

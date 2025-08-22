@@ -9,6 +9,58 @@
         and teleporting via doors.
 ]]
 
+
+local bossMenuFunc = {
+    {   name = "qb-management",
+        openBossMenu = function(isGang, group)
+            if isGang then
+                TriggerEvent("qb-gangmenu:client:OpenMenu")
+            else
+                TriggerEvent("qb-bossmenu:client:OpenMenu")
+            end
+        end,
+    },
+
+    {   name = "qbx_management",
+        openBossMenu = function(isGang, group)
+            if isGang then
+                exports["qbx_management"]:OpenBossMenu("gang")
+            else
+                exports["qbx_management"]:OpenBossMenu("job")
+            end
+        end,
+    },
+
+    {   name = "esx_society",
+        openBossMenu = function(isGang, group)
+            TriggerEvent('esx_society:openBossMenu', group, function() end, { wash = false })
+        end,
+    },
+
+    {   name = "tss-bossmenu",
+        openBossMenu = function(isGang, group)
+            TriggerEvent("tss-bossmenu:client:OpenMenu")
+        end,
+    },
+
+    {   name = "okokBossMenu",
+        openBossMenu = function(isGang, group)
+            ExecuteCommand('openbossmenu')
+        end,
+    },
+}
+
+function openBossMenu(isGang, group)
+    for i = 1, #bossMenuFunc do
+        local bossmenu = bossMenuFunc[i]
+        if isStarted(bossmenu.name) then
+            bossmenu.openBossMenu(isGang, group)
+            return
+        end
+    end
+end
+
+
 -------------------------------------------------------------
 -- Global Duty Status
 -------------------------------------------------------------
@@ -245,20 +297,4 @@ function useDoor(data)
     SetEntityHeading(PlayerPedId(), data.telecoords.w)
     DoScreenFadeIn(1000)
     Wait(100)
-end
-
-
-function openBossMenu(isGang, group)
-    if isStarted("qb-management") then
-        if isGang then
-            TriggerEvent("qb-gangmenu:client:OpenMenu")
-        else
-            TriggerEvent("qb-bossmenu:client:OpenMenu")
-        end
-    elseif isStarted("qbx_management") then
-        exports["qbx_management"]:OpenBossMenu(isGang and "gang" or "job")
-
-    elseif isStarted("esx_society") then
-        TriggerEvent('esx_society:openBossMenu', group, function() end, { wash = false })
-    end
 end
