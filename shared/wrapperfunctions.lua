@@ -24,7 +24,7 @@ function registerCommand(command, options)
     local commandResource = ""
     if isStarted(OXLibExport) then
         commandResource = OXLibExport
-        lib.addCommand(command, { help = options[1], restricted = options[5] and "group."..options[5] or nil }, options[4])
+        lib.addCommand(command, { help = options[1], restricted = options[5] and "group."..options[5] or nil }, options[3])
 
     elseif isStarted(QBExport) and not isStarted(QBXExport) then
         commandResource = QBExport
