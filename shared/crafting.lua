@@ -115,12 +115,12 @@ function craftingMenu(data)
                     local metaTable = {}
                     -- Build ingredient details.
                     for l, b in pairs(Recipes[i][tostring(k)]) do
-                        local label = Items[l] and Items[l].label or "error - "..l
+                        local label = getItemLabel(l)
                         local hasItem = checkStashItem(data.stashName, { [l] = b })
                         local missingMark = not hasItem and " ❌" or " "
                         settext = settext..(settext ~= "" and br or "").."[ x"..b.." ] - "..label..missingMark
 
-                        metaTable[Items[l] and Items[l].label or "error - "..l] = b
+                        metaTable[label] = b
                         itemTable[l] = b
                     end
 
@@ -128,7 +128,7 @@ function craftingMenu(data)
                         Wait(10)
                     end
                     disable = not checkStashItem(data.stashName, itemTable)
-                    setheader = ((metadata and metadata.label) or (Items[tostring(k)] and Items[tostring(k)].label) or "error - "..tostring(k))
+                    setheader = ((metadata and metadata.label) or getItemLabel(k))
                                 ..(Recipes[i]["amount"] > 1 and " x"..Recipes[i]["amount"] or "")
 
                     local statusEmoji = disable and " " or not canCarryTable[k] and " 📦" or " ✔️"
@@ -359,7 +359,7 @@ function makeItem(data)
                         return
                     end
                     if crafting and progressBar({
-                        label = "Using "..b.." "..Items[l].label,
+                        label = "Using "..b.." "..getItemLabel(l),
                         time = 1000,
                         cancel = true,
                         dict = 'pickup_object',
@@ -398,7 +398,7 @@ function makeItem(data)
             PlaySoundFromEntity(s.soundId, s.audioName, PlayerPedId(), s.audioRef, true, 0)
         end
         if crafting and progressBar({
-            label = bartext..((metadata and metadata.label) or Items[data.item].label).." x"..craftAmount,
+            label = bartext..((metadata and metadata.label) or getItemLabel(data.item)).." x"..craftAmount,
             time = totalBartime,
             cancel = true,
             dict = animDict,
@@ -437,7 +437,7 @@ function makeItem(data)
         -- Run the original loop for multiple progress bars
         for i = 1, craftAmount do
             if crafting and progressBar({
-                label = bartext..((metadata and metadata.label) or Items[data.item].label),
+                label = bartext..((metadata and metadata.label) or getItemLabel(data.item)),
                 time = bartime,
                 cancel = true,
                 dict = animDict,

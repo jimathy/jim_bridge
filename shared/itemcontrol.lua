@@ -1585,7 +1585,7 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
 
                 end
             else
-                debugPrint("^6Bridge^7: ^3"..action.."^7["..invName.."] Player("..src..") "..Items[item].label.."("..item..") x"..(amount or 1))
+                debugPrint("^6Bridge^7: ^3"..action.."^7["..invName.."] Player("..src..") "..getItemLabel(item).."("..item..") x"..(amount or 1))
             end
         end
     else
@@ -1610,7 +1610,7 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
                 ESX.GetPlayerFromId(src).addInventoryItem(item, amountToAdd)
             end
         else
-            debugPrint("^6Bridge^7: ^3"..action.."^7["..invName.."] Player("..src..") "..Items[item].label.."("..item..") x"..(amount or 1))
+            debugPrint("^6Bridge^7: ^3"..action.."^7["..invName.."] Player("..src..") "..getItemLabel(item).."("..item..") x"..(amount or 1))
         end
     end
 end)
@@ -1951,6 +1951,7 @@ end
 --- if doesItemExist(item) then print("item exists") end
 --- ```
 function doesItemExist(item)
+    local item = type(item) == "string" and item or tostring(item)
     if not item or item == "" then
         return false
     end
@@ -1965,16 +1966,18 @@ end
 
 
 function getItemLabel(item)
+    local item = type(item) == "string" and item or tostring(item)
+
     if not item or item == "" then
         return ""
     end
     if not Items or not next(Items) then
-        return item.." (Missing)"
+        return item.." (Missing item error)"
     end
     if Items[item] ~= nil then
         return Items[item].label
     end
-    return item.." (Missing)"
+    return item.." (Missing item error)"
 end
 
 
@@ -2476,7 +2479,7 @@ function sellMenu(data)
                 Menu[#Menu + 1] = {
                     isMenuHeader = not hasTable[k].hasItem,
                     icon = invImg(k),
-                    header = Items[k].label..(hasTable[k].hasItem and "💰 (x"..hasTable[k].count..")" or ""),
+                    header = getItemLabel(item)..(hasTable[k].hasItem and "💰 (x"..hasTable[k].count..")" or ""),
                     txt = (Loc and Loc[Config.Lan]) and Loc[Config.Lan].info["sell_all"]..v.." "..Loc[Config.Lan].info["sell_each"]
                     or "Sell ALL at $"..v.." each",
                     onSelect = function()
@@ -2534,7 +2537,7 @@ end
 --- ```
 function sellAnim(data, token)
     if not hasItem(data.item, 1) then
-        triggerNotify(nil, Loc[Config.Lan].error["dont_have"].." "..Items[data.item].label, "error")
+        triggerNotify(nil, Loc[Config.Lan].error["dont_have"].." "..getItemLabel(data.item), "error")
         return
     end
 
@@ -2596,7 +2599,7 @@ RegisterNetEvent(getScript()..":Sellitems", function(data, token)
         print((hasTable[data.item].count * data.price), data.price)
         fundPlayer((hasTable[data.item].count * data.price), "cash", src)
     else
-        triggerNotify(nil, Loc[Config.Lan].error["dont_have"].." "..Items[data.item].label, "error", src)
+        triggerNotify(nil, Loc[Config.Lan].error["dont_have"].." "..getItemLabel(data.item), "error", src)
     end
 end)
 
