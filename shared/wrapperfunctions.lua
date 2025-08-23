@@ -21,24 +21,56 @@
 --- })
 --- ```
 function registerCommand(command, options)
+    -- Name the options
+    local optionTable = {
+        helpInfo = options[1] or nil,           -- help info that pops up in chat box
+        subText = options[2] or nil,            -- sub help info for each arg
+        argsRequired = options[3] or nil,       -- command only works if you enter args
+        funct = options[4] or nil,              -- function that will run when command is triggered
+        restriction = options[5] or nil         -- admin group that can use the group or `nil`
+    }
+
     local commandResource = ""
     if isStarted(OXLibExport) then
         commandResource = OXLibExport
-        lib.addCommand(command, { help = options[1], restricted = options[5] and "group."..options[5] or nil }, options[4])
+        lib.addCommand(command,
+            {
+                help = optionTable.helpInfo,
+                params = optionTable.subText,
+                restricted = optionTable.restriction and "group."..optionTable.restriction or nil
+            },
+        optionTable.funct)
 
     elseif isStarted(QBExport) and not isStarted(QBXExport) then
         commandResource = QBExport
-        Core.Commands.Add(command, options[1], options[2], options[3], options[4], options[5] or nil)
+        Core.Commands.Add(command,
+            optionTable.helpInfo,
+            optionTable.subText,
+            optionTable.argsRequired,
+            optionTable.funt,
+            optionTable.restriction or nil
+        )
 
     elseif isStarted(RSGExport) then
         commandResource = RSGExport
-        Core.Commands.Add(command, options[1], options[2], options[3], options[4], options[5] or nil)
+        Core.Commands.Add(command,
+            optionTable.helpInfo,
+            optionTable.subText,
+            optionTable.argsRequired,
+            optionTable.funt,
+            optionTable.restriction or nil
+        )
 
     elseif isStarted(ESXExport) then
         commandResource = ESXExport
-        ESX.RegisterCommand(command, options[5] or 'admin', function(xPlayer, args, showError)
-            options[4](xPlayer.source, args, showError)
-        end, false, { help = options[1] })
+        ESX.RegisterCommand(command,
+            optionTable.restriction or 'admin',
+            function(xPlayer, args, showError)
+                optionTable.funct(xPlayer.source, args, showError)
+            end,
+            false,
+            { help = options[1] }
+        )
 
     end
     if commandResource ~= "" then
