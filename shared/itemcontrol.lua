@@ -2479,7 +2479,7 @@ function sellMenu(data)
                 Menu[#Menu + 1] = {
                     isMenuHeader = not hasTable[k].hasItem,
                     icon = invImg(k),
-                    header = getItemLabel(item)..(hasTable[k].hasItem and "💰 (x"..hasTable[k].count..")" or ""),
+                    header = getItemLabel(k)..(hasTable[k].hasItem and "💰 (x"..hasTable[k].count..")" or ""),
                     txt = (Loc and Loc[Config.Lan]) and Loc[Config.Lan].info["sell_all"]..v.." "..Loc[Config.Lan].info["sell_each"]
                     or "Sell ALL at $"..v.." each",
                     onSelect = function()
