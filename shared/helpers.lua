@@ -180,6 +180,7 @@ function GetPrintTime()
         local hour, min, sec = os.date('%H'), os.date('%M'), os.date('%S')
         return "^7("..string.format("%02d", hour)..":"..string.format("%02d", min)..":"..string.format("%02d", sec)..")"
     else
+        if gameName == "rdr3" then return "" end
         local _, _, _, hour, min, sec = GetLocalTime()
         return "^7("..string.format("%02d", hour)..":"..string.format("%02d", min)..":"..string.format("%02d", sec)..")"
     end

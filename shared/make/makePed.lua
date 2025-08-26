@@ -65,7 +65,6 @@ function makePed(data, coords, freeze, collision, scenario, anim, synced, fade)
         model = data.model
         loadModel(data.model)
         ped = CreatePed(0, model, coords.x, coords.y, coords.z - 1.03, coords.w, synced and synced or false, false)
-        SetEntityAlpha(ped, 0, false)
         -- Inheritance
         SetPedHeadBlendData(ped, data.custom.faceFather, data.custom.faceMother, data.custom.raceShape, data.custom.skinFather, data.custom.skinMother, data.custom.raceSkin, data.custom.faceMix or 0, data.custom.skinMix or 0, data.custom.raceMix or 0, false)
 
@@ -145,7 +144,8 @@ function makePed(data, coords, freeze, collision, scenario, anim, synced, fade)
     end
     unloadModel(model)
     Peds[keyGen()..keyGen()] = ped
-    if fade ~= false then
+    if fade ~= false and gameName ~= "rdr3" then
+        SetEntityAlpha(ped, 0, false)
         CreateThread(function()
             fadeInEnt(ped)
         end)
