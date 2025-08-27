@@ -25,4 +25,4 @@ client_scripts {
     'ui_modules/*.lua',
 }
 
-suppress_updates 'true'   -- set to 'true' to disable update pings
+suppress_updates 'false'   -- set to 'true' to disable update pings
