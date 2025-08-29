@@ -273,6 +273,7 @@ function progressBar(data)
     while result == nil do
         Wait(10)
     end
+    debugPrint("^5Debug^7: ^2ProgressBar result^7: ^3"..tostring(result).."^7")
 
     -- Cleanup
     FreezeEntityPosition(ped, false)
