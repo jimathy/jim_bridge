@@ -60,7 +60,7 @@ local phoneFunc = {
                 TriggerServerEvent('phone:sendNewMail', mailData)
             end,
     },
-    {   name = "roadphone",
+    {   phone = "roadphone",
         sendMail =
             function(mailData)
                 -- Convert HTML line breaks to newlines for roadphone.
@@ -249,3 +249,4 @@ RegisterNetEvent(getScript()..":jpr:SendMail", function(data)
     })
 
 end)
+
