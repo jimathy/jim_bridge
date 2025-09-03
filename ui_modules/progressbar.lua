@@ -53,27 +53,11 @@ function redProgressBar(data)
             Wait(0)
             local elapsed = GetGameTimer()
             local percentage = ((elapsed - (endTime - wait)) / wait) * 100
+            if percentage < 0 then percentage = 0 end
+            if percentage > 100 then percentage = 100 end
 
-            -- Convert to segmented progress (assuming 5 segments here)
-            local segments = 1  -- Number of segments in the bar
-            local segmentProgress = {}
-            local progressPerSegment = 100 / segments
-
-            for i = 1, segments do
-                local segmentStart = (i - 1) * progressPerSegment
-                local segmentEnd = i * progressPerSegment
-                if percentage >= segmentEnd then
-                    segmentProgress[i] = 100
-                elseif percentage <= segmentStart then
-                    segmentProgress[i] = 0
-                else
-                    segmentProgress[i] = ((percentage - segmentStart) / progressPerSegment) * 100
-                end
-            end
-
-            percentage = percentage >= 100 and 100 or percentage
             -- Draw your segmented progress bar
-            ShowRedProgressBar(segmentProgress, data.label, ("%.0f%%"):format(percentage))
+            ShowRedProgressBar(percentage, data.label, ("%.0f%%"):format(percentage))
 
             -- Controls to disable during progress
             if data.disableMouse then
@@ -151,40 +135,48 @@ function redProgressBar(data)
     return result
 end
 
-function ShowRedProgressBar(currentProg, title, level)
+function ShowRedProgressBar(percentage, title, level)
     local loc = vec2(0.40, 0.90)
     local size = vec2(0.3, 0.03)
+    local tickCount = 10        -- visually split into 10 segments (9 inner lines)
+    local barHeight = size.y / 3.4
+    local barWidth  = 0.21      -- tuned to your existing layout
+    local barLeft   = (loc.x - size.x / 4) + 0.075
+    local barCenter = barLeft + barWidth / 2
+    local lineW     = 0.001
+    local lineH     = barHeight + 0.00
 
-    -- Draw background box
-    DrawSprite("generic_textures", "inkroller_1a", loc.x+0.1, loc.y-0.01, 0.25, 0.07, 180.0, 0, 0, 0, 200)
+    -- Background plate
+    DrawSprite("generic_textures", "inkroller_1a", loc.x + 0.1, loc.y - 0.01, 0.25, 0.07, 180.0, 0, 0, 0, 200)
 
+    -- Title (left)
     SetTextFontForCurrentCommand(6)
     SetTextScale(0.35, 0.35)
-	SetTextColor(255, 255, 255, 255)
-	SetTextDropshadow(1, 0, 0, 0, 200)
-	BgDisplayText(title, loc.x - size.x / 4 + 0.074, loc.y - 0.034)
+    SetTextColor(255, 255, 255, 255)
+    SetTextDropshadow(1, 0, 0, 0, 200)
+    BgDisplayText(title, loc.x - size.x / 4 + 0.074, loc.y - 0.034)
 
+    -- Percentage (right)
     SetTextFontForCurrentCommand(1)
     SetTextScale(0.35, 0.35)
-	SetTextColor(255, 255, 255, 255)
-	SetTextDropshadow(1, 0, 0, 0, 200)
-	BgDisplayText(level, loc.x - size.x / 4 + 0.246, loc.y - 0.030)
+    SetTextColor(255, 255, 255, 255)
+    SetTextDropshadow(1, 0, 0, 0, 200)
+    BgDisplayText(level, loc.x - size.x / 4 + 0.246, loc.y - 0.030)
 
-    local segmentWidth = (size.x + 0.05) / (#currentProg * 2)  -- Divide the total width by 18 (9 segments * 2 gaps for each)
-    local gap = segmentWidth / #currentProg  -- Smaller gap between segments
+    -- Track (bg)
+    DrawRect(barCenter, loc.y, barWidth, barHeight, 100, 100, 100, 255)
 
-    for i = 1, #currentProg do
-        local segmentX = (loc.x - size.x / 4 ) + 0.075 + (i - 1) * (segmentWidth + gap)
-        local fillPercentage = currentProg[i]
-        local progressBarWidth = segmentWidth * (fillPercentage / 100)
+    -- Fill
+    local fillWidth = barWidth * (percentage / 100.0)
+    if fillWidth > 0.0 then
+        local fillCenter = barLeft + (fillWidth / 2.0)
+        DrawRect(fillCenter, loc.y, fillWidth, barHeight, 255, 0, 0, 200)  -- red fill
+    end
 
-        -- Semi-transparent background for each segment
-        DrawRect(segmentX + segmentWidth / 2, loc.y, segmentWidth, size.y / 3.4, 100, 100, 100, 255)
-
-        -- Filling progress for each segment
-        if progressBarWidth > 0 then
-            DrawRect(segmentX + progressBarWidth / 2, loc.y, progressBarWidth, size.y / 3.4, 255, 0, 0, 200)  -- Blue progress
-        end
+    -- Tick lines (9 inner lines for 10 segments)
+    for i = 1, (tickCount - 1) do
+        local x = barLeft + (barWidth * (i / tickCount))
+        DrawRect(x, loc.y, lineW, lineH, 0, 0, 0, 120)
     end
 end
 
@@ -213,29 +205,14 @@ function gtaProgressBar(data)
             local elapsed = GetGameTimer()
             local percentage = ((elapsed - (endTime - wait)) / wait) * 100
 
-            -- Convert to segmented progress (assuming 5 segments here)
-            local segments = 1  -- Number of segments in the bar
-            local segmentProgress = {}
-            local progressPerSegment = 100 / segments
+            if percentage < 0 then percentage = 0 end
+            if percentage > 100 then percentage = 100 end
 
-            for i = 1, segments do
-                local segmentStart = (i - 1) * progressPerSegment
-                local segmentEnd = i * progressPerSegment
-                if percentage >= segmentEnd then
-                    segmentProgress[i] = 100
-                elseif percentage <= segmentStart then
-                    segmentProgress[i] = 0
-                else
-                    segmentProgress[i] = ((percentage - segmentStart) / progressPerSegment) * 100
-                end
-            end
-
-            percentage = percentage >= 100 and 100 or percentage
             -- Draw your segmented progress bar
-            ShowGTAProgressBar(segmentProgress, data.label, ("%.0f%%"):format(percentage))
+            ShowGTAProgressBar(percentage, data.label, ("%.0f%%"):format(percentage))
 
             -- Controls to disable during progress
-            DisablePlayerFiring(ped, true)
+            DisablePlayerFiring(PlayerId(), true)
             DisableControlAction(0, 25, true) -- Disable aim
             DisableControlAction(0, 21, true) -- Disable sprint
             DisableControlAction(0, 30, true) -- Disable move left/right
@@ -246,13 +223,15 @@ function gtaProgressBar(data)
                 inProgress = false
             end
         end
+        result = inProgress
     end)
 
-    -- Wait for completion or cancel
-    while GetGameTimer() < endTime and inProgress do
-        Wait(100)
-    end
 
+    -- Wait for completion or cancel
+    while result == nil do Wait(10) end
+    inProgress = false
+
+    print(tostring(result))
     -- Cleanup animations/tasks
     if data.dict then
         stopAnim(data.dict, data.anim, ped)
@@ -261,10 +240,6 @@ function gtaProgressBar(data)
         ClearPedTasks(ped)
     end
 
-    result = inProgress
-    inProgress = false
-
-    while result == nil do Wait(10) end
 
     -- Cleanup
     FreezeEntityPosition(ped, false)
@@ -276,14 +251,22 @@ function gtaProgressBar(data)
     return result
 end
 
-function ShowGTAProgressBar(currentProg, title, level)
+function ShowGTAProgressBar(percentage, title, level)
     local loc = vec2(0.37, 0.90)
     local size = vec2(0.3, 0.03)
+    local tickCount = 10
+    local barHeight = size.y / 3.4
+    local barWidth  = 0.19
+    local barLeft   = (loc.x - size.x / 4) + 0.075
+    local barCenter = barLeft + barWidth / 2
+    local lineW     = 0.001
+    local lineH     = barHeight + 0.00
 
-    -- Draw background box
-    DrawSprite("timerbars", "all_black_bg", loc.x +0.028, loc.y-0.01, 0.15, 0.07, 0.0, 255, 255, 255, 255)
-    DrawSprite("timerbars", "all_black_bg", loc.x +0.170, loc.y-0.01, 0.15, 0.07, 180.0, 255, 255, 255, 255)
+    -- Background plates
+    DrawSprite("timerbars", "all_black_bg", loc.x + 0.028, loc.y - 0.01, 0.15, 0.07, 0.0,   255, 255, 255, 255)
+    DrawSprite("timerbars", "all_black_bg", loc.x + 0.170, loc.y - 0.01, 0.15, 0.07, 180.0, 255, 255, 255, 255)
 
+    -- Title (left)
     SetTextFont(0)
     SetTextProportional(1)
     SetTextScale(0.35, 0.35)
@@ -293,33 +276,34 @@ function ShowGTAProgressBar(currentProg, title, level)
     SetTextOutline()
     SetTextEntry("STRING")
     AddTextComponentString(title)
-    DrawText(loc.x - size.x / 4 + 0.074, loc.y - 0.034)  -- Adjust text position
+    DrawText(loc.x - size.x / 4 + 0.074, loc.y - 0.034)
 
+    -- Percentage (right)
     SetTextFont(0)
     SetTextProportional(1)
     SetTextScale(0.35, 0.25)
     SetTextColour(255, 255, 255, 255)
     SetTextEntry("STRING")
     AddTextComponentString(level)
-    DrawText(loc.x - size.x / 4 + 0.246, loc.y - 0.030)  -- Right-aligned additional text
+    DrawText(loc.x - size.x / 4 + 0.246, loc.y - 0.030)
 
-    local segmentWidth = (size.x + 0.05) / (#currentProg * 2)  -- Divide the total width by 18 (9 segments * 2 gaps for each)
-    local gap = segmentWidth / #currentProg  -- Smaller gap between segments
+    -- Track (bg)
+    DrawRect(barCenter, loc.y, barWidth, barHeight, 100, 100, 100, 255)
 
-    for i = 1, #currentProg do
-        local segmentX = (loc.x - size.x / 4 ) + 0.075 + (i - 1) * (segmentWidth + gap)
-        local fillPercentage = currentProg[i]
-        local progressBarWidth = segmentWidth * (fillPercentage / 100)
+    -- Fill
+    local fillWidth = barWidth * (percentage / 100.0)
+    if fillWidth > 0.0 then
+        local fillCenter = barLeft + (fillWidth / 2.0)
+        DrawRect(fillCenter, loc.y, fillWidth, barHeight, 93, 182, 229, 255) -- GTA blue
+    end
 
-        -- Semi-transparent background for each segment
-        DrawRect(segmentX + segmentWidth / 2, loc.y, segmentWidth, size.y / 3.4, 100, 100, 100, 255)
-
-        -- Filling progress for each segment
-        if progressBarWidth > 0 then
-            DrawRect(segmentX + progressBarWidth / 2, loc.y, progressBarWidth, size.y / 3.4, 93, 182, 229, 255)  -- Blue progress
-        end
+    -- Tick lines
+    for i = 1, (tickCount - 1) do
+        local x = barLeft + (barWidth * (i / tickCount))
+        DrawRect(x, loc.y, lineW, lineH, 0, 0, 0, 120)
     end
 end
+
 
 function stopProgressBar() inProgress = false end
 function isProgressBar() return inProgress end

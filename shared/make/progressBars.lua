@@ -4,220 +4,236 @@ local storedPID = nil
 
 local progressFunc = {
     ox = {
-        start = function(data)
-            local options = {
-                duration = debugMode and 1000 or data.time,
-                label = data.label,
-                position = data.position or "bottom",
-                useWhileDead = data.dead or false,
-                canCancel = data.cancel or true,
-                anim = {
-                    dict = data.dict,
-                    clip = data.anim,
-                    flag = (data.flag == 8 and 32 or data.flag) or nil,
-                    scenario = data.task
-                },
-                disable = {
-                    combat = data.combat or true,
-                    move = data.disableMovement or false,
-                    car = data.disableMovement or false,
-                    mouse = data.mouse or false
-                },
-            }
-            if data.prop and data.prop.model then
-                options.prop = {
-                    model = data.prop.model,
-                    pos = data.prop.pos or vec3(0, 0, 0),
-                    rot = data.prop.rot or vec3(0, 0, 0),
-                    bone = data.prop.bone or 0
+        start =
+            function(data)
+                local options = {
+                    duration = debugMode and 1000 or data.time,
+                    label = data.label,
+                    position = data.position or "bottom",
+                    useWhileDead = data.dead or false,
+                    canCancel = data.cancel or true,
+                    anim = {
+                        dict = data.dict,
+                        clip = data.anim,
+                        flag = (data.flag == 8 and 32 or data.flag) or nil,
+                        scenario = data.task
+                    },
+                    disable = {
+                        combat = data.combat or true,
+                        move = data.disableMovement or false,
+                        car = data.disableMovement or false,
+                        mouse = data.mouse or false
+                    },
                 }
-            end
-            if data.propTwo and data.propTwo.model then
-                options.propTwo = {
-                    model = data.propTwo.model,
-                    pos = data.propTwo.pos or vec3(0, 0, 0),
-                    rot = data.propTwo.rot or vec3(0, 0, 0),
-                    bone = data.propTwo.bone or 0
-                }
-            end
-            if data.progressType == "circle" then
-                if exports[OXLibExport]:progressCircle(options) then
-                    return true
-                else
-                    return false
+                if data.prop and data.prop.model then
+                    options.prop = {
+                        model = data.prop.model,
+                        pos = data.prop.pos or vec3(0, 0, 0),
+                        rot = data.prop.rot or vec3(0, 0, 0),
+                        bone = data.prop.bone or 0
+                    }
                 end
-            end
-            if not data.progressType or data.progressType == "bar" then
-                if exports[OXLibExport]:progressBar(options) then
-                    return true
-                else
-                    return false
+                if data.propTwo and data.propTwo.model then
+                    options.propTwo = {
+                        model = data.propTwo.model,
+                        pos = data.propTwo.pos or vec3(0, 0, 0),
+                        rot = data.propTwo.rot or vec3(0, 0, 0),
+                        bone = data.propTwo.bone or 0
+                    }
                 end
-            end
-        end,
-        stop = function()
-            exports[OXLibExport]:cancelProgress()
-        end,
+                if data.progressType == "circle" then
+                    if exports[OXLibExport]:progressCircle(options) then
+                        return true
+                    else
+                        return false
+                    end
+                end
+                if not data.progressType or data.progressType == "bar" then
+                    if exports[OXLibExport]:progressBar(options) then
+                        return true
+                    else
+                        print("^1progressBar was not successful")
+                    end
+                end
+            end,
+        stop =
+            function()
+                exports[OXLibExport]:cancelProgress()
+            end,
     },
 
     qb = {
-        start = function(data)
-            Core.Functions.Progressbar("progbar",
-                data.label,
-                debugMode and 1000 or data.time,
-                data.dead or false,
-                data.cancel or true,
-                {
-                    disableMovement = data.disableMovement or false,
-                    disableCarMovement = data.disableMovement or false,
-                    disableMouse = data.disableMouse or false,
-                    disableCombat = data.disableCombat or true,
-                },
-                {
-                    animDict = data.dict,
-                    anim = data.anim,
-                    flags = data.flag or 32,
-                    task = data.task
-                },
-                {}, {},
-                function()
-                    return true
-                end, function()
-                    return false
-                end, data.icon)
+        start =
+            function(data)
+                local p = promise.new()
+                Core.Functions.Progressbar("progbar",
+                    data.label,
+                    debugMode and 1000 or data.time,
+                    data.dead or false,
+                    data.cancel or true,
+                    {
+                        disableMovement = data.disableMovement or false,
+                        disableCarMovement = data.disableMovement or false,
+                        disableMouse = data.disableMouse or false,
+                        disableCombat = data.disableCombat or true,
+                    },
+                    {
+                        animDict = data.dict,
+                        anim = data.anim,
+                        flags = data.flag or 32,
+                        task = data.task
+                    },
+                    {}, {},
+                    function() p:resolve(true) end,
+                    function() p:resolve(false) end,
+                data.icon)
+                return Citizen.Await(p)
             end,
-        stop = function()
-            TriggerEvent("progressbar:client:cancel")
-        end,
+        stop =
+            function()
+                TriggerEvent("progressbar:client:cancel")
+            end,
     },
 
     qs = {
-        start = function(data)
-            if exports['qs-interface']:ProgressBar({
-                duration = debugMode and 1000 or data.time,
-                label = data.label,
-                position = 'bottom',
-                useWhileDead = data.dead or false,
-                canCancel = data.cancel or true,
-                disable = data.disableMovement or false,
-                anim = {
-                    dict = data.dict,
-                    clip = data.anim,
-                    flag = data.flag or 32
-                },
-                prop = nil
-            })  then
-                return true
-            else
-                return false
-            end
-        end,
-        stop = function()
-            --??
-            TriggerEvent("progressbar:client:cancel")
-        end,
+        start =
+            function(data)
+                if exports['qs-interface']:ProgressBar({
+                    duration = debugMode and 1000 or data.time,
+                    label = data.label,
+                    position = 'bottom',
+                    useWhileDead = data.dead or false,
+                    canCancel = data.cancel or true,
+                    disable = data.disableMovement or false,
+                    anim = {
+                        dict = data.dict,
+                        clip = data.anim,
+                        flag = data.flag or 32
+                    },
+                    prop = nil
+                })  then
+                    return true
+                else
+                    return false
+                end
+            end,
+        stop =
+            function()
+                --??
+                TriggerEvent("progressbar:client:cancel")
+            end,
     },
 
     esx = {
-        start = function(data)
-            ESX.Progressbar(data.label, debugMode and 1000 or data.time, {
-                FreezePlayer = true,
-                animation = {
-                    type = data.anim,
-                    dict = data.dict,
-                    scenario = data.task,
-                },
-                onFinish = function()
-                    return true
-                end,
-                onCancel = function()
-                    return false
-                end
-            })
-        end,
-        stop = function()
-            ESX.CancelProgressbar()
-        end,
+        start =
+            function(data)
+                local p = promise.new()
+                ESX.Progressbar(data.label, debugMode and 1000 or data.time, {
+                    FreezePlayer = true,
+                    animation = {
+                        type = data.anim,
+                        dict = data.dict,
+                        scenario = data.task,
+                    },
+                    onFinish = function()
+                        p:resolve(true)
+                    end,
+                    onCancel = function()
+                        p:resolve(false)
+                        return false
+                    end
+                })
+                return Citizen.Await(p)
+            end,
+        stop =
+            function()
+                ESX.CancelProgressbar()
+            end,
     },
 
     lation = {
-        start = function(data)
-            if exports.lation_ui:progressBar({
-                label = data.label,
-                description = nil,
-                duration = debugMode and 1000 or data.time,
-                icon = data.icon,
-                useWhileDead = data.dead or false,
-                disable = {
-                    combat = data.combat or true,
-                    move = data.disableMovement or false,
-                    car = data.disableMovement or false,
-                },
-                anim = {
-                    dict = data.dict,
-                    clip = data.anim,
-                    flag = data.flag
-                },
-                prop = {
-                    model = data.prop and data.prop.model,
-                    pos = data.prop and (data.prop.pos or vec3(0, 0, 0)),
-                    rot = data.prop and (data.prop.rot or vec3(0, 0, 0)),
-                    bone = data.prop and (data.prop.bone or 0)
-                }
-            }) then
-                return true
-            else
-                return false
-            end
-        end,
-        stop = function()
-            exports.lation_ui:cancelProgress()
-        end,
+        start =
+            function(data)
+                if exports.lation_ui:progressBar({
+                    label = data.label,
+                    description = nil,
+                    duration = debugMode and 1000 or data.time,
+                    icon = data.icon,
+                    useWhileDead = data.dead or false,
+                    disable = {
+                        combat = data.combat or true,
+                        move = data.disableMovement or false,
+                        car = data.disableMovement or false,
+                    },
+                    anim = {
+                        dict = data.dict,
+                        clip = data.anim,
+                        flag = data.flag
+                    },
+                    prop = {
+                        model = data.prop and data.prop.model,
+                        pos = data.prop and (data.prop.pos or vec3(0, 0, 0)),
+                        rot = data.prop and (data.prop.rot or vec3(0, 0, 0)),
+                        bone = data.prop and (data.prop.bone or 0)
+                    }
+                }) then
+                    return true
+                else
+                    return false
+                end
+            end,
+        stop =
+            function()
+                exports.lation_ui:cancelProgress()
+            end,
     },
 
     red = {
-        start = function(data)
-            if exports.jim_bridge:redProgressBar({
-                label = data.label,
-                time = debugMode and 1000 or data.time,
-                dict = data.dict,
-                anim = data.anim,
-                flag = data.flag or 32,
-                task = data.task,
-                disableMovement = data.disableMovement or false,
-                cancel = data.cancel or true,
-            }) then
-                return true
-            else
-                return false
-            end
-        end,
-        stop = function()
-            exports.jim_bridge:stopProgressBar()
-        end,
+        start =
+            function(data)
+                if exports.jim_bridge:redProgressBar({
+                    label = data.label,
+                    time = debugMode and 1000 or data.time,
+                    dict = data.dict,
+                    anim = data.anim,
+                    flag = data.flag or 32,
+                    task = data.task,
+                    disableMovement = data.disableMovement or false,
+                    cancel = data.cancel or true,
+                }) then
+                    return true
+                else
+                    return false
+                end
+            end,
+        stop =
+            function()
+                exports.jim_bridge:stopProgressBar()
+            end,
     },
 
     gta = {
-        start = function(data)
-
-            if exports.jim_bridge:gtaProgressBar({
-                label = data.label,
-                time = debugMode and 1000 or data.time,
-                dict = data.dict,
-                anim = data.anim,
-                flag = data.flag or 32,
-                task = data.task,
-                disableMovement = data.disableMovement or false,
-                cancel = data.cancel or true,
-            }) then
-                return true
-            else
-                return false
-            end
-        end,
-        stop = function()
-            exports.jim_bridge:stopProgressBar()
-        end,
+        start =
+            function(data)
+                if exports.jim_bridge:gtaProgressBar({
+                    label = data.label,
+                    time = debugMode and 1000 or data.time,
+                    dict = data.dict,
+                    anim = data.anim,
+                    flag = data.flag or 32,
+                    task = data.task,
+                    disableMovement = data.disableMovement or false,
+                    cancel = data.cancel or true,
+                }) then
+                    return true
+                else
+                    return false
+                end
+            end,
+        stop =
+            function()
+                exports.jim_bridge:stopProgressBar()
+            end,
     },
 }
 
@@ -254,7 +270,11 @@ local progressFunc = {
 ---     cancel = true,
 --- })
 --- ```
+
+local progresssBarActive = false
 function progressBar(data)
+    if progresssBarActive then return else progresssBarActive = true end
+
     local ped = PlayerPedId()
     if data.shared then
         debugPrint("^6Bridge^7: ^6Sharing progressBar to player^7: ^6"..data.shared.pid.."^7")
@@ -273,6 +293,7 @@ function progressBar(data)
     while result == nil do
         Wait(10)
     end
+    debugPrint("^5Debug^7: ^2ProgressBar result^7: ^3"..tostring(result).."^7")
 
     -- Cleanup
     FreezeEntityPosition(ped, false)
@@ -293,6 +314,7 @@ function progressBar(data)
         TriggerServerEvent(getScript()..":clearAuthToken")
         currentToken = triggerCallback(AuthEvent)
     end
+    progresssBarActive = false
     return result
 end
 
@@ -301,6 +323,7 @@ end
 --- This function cancels the progress bar based on the configured progress bar system, handling any necessary cleanup.
 function stopProgressBar()
     progressFunc[Config.System.ProgressBar].stop()
+    progresssBarActive = false
 end
 
 -- System to handle sending/sharing progress bars between players --

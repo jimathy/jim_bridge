@@ -30,7 +30,7 @@ function makeVeh(model, coords, synced, fade)
 	debugPrint("^6Bridge^7: ^1Veh ^2Created^7: '^6"..veh.."^7' | ^2Hash^7: ^7'^6"..model.."^7' | ^2Coord^7: "..formatCoord(coords))
 	unloadModel(model)
 	Vehicles[#Vehicles + 1] = veh
-    if fade ~= false then
+    if fade ~= false and gameName ~= "rdr3" then
         SetEntityAlpha(veh, 0, false)
         CreateThread(function()
             fadeInEnt(veh)

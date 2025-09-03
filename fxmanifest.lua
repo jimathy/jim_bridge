@@ -7,7 +7,6 @@ rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aw
 games { 'gta5', 'rdr3' }
 lua54 'yes'
 
-
 files {
     'starter.lua',
     'shared/*.lua',
@@ -25,3 +24,5 @@ client_scripts {
     'clientFrameworkCache.lua',
     'ui_modules/*.lua',
 }
+
+suppress_updates 'false'   -- set to 'true' to disable update pings

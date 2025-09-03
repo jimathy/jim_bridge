@@ -12,7 +12,7 @@ if isServer() then
         local src = source
         local token = keyGen()..keyGen()..keyGen()..keyGen()  -- Use a secure random generator here
         --debugPrint(GetInvokingResource())
-        if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= "qb-core" then
+        if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= Exports.QBExport and GetInvokingResource() ~= Exports.VorpExport then
             debugPrint("^1Error^7: ^1Possible exploit^7, ^1vital function was called from an external resource^7")
             return  ""
         end
@@ -45,8 +45,9 @@ if isServer() then
 
     createCallback(getScript()..":callback:GetAuthEvent", function(source)
         local src = source
+        --debugPrint(GetInvokingResource())
 
-        if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= "qb-core" then
+        if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= Exports.QBExport and GetInvokingResource() ~= Exports.VorpExport then
             debugPrint("^1Error^7: ^1Possible exploit^7, ^1vital callback was called from an external resource^7")
             return ""
         end

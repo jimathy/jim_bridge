@@ -31,17 +31,18 @@ local Exports = {
 
     -- REDM
     RSGExport = "rsg-core",
-    RSGInv = "rsg-inventory"
+    RSGInv = "rsg-inventory",
+
+    VorpExport = "vorp_core",
+    VorpInv = "vorp_inventory",
+    VorpMenu = "vorp_menu",
 }
 
 -- Prevent reloading if cache is already initialized
-local cache = {
-    Items = {},
-    Vehicles = {},
-    Jobs = {},
-    Gangs = {},
-}
+local cache = { Items = {}, Vehicles = {}, Jobs = {}, Gangs = {}, }
 local cacheReady = false
+
+-- Timer info, for debugging more then anything
 local timers = {}
 local function startTimer(label)
     timers[label] = GetGameTimer()
@@ -52,26 +53,57 @@ local function endTimer(label)
     timers[label] = "("..(timers[label] / 1000).."s)"
 end
 startTimer("Cache") startTimer("Items") startTimer("Vehicles") startTimer("Jobs") startTimer("InvWeight") startTimer("InvSlots")
--- Helper function to check if resource exists in server (instead of if it is already started)
+
+-- Helper functions --
 local function checkExists(resourceName)
-    return GetResourceState(resourceName):find("start") or GetResourceState(resourceName):find("stopped")
+    local state = GetResourceState(resourceName)
+    return state and (state:find("start") or state:find("stopped"))
 end
 
--- Ensure oxmysql resource is loaded
-if checkExists(Exports.OXCoreExport) or checkExists(Exports.ESXExport) then
+local function waitStarted(resourceName)
+    while GetResourceState(resourceName) ~= "started" do Wait(100) end
+end
+
+local function waitStartedOrStopped(resourceName)
+    local state = GetResourceState(resourceName)
+    while state ~= "started" and state ~= "stopped" do
+        Wait(100)
+        state = GetResourceState(resourceName)
+    end
+end
+
+local function dupLowercaseWeapons(items)
+    for k, v in pairs(items or {}) do
+        if type(k) == "string" then
+            if k:find("WEAPON") then
+                items[k:lower()] = v
+            end
+        else
+            print("^1ERROR^7: ^1Possible table inside a table, check your items.lua^7?")
+            print("^1Possible Issue found^7:")
+            print(json.encode(items[k], { indent = true }))
+        end
+    end
+end
+
+-- Forceload libs --
+
+-- Ensure oxmysql resource is loaded for jim_bridge internally
+-- For some core's it needs to get data from the database
+if checkExists(Exports.OXCoreExport) or checkExists(Exports.ESXExport) or checkExists(Exports.VorpExport) then
     local fileLoader = assert(load(LoadResourceFile("oxmysql", ('lib/MySQL.lua')), ('@@oxmysql/lib/MySQL.lua')))
     fileLoader()
 end
 
 if checkExists(Exports.OXCoreExport) then
     -- Detected OX_Core in server, wait for it to be started if needed
-    while GetResourceState(Exports.OXCoreExport) ~= "started" do Wait(100) end
+    waitStartedOrStopped(Exports.OXCoreExport)
     local fileLoader = assert(load(LoadResourceFile(Exports.OXCoreExport, ('lib/init.lua')), ('@@'..Exports.OXCoreExport..'/lib/init.lua')))
     fileLoader()
 end
 if checkExists(Exports.ESXExport) then
     -- Detected ESX in server, wait for it to be started if needed
-    while GetResourceState(Exports.ESXExport) ~= "started" do Wait(100) end
+    waitStarted(Exports.ESXExport)
     local fileLoader = assert(load(LoadResourceFile(Exports.ESXExport, ('/imports.lua')), ('@@'..Exports.ESXExport..'/imports.lua')))
     fileLoader()
 end
@@ -89,225 +121,274 @@ end
 ---------------------
 ---- Load Items -----
 ---------------------
--- Items initialization based on detected inventory system
-if checkExists(Exports.OXInv) then
-    -- Wait for OX Inventory to start if it's not already started
-    while GetResourceState(Exports.OXInv) ~= "started" do Wait(100) end
-    itemResource = Exports.OXInv
 
-    local success, result = pcall(function()
-        return exports[Exports.OXInv]:Items()
-    end)
-    if success and result then
-        cache.Items = result
-    end
-
-    -- Get Weapon info and duplicate them if they are uppercase
-    -- (duplicate incase anything checks for the uppercase version)
-    for k, v in pairs(cache.Items) do
-        if type(k) == "string" then
-            if k:find("WEAPON") then
-                cache.Items[k:lower()] = cache.Items[k]
+local itemFunc = {
+    {   script = Exports.OXInv,
+        cacheItem = function()
+            local success, result = pcall(function()
+                return exports[Exports.OXInv]:Items()
+            end)
+            if success and result then
+                cache.Items = result
             end
-        else
-            print("^1ERROR^7: ^1Possible table inside a table, check your items.lua^7?")
-            print("^1Possible Issue found^7:")
-            print(json.encode(cache.Items[k], {indent = true}))
-        end
-    end
-
-elseif checkExists(Exports.TgiannInv) then
-    -- Wait for OX Inventory to start if it's not already started
-    while GetResourceState(Exports.TgiannInv) ~= "started" do Wait(100) end
-    itemResource = Exports.TgiannInv
-
-    local success, result = pcall(function()
-        return exports[Exports.TgiannInv]:Items()
-    end)
-    if success and result then
-        cache.Items = result
-    end
-
-    -- Get Weapon info and duplicate them if they are uppercase
-    -- (duplicate incase anything checks for the uppercase version)
-    for k, v in pairs(cache.Items) do
-        if type(k) == "string" then
-            if k:find("WEAPON") then
-                cache.Items[k:lower()] = cache.Items[k]
+        end,
+    },
+    {   script = Exports.TgiannInv,
+        cacheItem = function()
+            local success, result = pcall(function()
+                return exports[Exports.TgiannInv]:Items()
+            end)
+            if success and result then
+                cache.Items = result
             end
-        else
-            print("^1ERROR^7: ^1Possible table inside a table, check your items.lua^7?")
-            print("^1Possible Issue found^7:")
-            print(json.encode(cache.Items[k], {indent = true}))
-        end
+        end,
+    },
+    {   script = Exports.QBXExport,
+        cacheItem = function()
+            cache.Items = exports[Exports.QBExport]:GetCoreObject().Shared.Items
+            -- If this is nil, they need to update to qbx_core 1.23.0+
+            if not cache.Items then
+                -- if their inventory doesn't allow that (they refuse to update their butchered core replacement):
+                if GetResourceState(Exports.QSInv):find("start") then
+                    itemResource = Exports.QSInv
+                    cache.Items = exports[Exports.QSInv]:GetItemList()
+
+                elseif GetResourceState(Exports.OrigenInv):find("start") then
+                    itemResource = Exports.OrigenInv
+                    cache.Items = exports[Exports.OrigenInv]:Items()
+
+                elseif GetResourceState(Exports.CodeMInv):find("start") then
+                    itemResource = Exports.CodeMInv
+                    cache.Items = exports[Exports.CodeMInv]:GetItemList()
+
+                elseif GetResourceState(Exports.CoreInv):find("start") then
+                    itemResource = Exports.CoreInv
+                    cache.Items = exports[Exports.CoreInv]:getItemsList()
+
+                elseif GetResourceState(Exports.TgiannInv):find("start") then
+                    itemResource = Exports.TgiannInv
+                    cache.Items = exports[Exports.TgiannInv]:Items()
+                end
+            end
+        end,
+    },
+    {   script = Exports.QBExport,
+        cacheItem = function()
+            cache.Items = exports[Exports.QBExport]:GetCoreObject().Shared.Items
+        end,
+    },
+    {   script = Exports.ESXExport,
+        cacheItem = function()
+            if GetResourceState(Exports.QSInv):find("start") then
+                cache.Items = exports[Exports.QSInv]:GetItemList()
+            else
+                cache.Items = ESX.GetItems()
+                while not next(cache.Items) do
+                    cache.Items = ESX.GetItems()
+                    Wait(1000)
+                end
+            end
+        end,
+    },
+    {   script = Exports.RSGExport,
+        cacheItem = function()
+            cache.Items = exports[Exports.RSGExport]:GetCoreObject().Shared.Items
+        end,
+    },
+    {   script = Exports.VorpInv,
+        cacheItem = function()
+            local dbItems = MySQL.query.await('SELECT * FROM `items`')
+            local tempItems = {}
+            for i = 1, #dbItems do
+                local v = dbItems[i]
+                tempItems[v.item] = {
+                    name = v.item,
+                    label = v.label,
+                    weight = v.weight,
+                    info = v.metadata,
+                    usable = v.usable,
+                    type = v.type,
+                    description = v.desc,
+                }
+            end
+            cache.Items = tempItems
+        end,
+    },
+}
+
+for i = 1, #itemFunc do
+    local data = itemFunc[i]
+    if checkExists(data.script) then
+        waitStarted(data.script)            -- Wait for detected script to start fully
+        data.cacheItem()                    -- run tablized function for core/inv
+        dupLowercaseWeapons(cache.Items)    -- make usable weapon item names for jim_bridge
+        itemResource = data.script          -- Grab script name to announce later
+        endTimer("Items")                   -- end timer
+        break                               -- break loop so it doesn't keep checking
     end
-
-elseif checkExists(Exports.QBXExport) then
-    while GetResourceState(Exports.QBXExport) ~= "started" do Wait(100) end
-    itemResource = Exports.QBXExport
-    cache.Items = exports[Exports.QBExport]:GetCoreObject().Shared.Items
-    -- If this is nil, they need to update to qbx_core 1.23.0+
-    if not cache.Items then
-        -- if their inventory doesn't allow that (they refuse to update their butchered core replacement):
-        if GetResourceState(Exports.QSInv):find("start") then
-            itemResource = Exports.QSInv
-            cache.Items = exports[Exports.QSInv]:GetItemList()
-
-        elseif GetResourceState(Exports.OrigenInv):find("start") then
-            itemResource = Exports.OrigenInv
-            cache.Items = exports[Exports.OrigenInv]:Items()
-
-        elseif GetResourceState(Exports.CodeMInv):find("start") then
-            itemResource = Exports.CodeMInv
-            cache.Items = exports[Exports.CodeMInv]:GetItemList()
-
-        elseif GetResourceState(Exports.CoreInv):find("start") then
-            itemResource = Exports.CoreInv
-            cache.Items = exports[Exports.CoreInv]:getItemsList()
-
-        elseif GetResourceState(Exports.TgiannInv):find("start") then
-            itemResource = Exports.TgiannInv
-            cache.Items = exports[Exports.TgiannInv]:Items()
-        end
-    end
-
-elseif checkExists(Exports.QBExport) then
-    while GetResourceState(Exports.QBExport) ~= "started" do Wait(100) end
-    itemResource = Exports.QBExport
-    cache.Items = exports[Exports.QBExport]:GetCoreObject().Shared.Items
-
-elseif checkExists(Exports.ESXExport) then
-    itemResource = Exports.ESXExport
-    if GetResourceState(Exports.QSInv):find("start") then
-        cache.Items = exports[Exports.QSInv]:GetItemList()
-    else
-        cache.Items = ESX.GetItems()
-        while not next(cache.Items) do
-            cache.Items = ESX.GetItems()
-            Wait(1000)
-        end
-    end
-
-elseif checkExists(Exports.RSGExport) then
-    while GetResourceState(Exports.RSGExport) ~= "started" do Wait(100) end
-    itemResource = Exports.RSGExport
-    cache.Items = exports[Exports.RSGExport]:GetCoreObject().Shared.Items
 end
-endTimer("Items")
 
 ---------------------
 --- Load Vehicles ---
 ---------------------
--- Vehicle loading depending on framework
-if checkExists(Exports.QBXExport) then
-    vehResource = Exports.QBXExport
-    cache.Vehicles = exports[Exports.QBExport]:GetCoreObject().Shared.Vehicles
+---
+local vehicleFunc = {
 
-elseif checkExists(Exports.QBExport)then
-    vehResource = Exports.QBExport
-    cache.Vehicles = exports[Exports.QBExport]:GetCoreObject().Shared.Vehicles
+    {   script = Exports.QBXExport,
+        cacheVehicle = function()
+            cache.Vehicles = exports[Exports.QBExport]:GetCoreObject().Shared.Vehicles
+        end,
+    },
+    {   script = Exports.QBExport,
+        cacheVehicle = function()
+            cache.Vehicles = exports[Exports.QBExport]:GetCoreObject().Shared.Vehicles
+        end,
+    },
+    {   script = Exports.OXCoreExport,
+        cacheVehicle = function()
+            cache.Vehicles = {}
+            for k, v in pairs(Ox.GetVehicleData()) do
+                cache.Vehicles[k] = {
+                    model = k, hash = joaat(k),
+                    price = v.price,
+                    name = v.name,
+                    brand = v.make
+                }
+            end
+        end,
+    },
+    {   script = Exports.ESXExport,
+        cacheVehicle = function()
+            while not MySQL do Wait(100) end
+            for _, v in pairs(MySQL.query.await('SELECT model, price, name FROM vehicles')) do
+                cache.Vehicles[v.model] = {
+                    model = v.model,
+                    hash = joaat(v.model),
+                    price = v.price,
+                    name = v.name,
+                }
+            end
+        end,
+    },
+    {   script = Exports.RSGExport,
+        cacheVehicle = function()
+            cache.Vehicles = exports[Exports.RSGExport]:GetCoreObject().Shared.Vehicles
+        end,
+    },
+    {   script = Exports.VorpExport,
+        cacheVehicle = function()
+            cache.Vehicles = { ["unkown"] = {} }
+        end,
+    },
+}
 
-elseif checkExists(Exports.OXCoreExport) then
-    vehResource = Exports.OXCoreExport
-    cache.Vehicles = {}
-    for k, v in pairs(Ox.GetVehicleData()) do
-        cache.Vehicles[k] = {
-            model = k, hash = joaat(k),
-            price = v.price,
-            name = v.name,
-            brand = v.make
-        }
+for i = 1, #vehicleFunc do
+    local data = vehicleFunc[i]
+    if checkExists(data.script) then
+        waitStarted(data.script)            -- Wait for detected script to start fully
+        data.cacheVehicle()                    -- run tablized function for core
+        vehResource = data.script          -- Grab script name to announce later
+        endTimer("Vehicles")                   -- end timer
+        break                               -- break loop so it doesn't keep checking
     end
-
-elseif checkExists(Exports.ESXExport) then
-    vehResource = Exports.ESXExport
-    while not MySQL do Wait(1000) end
-    for _, v in pairs(MySQL.query.await('SELECT model, price, name FROM vehicles')) do
-        cache.Vehicles[v.model] = {
-            model = v.model,
-            hash = joaat(v.model),
-            price = v.price,
-            name = v.name,
-        }
-    end
-
-elseif checkExists(Exports.RSGExport) then
-    vehResource = Exports.RSGExport
-    cache.Vehicles = exports[Exports.RSGExport]:GetCoreObject().Shared.Vehicles
-
 end
-endTimer("Vehicles")
 
 ---------------------
 ----- Load Jobs -----
 ---------------------
--- Jobs loading based on framework
-if checkExists(Exports.QBXExport) then
-    jobResource = Exports.QBXExport
-    cache.Jobs, cache.Gangs = exports[Exports.QBXExport]:GetJobs(), exports[Exports.QBXExport]:GetGangs()
 
-elseif checkExists(Exports.QBExport) then
-    jobResource = Exports.QBExport
-    cache.Jobs, cache.Gangs = exports[Exports.QBExport]:GetCoreObject().Shared.Jobs, exports[Exports.QBExport]:GetCoreObject().Shared.Gangs
+local jobFunc = {
 
-elseif checkExists(Exports.OXCoreExport) then
-    jobResource = Exports.OXCoreExport
-    while not MySQL do Wait(1000) end
-    local tempJobs = MySQL.query.await('SELECT * FROM `ox_groups`')
-    local tempGrades = MySQL.query.await('SELECT * FROM `ox_group_grades`')
-    local gradeMap = {}
-    for _, grade in pairs(tempGrades) do
-        gradeMap[grade.group] = gradeMap[grade.group] or {}
-        gradeMap[grade.group][grade.grade] = { name = grade.label }
-    end
-    for _, job in pairs(tempJobs) do
-        cache.Jobs[job.name] = {
-            label = job.label,
-            grades = gradeMap[job.name] or {}
-        }
-    end
-    cache.Gangs = cache.Jobs
-
-elseif checkExists(Exports.ESXExport) then
-    jobResource = Exports.ESXExport
-    ESX = exports[Exports.ESXExport]:getSharedObject()
-    cache.Jobs = ESX.GetJobs()
-    while not next(cache.Jobs) do
-        Wait(100)
-        cache.Jobs = ESX.GetJobs()
-    end
-    for Role, Grades in pairs(cache.Jobs) do
-        -- Check for if user has added grades
-        if Grades.grades == nil or not next(Grades.grades) then
-            goto continue
-        end
-        for grade, info in pairs(Grades.grades) do
-            if info.label and info.label:find("[Bb]oss") then
-                cache.Jobs[Role].grades[grade].isBoss = true
-                goto continue
+    {   script = Exports.QBXExport,
+        cacheJob = function()
+            cache.Jobs, cache.Gangs = exports[Exports.QBXExport]:GetJobs(), exports[Exports.QBXExport]:GetGangs()
+        end,
+    },
+    {   script = Exports.QBExport,
+        cacheJob = function()
+            Core = exports[Exports.QBExport]:GetCoreObject()
+            cache.Jobs, cache.Gangs = Core.Shared.Jobs, Core.Shared.Gangs
+        end,
+    },
+    {   script = Exports.OXCoreExport,
+        cacheJob = function()
+            while not MySQL do Wait(100) end
+            local tempJobs = MySQL.query.await('SELECT * FROM `ox_groups`')
+            local tempGrades = MySQL.query.await('SELECT * FROM `ox_group_grades`')
+            local gradeMap = {}
+            for _, grade in pairs(tempGrades) do
+                gradeMap[grade.group] = gradeMap[grade.group] or {}
+                gradeMap[grade.group][grade.grade] = { name = grade.label }
             end
-        end
-        local highestGrade = nil
-        for k in pairs(Grades.grades) do
-            local num = tonumber(k)
-            if num and (not highestGrade or num > highestGrade) then
-                highestGrade = num
+            for _, job in pairs(tempJobs) do
+                cache.Jobs[job.name] = {
+                    label = job.label,
+                    grades = gradeMap[job.name] or {}
+                }
             end
-        end
+            cache.Gangs = cache.Jobs
+        end,
+    },
+    {   script = Exports.ESXExport,
+        cacheJob = function()
+            ESX = ESX or exports[Exports.ESXExport]:getSharedObject()
+            cache.Jobs = ESX.GetJobs()
+            while not next(cache.Jobs) do
+                Wait(100)
+                cache.Jobs = ESX.GetJobs()
+            end
+            for Role, Grades in pairs(cache.Jobs) do
+                -- Check for if user has added grades
+                if Grades.grades == nil or not next(Grades.grades) then
+                    goto continue
+                end
+                for grade, info in pairs(Grades.grades) do
+                    if info.label and info.label:find("[Bb]oss") then
+                        cache.Jobs[Role].grades[grade].isBoss = true
+                        goto continue
+                    end
+                end
+                local highestGrade = nil
+                for k in pairs(Grades.grades) do
+                    local num = tonumber(k)
+                    if num and (not highestGrade or num > highestGrade) then
+                        highestGrade = num
+                    end
+                end
 
-        if highestGrade then
-            cache.Jobs[Role].grades[tostring(highestGrade)].isBoss = true
-        end
-        ::continue::
+                if highestGrade then
+                    cache.Jobs[Role].grades[tostring(highestGrade)].isBoss = true
+                end
+                ::continue::
+            end
+            cache.Gangs = cache.Jobs
+        end,
+    },
+    {   script = Exports.RSGExport,
+        cacheJob = function()
+            Core = exports[Exports.RSGExport]:GetCoreObject()
+            cache.Jobs, cache.Gangs = Core.Shared.Jobs, Core.Shared.Gangs
+        end,
+    },
+    {   script = Exports.VorpExport,
+        cacheJob = function()
+            cache.Jobs = { ["unkown"] = {} }
+            cache.Gangs = cache.Jobs
+        end,
+    },
+}
+
+for i = 1, #jobFunc do
+    local data = jobFunc[i]
+    if checkExists(data.script) then
+        waitStarted(data.script)            -- Wait for detected script to start fully
+        data.cacheJob()                    -- run tablized function for core
+        jobResource = data.script          -- Grab script name to announce later
+        endTimer("Jobs")                   -- end timer
+        break                               -- break loop so it doesn't keep checking
     end
-    cache.Gangs = cache.Jobs
-
-elseif checkExists(Exports.RSGExport) then
-    jobResource = Exports.RSGExport
-    cache.Jobs, cache.Gangs = exports[Exports.RSGExport]:GetCoreObject().Shared.Jobs, exports[Exports.RSGExport]:GetCoreObject().Shared.Gangs
-
 end
-endTimer("Jobs")
+
 
 -- Fallback if nil or empty
 if cache.Items == nil or not next(cache.Items) then
@@ -402,10 +483,8 @@ for script, data in pairs(invWeightTable) do
     if checkExists(script) then
         if script == Exports.QBInv and GetResourceState(Exports.JPRInv):find("start") then goto skip end
 
-        while GetResourceState(script) ~= "started" and GetResourceState(script) ~= "stopped" do
-            Wait(100)
-            print("Waiting for script start")
-        end
+        waitStartedOrStopped(script)
+
         local attempts = data.fallback or { data }
         local lookup, used, err
 

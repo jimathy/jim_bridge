@@ -25,7 +25,12 @@ Exports = {
 
     -- REDM
     RSGExport = "rsg-core",
-    RSGInv = "rsg-inventory"
+    RSGInv = "rsg-inventory",
+
+    VorpExport = "vorp_core",
+    VorpInv = "vorp_inventory",
+    VorpMenu = "vorp_menu",
+
 }
 
 -- Required variables

@@ -62,6 +62,9 @@ function onPlayerLoaded(func, onStart)
         elseif isStarted(RSGExport) then
             onPlayerFramework = RSGExport
             RegisterNetEvent('RSGCore:Client:OnPlayerLoaded', tempFunc)
+        elseif isStarted(VorpExport) then
+            onPlayerFramework = VorpExport
+            RegisterNetEvent("vorp_core:Client:OnPlayerSpawned", tempFunc)
         end
 
         if onPlayerFramework ~= "" then
@@ -174,6 +177,12 @@ function waitForLogin()
                 break
             end
         end
+    elseif isStarted(VorpExport) then
+        -- For other frameworks, use LocalPlayer.state.isLoggedIn.
+        while not LocalPlayer.state.IsInSession and (GetGameTimer() - startTime) < timeout do
+            Wait(100)
+        end
+        loggedIn = LocalPlayer.state.IsInSession
     else
         -- For other frameworks, use LocalPlayer.state.isLoggedIn.
         while not LocalPlayer.state.isLoggedIn and (GetGameTimer() - startTime) < timeout do

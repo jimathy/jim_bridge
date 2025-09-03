@@ -22,6 +22,9 @@ OXInv, QBInv, PSInv, QSInv, CoreInv, CodeMInv, OrigenInv, TgiannInv, JPRInv =
     Exports.JPRInv or ""
 
 RSGExport, RSGInv = Exports.RSGExport or "", Exports.RSGInv or ""
+VorpExport, VorpInv = Exports.VorpExport or "", Exports.VorpInv or ""
+
+
 QBMenuExport = Exports.QBMenuExport or ""
 QBTargetExport, OXTargetExport = Exports.QBTargetExport or "", Exports.OXTargetExport or ""
 
@@ -29,6 +32,8 @@ if isStarted(QBXExport) or isStarted(QBExport) then
     Core = Core or exports[QBExport]:GetCoreObject()
 elseif isStarted(RSGExport) then
     Core = Core or exports[RSGExport]:GetCoreObject()
+elseif isStarted(VorpExport) then
+    Core = Core or exports[VorpExport]:GetCore()
 end
 
 
