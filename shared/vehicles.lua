@@ -300,3 +300,33 @@ function getClosestVehicle(coords, src)
 
     return closestVehicle, closestDistance
 end
+
+--- Checks whether a vehicle is owned or not using the plate as reference
+---
+--- @param plate string The plate of the vehicle to check
+--- @return boolean whether vehicle is owned
+---
+--- @usage
+--- ```lua
+--- local plate = "ABCD1234"
+--- local isVehicleOwned = isVehicleOwned(plate)
+--- ```
+local vehiclesOwned = {}
+
+function isVehicleOwned(plate)
+    vehDatabase = "player_vehicles"
+    if isStarted(ESXExport) then vehDatabase = "owned_vehicles"
+    elseif isStarted(OXCoreExport) then vehDatabase = "vehicles" end
+
+    if vehiclesOwned[plate] == true then
+        return true
+    else
+        local result = MySQL.query.await("SELECT 1 from "..vehDatabase.." WHERE plate = ?", { plate })
+        if json.encode(result) ~= "[]" then
+            vehiclesOwned[plate] = true
+            return true
+        else
+            return false
+        end
+    end
+end
