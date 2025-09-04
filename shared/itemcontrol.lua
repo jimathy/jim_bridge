@@ -518,7 +518,7 @@ local InvFunc = {
         hasItem =
             function(item, amount, src)
                 if src then
-                    local serverItemCheck = exports[TgiannInv]:GetItem(src, item, nil, true) or 0
+                    local serverItemCheck = exports[TgiannInv]:GetItemCount(src, item, nil, true) or 0
                     return serverItemCheck >= amount, serverItemCheck
                 else
                     local localItemCheck = exports[TgiannInv]:GetItemCount(item) or 0
