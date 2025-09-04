@@ -42,25 +42,25 @@ local phoneFunc = {
                 )
             end,
     },
-    {   name = "yflip-phone",
+    {   phone = "yflip-phone",
         sendMail =
             function(mailData)
                 TriggerServerEvent(getScript()..":yflip:SendMail", mailData)
             end,
     },
-    {   name = "qs-smartphone",
+    {   phone = "qs-smartphone",
         sendMail =
             function(mailData)
                 TriggerServerEvent('qs-smartphone:server:sendNewMail', mailData)
             end,
     },
-    {   name = "qs-smartphone-pro",
+    {   phone = "qs-smartphone-pro",
         sendMail =
             function(mailData)
                 TriggerServerEvent('phone:sendNewMail', mailData)
             end,
     },
-    {   name = "roadphone",
+    {   phone = "roadphone",
         sendMail =
             function(mailData)
                 -- Convert HTML line breaks to newlines for roadphone.
@@ -68,7 +68,7 @@ local phoneFunc = {
                 exports["roadphone"]:sendMail(mailData)
             end,
     },
-    {   name = "lb-phone",
+    {   phone = "lb-phone",
         sendMail =
             function(mailData)
                 -- Convert HTML line breaks to newlines for lb-phone.
@@ -76,7 +76,7 @@ local phoneFunc = {
                 TriggerServerEvent(getScript()..":lbphone:SendMail", mailData)
             end,
     },
-    {   name = "qb-phone",
+    {   phone = "qb-phone",
         sendMail =
             function(mailData)
                 TriggerServerEvent('qb-phone:server:sendNewMail', mailData)
@@ -111,19 +111,19 @@ local phoneFunc = {
                 TriggerClientEvent('qb-phone:RefreshPhone', mailData.src)
             end,
     },
-    {   name = "npwd_qbx_mail",
+    {   phone = "npwd_qbx_mail",
         sendMail =
             function(mailData)
                 TriggerServerEvent('qb-phone:server:sendNewMail', mailData)
             end,
     },
-    {   name = "jpr-phonesystem",
+    {   phone = "jpr-phonesystem",
         sendMail =
             function(mailData)
                 TriggerServerEvent(getScript()..":jpr:SendMail", mailData)
             end,
     },
-    {   name = "ef-phone",
+    {   phone = "ef-phone",
         sendMail =
             function(mailData)
                 TriggerServerEvent('qb-phone:server:sendNewMail', mailData)
@@ -247,4 +247,6 @@ RegisterNetEvent(getScript()..":jpr:SendMail", function(data)
         Destinatario = Player.PlayerData.citizenid, -- Recipient identifier
         Event = {},                                 -- Optional event details
     })
+
 end)
+
