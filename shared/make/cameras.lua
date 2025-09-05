@@ -20,6 +20,13 @@ local camCache = {}
 function createTempCam(ent, coords)
 	local camID = nil
 	if Config.Crafting?.craftCam or Config.System.enableCam then
+
+		if not ent and not coords then
+			camID = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
+			camCache[#camCache+1] = camID
+			return camID
+		end
+		
 		debugPrint("^6Bridge^7: ^2Custom Camera Created")
 
 		local camCoords = nil
