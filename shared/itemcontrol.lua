@@ -2667,6 +2667,7 @@ function openShop(data)
     if Config.General.JimShops then
         TriggerServerEvent("jim-shops:ShopOpen", "shop", data.items.label, data.items)
         lookEnt(data.coords)
+        return
     end
 
     for i = 1, #InvFunc do
