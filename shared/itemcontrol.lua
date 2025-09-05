@@ -1320,7 +1320,7 @@ function hasItem(items, amount, src)
             end
         end
     end
-    for k, v in pairs(hasTable) do
+    for _, v in pairs(hasTable) do
         if not v.hasItem then
             return false, hasTable
         end
@@ -1410,31 +1410,39 @@ end
 --- ```
 function createUseableItem(item, funct)
     if doesItemExist(item) then
-        local itemResource = ""
-        if isStarted(ESXExport) then
-            itemResource = ESXExport
-            while not ESX do Wait(0) end
-            ESX.RegisterUsableItem(item, funct)
+        local useableFunc = {
+            {   framework = ESXExport,
+                func = function(item, funct)
+                    while not ESX do Wait(0) end
+                    ESX.RegisterUsableItem(item, funct)
+                end,
+            },
+            {   framework = QBXExport,
+                func = function(item, funct)
+                    exports[QBXExport]:CreateUseableItem(item, funct)
+                end,
+            },
+            {   framework = QBExport,
+                func = function(item, funct)
+                    Core.Functions.CreateUseableItem(item, funct)
+                end,
+            },
+            {   framework = RSGExport,
+                func = function(item, funct)
+                    Core.Functions.CreateUseableItem(item, funct)
+                end,
+            },
+        }
 
-        elseif isStarted(QBExport) and not isStarted(QBXExport) then
-            itemResource = QBExport
-            Core.Functions.CreateUseableItem(item, funct)
-
-        elseif isStarted(QBXExport) then
-            itemResource = QBXExport
-            exports[QBXExport]:CreateUseableItem(item, funct)
-
-        elseif isStarted(RSGExport) then
-            itemResource = RSGExport
-            Core.Functions.CreateUseableItem(item, funct)
-
+        for i = 1, #useableFunc do
+            local framework = useableFunc[i]
+            if isStarted(framework.framework) then
+                debugPrint("^6Bridge^7: ^2Registering ^3UsableItem^2 with ^4"..framework.framework.."^7:", item)
+                framework.func(item, funct)
+                return
+            end
         end
-
-        if itemResource ~= "" then
-            debugPrint("^6Bridge^7: ^2Registering ^3UsableItem^2 with ^4"..itemResource.."^7:", item)
-        else
-            debugPrint("^4ERROR^7: No supported framework detected for registering usable item: ^3"..item.."^7")
-        end
+        debugPrint("^4ERROR^7: No supported framework detected for registering usable item: ^3"..item.."^7")
     else
         print("^1ERROR^7: ^1Tried to make item usable but it didn't exist^7: "..item)
     end
@@ -2312,6 +2320,7 @@ RegisterNetEvent(getScript()..":server:stashRemoveItem", stashRemoveItem)
 function stashhasItem(stashItems, items, amount)
     local invs = { OXInv, QSInv, CoreInv, CodeMInv, OrigenInv, TgiannInv, JPRInv, QBInv, PSInv, RSGInv }
     local foundInv = ""
+
     for _, inv in ipairs(invs) do
         if isStarted(inv) then
             foundInv = inv:gsub("%-", "^7-^6"):gsub("%_", "^7_^6")

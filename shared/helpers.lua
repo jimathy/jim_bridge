@@ -463,7 +463,7 @@ function PerformRaycast(startCoords, endCoords, entity, flags)
     local shapeTest = StartExpensiveSynchronousShapeTestLosProbe(
         startCoords.x, startCoords.y, startCoords.z,
         endCoords.x, endCoords.y, endCoords.z,
-        flags or 4294967295, entity, 0
+        flags or 4294967295, entity, 4
     )
 
     return GetShapeTestResult(shapeTest)

@@ -152,35 +152,57 @@ end
 --- toggleDuty()  -- Player receives a notification of their new duty status.
 --- ```
 function toggleDuty()
-    if isStarted(QBExport) or isStarted(QBXExport) then
-        TriggerServerEvent("QBCore:ToggleDuty")
-        Wait(100)
-        onDuty = getPlayer().onDuty
+    local dutyFunc = {
+        {   framework = QBExport,
+            func = function()
+                TriggerServerEvent("QBCore:ToggleDuty")
+                Wait(100)
+                onDuty = getPlayer().onDuty
+            end
+        },
+        {   framework = QBXExport,
+            func = function()
+                TriggerServerEvent("QBCore:ToggleDuty")
+                Wait(100)
+                onDuty = getPlayer().onDuty
+            end
+        },
+        {   framework = RSGExport,
+            func = function()
+                TriggerServerEvent("RSGCore:ToggleDuty")
+                Wait(100)
+                onDuty = getPlayer().onDuty
+            end
+        },
+        {   framework = ESXExport,
+            func = function()
+                local tempJob = ESX.GetPlayerData().job
+                tempJob.onDuty = not onDuty
+                ESX.SetPlayerData("job", tempJob)
+                onDuty = getPlayer().onDuty
+                if onDuty then
+                    triggerNotify(nil, "Now on duty", "success")
+                else
+                    triggerNotify(nil, "Now off duty", "success")
+                end
+            end
+        },
+    }
 
-    elseif isStarted(RSGExport) then
-        TriggerServerEvent("RSGCore:ToggleDuty")
-        Wait(100)
-        onDuty = getPlayer().onDuty
-
-    elseif isStarted(ESXExport) then
-        local tempJob = ESX.GetPlayerData().job
-        tempJob.onDuty = not onDuty
-        ESX.SetPlayerData("job", tempJob)
-        onDuty = getPlayer().onDuty
-        if onDuty then
-            triggerNotify(nil, "Now on duty", "success")
-        else
-            triggerNotify(nil, "Now off duty", "success")
+    for i = 1, #dutyFunc do
+        local framework = dutyFunc[i]
+        if isStarted(framework.framework) then
+            framework.func()
+            return
         end
+    end
 
+    -- fallback
+    onDuty = not onDuty
+    if onDuty then
+        triggerNotify(nil, "Now on duty", "success")
     else
-        onDuty = not onDuty
-        if onDuty then
-            triggerNotify(nil, "Now on duty", "success")
-        else
-            triggerNotify(nil, "Now off duty", "success")
-        end
-
+        triggerNotify(nil, "Now off duty", "success")
     end
 end
 

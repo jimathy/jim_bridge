@@ -53,7 +53,10 @@ local polyCreation = {
             return zone
         end,
         createCircle = function(data)
-            local zone = CircleZone:Create(data.coords, data.radius, { name = data.name, debugPoly = debugMode })
+            local zone = CircleZone:Create(data.coords, data.radius, {
+                name = data.name,
+                debugPoly = data.debug
+            })
             zone:onPlayerInOut(function(isPointInside)
                 if isPointInside then
                     data.onEnter()

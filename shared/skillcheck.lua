@@ -22,7 +22,8 @@ local skillCheckFunc = {
                     "2",
                     "3",
                     "4"
-                })
+                }
+            )
             if Skillbar then
                 return true
             else

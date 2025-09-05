@@ -105,16 +105,28 @@ end
 function getVehicleProperties(vehicle)
     if not vehicle then return nil end
 
-    local properties = {}
-    if isStarted(QBExport) and not isStarted(QBXExport) then
-        properties = Core.Functions.GetVehicleProperties(vehicle)
-        debugPrint("^6Bridge^7: ^2Getting Vehicle Properties ^7[^6"..QBExport.."^7] - [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7/^3"..properties.model.."^7] - [^3"..properties.plate.."^7]")
-
-    elseif isStarted(OXLibExport) then
-        properties = lib.getVehicleProperties(vehicle)
-        debugPrint("^6Bridge^7: ^2Getting Vehicle Properties ^7[^6"..OXLibExport.."^7] - [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7/^3"..properties.model.."^7] - [^3"..properties.plate.."^7]")
+    local propertyFunc = {
+        { framework = OXLibExport,
+            func = function(vehicle)
+                return lib.getVehicleProperties(vehicle)
+            end,
+        },
+        { framework = QBExport,
+            func = function(vehicle)
+                return Core.Functions.GetVehicleProperties(vehicle)
+            end,
+        },
+    }
+    for i = 1, #propertyFunc do
+        local prop = propertyFunc[i]
+        if isStarted(prop.framework) then
+            local properties = prop.func(vehicle)
+            debugPrint("^6Bridge^7: ^2Getting Vehicle Properties ^7[^6"..prop.framework.."^7] - [^3"..vehicle.."^7] - [^3"..GetEntityModel(vehicle).."^7/^3"..properties.model.."^7] - [^3"..properties.plate.."^7]")
+            return properties
+        end
     end
-    return properties
+
+    return nil
 end
 
 --- Sets the properties of a given vehicle if changes are detected.
@@ -228,7 +240,7 @@ function pushVehicle(entity)
     if entity ~= 0 and DoesEntityExist(entity) then
         -- Request network control if not already controlled.
         if not NetworkHasControlOfEntity(entity) then
-            debugPrint("^6Bridge^7: ^3pushVehicle^7: ^2Requesting network control of vehicle^7.")
+            debugPrint("^6Bridge^7: ^3pushEnt^7: ^2Requesting network control of vehicle^7.")
             NetworkRequestControlOfEntity(entity)
             local timeout = 2000
             while timeout > 0 and not NetworkHasControlOfEntity(entity) do
@@ -236,13 +248,13 @@ function pushVehicle(entity)
                 timeout = timeout - 100
             end
             if NetworkHasControlOfEntity(entity) then
-                debugPrint("^6Bridge^7: ^3pushVehicle^7: ^2Network now has control of the entity^7.")
+                debugPrint("^6Bridge^7: ^3pushEnt^7: ^2Network now has control of the entity^7.")
             end
         end
 
         -- Set as mission entity if not already set.
         if not IsEntityAMissionEntity(entity) then
-            debugPrint("^6Bridge^7: ^3pushVehicle^7: ^2Setting vehicle as a ^7'^2mission^7' ^2entity^7.")
+            debugPrint("^6Bridge^7: ^3pushEnt^7: ^2Setting vehicle as a ^7'^2mission^7' ^2entity^7.")
             SetEntityAsMissionEntity(entity, true, true)
             local timeout = 2000
             while timeout > 0 and not IsEntityAMissionEntity(entity) do
@@ -250,18 +262,23 @@ function pushVehicle(entity)
                 timeout = timeout - 100
             end
             if IsEntityAMissionEntity(entity) then
-                debugPrint("^6Bridge^7: ^3pushVehicle^7: ^2Vehicle is a ^7'^2mission^7'^2 entity^7.")
+                debugPrint("^6Bridge^7: ^3pushEnt^7: ^2Vehicle is a ^7'^2mission^7'^2 entity^7.")
             end
         end
     end
 end
+
+-- add entitty named version
+function pushEnt(...) pushVehicle(...) end
+
 
 --- Finds the closest vehicle to the specified coordinates.
 --- The function uses different APIs based on whether a source is provided.
 ---
 --- @param coords table|vector3 (Optional) The reference coordinates. If nil, uses the player's position.
 --- @param src boolean (Optional) If true, uses GetPlayerPed(source) and GetAllVehicles.
---- @return number|number closestVehicle|closestDistance The closest vehicle entity and its distance.
+--- @return number closestVehicle The closest vehicle entity and its distance.
+--- @return number closestDistance The distance of the closest vehicle.
 ---
 --- @usage
 --- ```lua
@@ -271,9 +288,11 @@ function getClosestVehicle(coords, src)
     local ped, vehicles, closestDistance, closestVehicle
 
     if src then
+        -- if checking server side cache src's ped and use server native
         ped = GetPlayerPed(src)
         vehicles = GetAllVehicles()
     else
+        -- if checking client side cache local ped and use client native
         ped = PlayerPedId()
         vehicles = GetGamePool('CVehicle')
     end
@@ -290,7 +309,7 @@ function getClosestVehicle(coords, src)
 
     for i = 1, #vehicles, 1 do
         local vehicleCoords = GetEntityCoords(vehicles[i])
-        local distance = #(vehicleCoords - coords)
+        local distance = #(vehicleCoords - coords.xyz)
 
         if closestDistance == -1 or distance < closestDistance then
             closestDistance = distance
@@ -311,19 +330,46 @@ end
 --- local plate = "ABCD1234"
 --- local isVehicleOwned = isVehicleOwned(plate)
 --- ```
+
 local vehiclesOwned = {}
 
 function isVehicleOwned(plate)
-    vehDatabase = "player_vehicles"
-    if isStarted(ESXExport) then vehDatabase = "owned_vehicles"
-    elseif isStarted(OXCoreExport) then vehDatabase = "vehicles" end
-
+    -- If already checked, cache it to reduce database calls
     if vehiclesOwned[plate] == true then
         return true
     else
-        local result = MySQL.query.await("SELECT 1 from "..vehDatabase.." WHERE plate = ?", { plate })
+        -- Find frameworks vehicle table and search sql for if vehicle plate is owned
+        local sqlTable = "player_vehicles"
+        local vehDatabase = {
+
+            {   framework = ESXExport,
+                sqlTable = "owned_vehicles"
+            },
+
+            {   framework = QBExport,
+                sqlTable = "player_vehicles"
+            },
+
+            {   framework = QBXExport,
+                sqlTable = "player_vehicles"
+            },
+
+            {   framework = OXCoreExport,
+                sqlTable = "owned_vehicles"
+            },
+
+        }
+
+        for i = 1, #vehDatabase do
+            local framework = vehDatabase[i]
+            if isStarted(framework.framework) then
+                sqlTable = framework.sqlTable
+            end
+        end
+
+        local result = MySQL.query.await("SELECT 1 from "..sqlTable.." WHERE plate = ?", { plate })
         if json.encode(result) ~= "[]" then
-            vehiclesOwned[plate] = true
+            vehiclesOwned[plate] = true     -- Cache ownership for later checks
             return true
         else
             return false
