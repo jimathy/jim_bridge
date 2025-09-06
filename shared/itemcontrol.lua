@@ -51,6 +51,10 @@ local InvFunc = {
             function()
                 return exports[OXInv]:GetPlayerMaxWeight()
             end,
+        getCurrentInvWeight =
+            function()
+                return exports[OXInv]:GetPlayerWeight()
+            end,
         getPlayerInv =
             function(src)
                 local grabInv = nil
@@ -153,6 +157,15 @@ local InvFunc = {
             function()
                 return InventoryWeight
             end,
+        getCurrentInvWeight =
+            function()
+                local weight = 0
+                local itemcheck = exports[CoreInv]:getInventory()
+                for _, v in pairs(itemcheck) do
+                    weight += ((v.weight * v.amount) or 0)
+                end
+                return weight
+            end,
         getPlayerInv =
             function(src)
                 local grabInv = nil
@@ -242,6 +255,15 @@ local InvFunc = {
         getMaxInvWeight =
             function()
                 return InventoryWeight
+            end,
+        getCurrentInvWeight =
+            function()
+                local weight = 0
+                local itemcheck = exports[OrigenInv]:getPlayerInventory()
+                for _, v in pairs(itemcheck) do
+                    weight += ((v.weight * v.amount) or 0)
+                end
+                return weight
             end,
         getPlayerInv =
             function(src)
@@ -345,6 +367,15 @@ local InvFunc = {
             function()
                 return InventoryWeight
             end,
+        getCurrentInvWeight =
+            function()
+                local weight = 0
+                local itemcheck = exports[CodeMInv]:GetClientPlayerInventory()
+                for _, v in pairs(itemcheck) do
+                    weight += ((v.weight * v.amount) or 0)
+                end
+                return weight
+            end,
         getPlayerInv =
             function(src)
                 local grabInv = nil
@@ -443,6 +474,15 @@ local InvFunc = {
         getMaxInvWeight =
             function()
                 return InventoryWeight
+            end,
+        getCurrentInvWeight =
+            function()
+                local weight = 0
+                local itemcheck = exports[TgiannInv]:GetPlayerItems()
+                for _, v in pairs(itemcheck) do
+                    weight += ((v.weight * v.amount) or 0)
+                end
+                return weight
             end,
         getPlayerInv =
             function(src)
@@ -575,6 +615,15 @@ local InvFunc = {
                 else
                     return InventoryWeight
                 end
+            end,
+        getCurrentInvWeight =
+            function()
+                local weight = 0
+                local itemcheck = Core.Functions.GetPlayerData().items
+                for _, v in pairs(itemcheck) do
+                    weight += ((v.weight * v.amount) or 0)
+                end
+                return weight
             end,
         getPlayerInv =
             function(src)
@@ -742,6 +791,15 @@ local InvFunc = {
                 else
                     return InventoryWeight
                 end
+            end,
+        getCurrentInvWeight =
+            function()
+                local weight = 0
+                local itemcheck = Core.Functions.GetPlayerData().items
+                for _, v in pairs(itemcheck) do
+                    weight += ((v.weight * v.amount) or 0)
+                end
+                return weight
             end,
         getPlayerInv =
             function(src)
@@ -933,6 +991,15 @@ local InvFunc = {
                     return InventoryWeight
                 end
             end,
+        getCurrentInvWeight =
+            function()
+                local weight = 0
+                local itemcheck = Core.Functions.GetPlayerData().items
+                for _, v in pairs(itemcheck) do
+                    weight += ((v.weight * v.amount) or 0)
+                end
+                return weight
+            end,
         getPlayerInv =
             function(src)
                 local grabInv = nil
@@ -1093,6 +1160,15 @@ local InvFunc = {
                 else
                     return InventoryWeight
                 end
+            end,
+        getCurrentInvWeight =
+            function()
+                local weight = 0
+                local itemcheck = Core.Functions.GetPlayerData().items
+                for _, v in pairs(itemcheck) do
+                    weight += ((v.weight * v.amount) or 0)
+                end
+                return weight
             end,
         getPlayerInv =
             function(src)
@@ -1785,52 +1861,11 @@ end
 
 function getCurrentInvWeight()
     local weight = 0
-    if isStarted(QBInv) or isStarted(PSInv) or isStarted(RSGInv) or isStarted(JPRInv) then
-        local itemcheck = Core.Functions.GetPlayerData().items
-        for _, v in pairs(itemcheck) do
-            weight += ((v.weight * v.amount) or 0)
-        end
-    end
-
-    if isStarted(OXInv) then
-        weight = exports[OXInv]:GetPlayerWeight()
-    end
-
-    if isStarted(CoreInv) then
-        local itemcheck = exports[CoreInv]:getInventory()
-        for _, v in pairs(itemcheck) do
-            weight += ((v.weight * v.amount) or 0)
-        end
-    end
-
-    if isStarted(CodeMInv) then
-        local itemcheck = exports[CodeMInv]:GetClientPlayerInventory()
-        for _, v in pairs(itemcheck) do
-            weight += ((v.weight * v.amount) or 0)
-        end
-    end
-
-    if isStarted(OrigenInv) then
-        local itemcheck = exports[OrigenInv]:getPlayerInventory()
-        for _, v in pairs(itemcheck) do
-            weight += ((v.weight * v.amount) or 0)
-        end
-    end
-
-    if isStarted(TgiannInv) then
-        local itemcheck = exports[TgiannInv]:GetPlayerItems()
-        for _, v in pairs(itemcheck) do
-            weight += ((v.weight * v.amount) or 0)
-        end
-    end
-
-    -- For ESX default inventory (es_extended)
-    if ESX and isStarted(ESXExport) then
-        local xPlayer = ESX.GetPlayerData() or {}
-        if xPlayer.inventory then
-            for _, v in pairs(xPlayer.inventory) do
-                weight += ((v.weight * v.amount) or 0)
-            end
+    for i = 1, #InvFunc do
+        local inv = InvFunc[i]
+        if isStarted(inv.invName) then
+            weight = inv.getMaxInvWeight()
+            break
         end
     end
 
@@ -2077,17 +2112,17 @@ RegisterNetEvent(getScript()..":server:openServerStash", function(data)
 
     if isStarted(TgiannInv) then
         exports[TgiannInv]:OpenInventory(source, 'stash', data.stashName, data)
-    end
-    if isStarted(JPRInv) then
+
+    elseif isStarted(JPRInv) then
         exports[JPRInv]:OpenInventory(source, data.stashName, data)
-    end
-    if isStarted(QBInv) then
+
+    elseif isStarted(QBInv) then
         exports[QBInv]:OpenInventory(source, data.stashName, data)
-    end
-    if isStarted(PSInv) then
+
+    elseif isStarted(PSInv) then
         exports[PSInv]:OpenInventory(source, data.stashName, data)
-    end
-    if isStarted(RSGInv) then
+
+    elseif isStarted(RSGInv) then
         exports[RSGInv]:OpenInventory(source, data.stashName, data)
     end
 end)
