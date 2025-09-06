@@ -7,6 +7,26 @@
       • Wait for the player to be logged in before proceeding.
 ]]
 
+local onLoadLast = {} -- keyed by tostring(func)
+
+local function _debouncedRun(func)
+    local key  = tostring(func)
+    local now  = GetGameTimer()
+    local last = onLoadLast[key] or -1e12
+
+    if (now - last) < 5000 then
+        debugPrint(("^6Bridge^7 ^3onPlayerLoaded^7 skipped — cooldown %dms remaining"):format(5000 - (now - last)))
+        return
+    end
+
+    onLoadLast[key] = now
+    CreateThread(function()
+        Wait(2000) -- keep your small delay
+        debugPrint("^6Bridge^7: ^2Executing onPlayerLoaded callback")
+        func()
+    end)
+end
+
 -------------------------------------------------------------
 -- Player Loaded and Unloaded Events
 -------------------------------------------------------------
@@ -30,48 +50,42 @@ function onPlayerLoaded(func, onStart)
     if onStart then
         onResourceStart(function()
             if not waitForLogin() then return end
-
-            loaded = true
-            debugPrint("^6Bridge^7: ^3onResourceStart^7()^2 executed through ^3onPlayerLoaded^7()")
-            Wait(2000)
-            func()
+            debugPrint("^6Bridge^7: ^3onResourceStart^7()^2 routed through ^3onPlayerLoaded^7()")
+            _debouncedRun(func)
         end, true)
     end
 
-    if not loaded then
-        local tempFunc = function()
-            Wait(2000)
-            debugPrint("^6Bridge^7: ^2Executing onPlayerLoaded")
-            func()
-        end
+    local handler = function()
+        _debouncedRun(func)
+    end
 
-        if isStarted(QBExport) or isStarted(QBXExport) then
-            onPlayerFramework = QBExport
-            RegisterNetEvent('QBCore:Client:OnPlayerLoaded', tempFunc)
-        elseif isStarted(ESXExport) then
-            onPlayerFramework = ESXExport
-            RegisterNetEvent('esx:playerLoaded', function()
-                if waitForSharedLoad() then
-                    tempFunc()
-                end
-            end
-        )
-        elseif isStarted(OXCoreExport) then
-            onPlayerFramework = OXCoreExport
-            RegisterNetEvent('ox:playerLoaded', tempFunc)
-        elseif isStarted(RSGExport) then
-            onPlayerFramework = RSGExport
-            RegisterNetEvent('RSGCore:Client:OnPlayerLoaded', tempFunc)
-        elseif isStarted(VorpExport) then
-            onPlayerFramework = VorpExport
-            RegisterNetEvent("vorp_core:Client:OnPlayerSpawned", tempFunc)
-        end
+    if isStarted(QBExport) or isStarted(QBXExport) then
+        onPlayerFramework = QBExport
+        RegisterNetEvent('QBCore:Client:OnPlayerLoaded', handler)
 
-        if onPlayerFramework ~= "" then
-            debugPrint("^6Bridge^7: ^2Registering ^3onPlayerLoaded^7()^2 with ^3" .. onPlayerFramework.."^7")
-        else
-            print("^4ERROR^7: No supported core detected for onPlayerLoaded - Check starter.lua")
-        end
+    elseif isStarted(ESXExport) then
+        onPlayerFramework = ESXExport
+        RegisterNetEvent('esx:playerLoaded', function()
+            if waitForSharedLoad() then handler() end
+        end)
+
+    elseif isStarted(OXCoreExport) then
+        onPlayerFramework = OXCoreExport
+        RegisterNetEvent('ox:playerLoaded', handler)
+
+    elseif isStarted(RSGExport) then
+        onPlayerFramework = RSGExport
+        RegisterNetEvent('RSGCore:Client:OnPlayerLoaded', handler)
+
+    elseif isStarted(VorpExport) then
+        onPlayerFramework = VorpExport
+        RegisterNetEvent('vorp_core:Client:OnPlayerSpawned', handler)
+    end
+
+    if onPlayerFramework ~= "" then
+        debugPrint("^6Bridge^7: ^2Registering ^3onPlayerLoaded^7()^2 with ^3" .. onPlayerFramework .. "^7")
+    else
+        print("^4ERROR^7: No supported core detected for onPlayerLoaded - Check starter.lua")
     end
 end
 
