@@ -364,6 +364,7 @@ function isVehicleOwned(plate)
             local framework = vehDatabase[i]
             if isStarted(framework.framework) then
                 sqlTable = framework.sqlTable
+                break
             end
         end
 
