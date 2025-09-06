@@ -52,8 +52,13 @@ local InvFunc = {
                 return exports[OXInv]:GetPlayerMaxWeight()
             end,
         getCurrentInvWeight =
-            function()
-                return exports[OXInv]:GetPlayerWeight()
+            function(src)
+                local weight = 0
+                local itemcheck = getPlayerInv(src)
+                for _, v in pairs(itemcheck) do
+                    weight += ((v.weight * v.amount) or 0)
+                end
+                return weight
             end,
         getPlayerInv =
             function(src)
@@ -158,9 +163,9 @@ local InvFunc = {
                 return InventoryWeight
             end,
         getCurrentInvWeight =
-            function()
+            function(src)
                 local weight = 0
-                local itemcheck = exports[CoreInv]:getInventory()
+                local itemcheck = getPlayerInv(src)
                 for _, v in pairs(itemcheck) do
                     weight += ((v.weight * v.amount) or 0)
                 end
@@ -257,9 +262,9 @@ local InvFunc = {
                 return InventoryWeight
             end,
         getCurrentInvWeight =
-            function()
+            function(src)
                 local weight = 0
-                local itemcheck = exports[OrigenInv]:getPlayerInventory()
+                local itemcheck = getPlayerInv(src)
                 for _, v in pairs(itemcheck) do
                     weight += ((v.weight * v.amount) or 0)
                 end
@@ -368,9 +373,9 @@ local InvFunc = {
                 return InventoryWeight
             end,
         getCurrentInvWeight =
-            function()
+            function(src)
                 local weight = 0
-                local itemcheck = exports[CodeMInv]:GetClientPlayerInventory()
+                local itemcheck = getPlayerInv(src)
                 for _, v in pairs(itemcheck) do
                     weight += ((v.weight * v.amount) or 0)
                 end
@@ -476,9 +481,9 @@ local InvFunc = {
                 return InventoryWeight
             end,
         getCurrentInvWeight =
-            function()
+            function(src)
                 local weight = 0
-                local itemcheck = exports[TgiannInv]:GetPlayerItems()
+                local itemcheck = getPlayerInv(src)
                 for _, v in pairs(itemcheck) do
                     weight += ((v.weight * v.amount) or 0)
                 end
@@ -617,9 +622,9 @@ local InvFunc = {
                 end
             end,
         getCurrentInvWeight =
-            function()
+            function(src)
                 local weight = 0
-                local itemcheck = Core.Functions.GetPlayerData().items
+                local itemcheck = getPlayerInv(src)
                 for _, v in pairs(itemcheck) do
                     weight += ((v.weight * v.amount) or 0)
                 end
@@ -793,9 +798,9 @@ local InvFunc = {
                 end
             end,
         getCurrentInvWeight =
-            function()
+            function(src)
                 local weight = 0
-                local itemcheck = Core.Functions.GetPlayerData().items
+                local itemcheck = getPlayerInv(src)
                 for _, v in pairs(itemcheck) do
                     weight += ((v.weight * v.amount) or 0)
                 end
@@ -992,9 +997,9 @@ local InvFunc = {
                 end
             end,
         getCurrentInvWeight =
-            function()
+            function(src)
                 local weight = 0
-                local itemcheck = Core.Functions.GetPlayerData().items
+                local itemcheck = getPlayerInv(src)
                 for _, v in pairs(itemcheck) do
                     weight += ((v.weight * v.amount) or 0)
                 end
@@ -1162,9 +1167,9 @@ local InvFunc = {
                 end
             end,
         getCurrentInvWeight =
-            function()
+            function(src)
                 local weight = 0
-                local itemcheck = Core.Functions.GetPlayerData().items
+                local itemcheck = getPlayerInv(src)
                 for _, v in pairs(itemcheck) do
                     weight += ((v.weight * v.amount) or 0)
                 end
@@ -1528,12 +1533,6 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
 
     local src = (newsrc and tonumber(newsrc)) or source
 
-    -- Only server resources may set newsrc; clients cannot.
-    --if newsrc ~= nil and source ~= 0 then
-    --    debugPrint("^1DENY^7: client tried to set newsrc")
-    --    return
-    --end
-
     if (give == true or give == 1) then
         if newsrc == nil then -- this must be coming from client this would be blank
             if not checkToken(src, token, "item", item) then
@@ -1847,6 +1846,15 @@ if isServer() then
     end)
 end
 
+--- Attempts to return the number value of the max inventory weight
+---
+--- @param src number (optional) can be run in server or client.
+---
+--- @usage
+--- ```lua
+--- local maxInvWeight = getMaxInvWeight()
+--- print("Max Inventory Weight:", maxInvWeight)
+--- ```
 function getMaxInvWeight()
     local weight = 0
     for i = 1, #InvFunc do
@@ -1859,12 +1867,21 @@ function getMaxInvWeight()
     return weight
 end
 
-function getCurrentInvWeight()
+--- Returns current number value of the players inventory weight
+---
+--- @param src number (optional) can be run in server or client.
+---
+--- @usage
+--- ```lua
+--- local currentInvWeight = getCurrentInvWeight()
+--- print("Current Player Inventory Weight:", currentInvWeight)
+--- ```
+function getCurrentInvWeight(src)
     local weight = 0
     for i = 1, #InvFunc do
         local inv = InvFunc[i]
         if isStarted(inv.invName) then
-            weight = inv.getMaxInvWeight()
+            weight = inv.getCurrentInvWeight(src)
             break
         end
     end
@@ -1872,6 +1889,18 @@ function getCurrentInvWeight()
     return weight
 end
 
+--- Retruns if the player has enough inventory slots free
+---
+--- @param slots number The number of free slots.
+--- @param src number (optional) can be run in server or client.
+---
+--- @usage
+--- ```lua
+--- local slots = 5
+--- if hasFreeInventorySlots(slots, src) then
+---     print("Player has enough slots free!")
+--- end
+--- ```
 function hasFreeInventorySlots(slots, src)
     local inv = getPlayerInv(src)
     if (countTable(inv) + slots) <= InventorySlots then
@@ -1907,7 +1936,16 @@ function doesItemExist(item)
     return false
 end
 
-
+--- Attempts to return the item "label"
+--- If can't be found returns "item (Missing item error)"
+---
+--- @param item string The item name.
+---
+--- @usage
+--- ```lua
+--- local label = getItemLabel("apple")
+--- print("label")
+--- ```
 function getItemLabel(item)
     local item = type(item) == "string" and item or tostring(item)
 
