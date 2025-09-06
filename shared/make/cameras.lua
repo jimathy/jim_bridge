@@ -21,32 +21,28 @@ function createTempCam(ent, coords)
 	local camID = nil
 	if Config.Crafting?.craftCam or Config.System.enableCam then
 
+		-- if not ent or coords are provided, make a basic camera to control later
 		if not ent and not coords then
 			camID = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
 			camCache[#camCache+1] = camID
 			return camID
 		end
-		
-		debugPrint("^6Bridge^7: ^2Custom Camera Created")
 
-		local camCoords = nil
-		--local pointCoords = nil
-
-		if type(ent) ~= "number" then -- if received a vector3 or vector4 use those coords for origin point
-			camCoords = ent
-		else
-			camCoords = GetOffsetFromEntityInWorldCoords(ent, 1.0, -0.3, 0.8)
-		end
+		-- if received a vector3 or vector4 use those coords for origin point, otherwrise get offset from entity
+		local camCoords = type(ent) ~= "number" and ent or GetOffsetFromEntityInWorldCoords(ent, 1.0, -0.3, 0.8)
 
 		-- Create the camera
 		camID = CreateCamWithParams("DEFAULT_SCRIPTED_CAMERA", camCoords.x, camCoords.y, camCoords.z + 0.5, 1.0, 0.0, 0.0, 60.00, false, 0)
 		camCache[#camCache+1] = camID
 
+		debugPrint("^6Bridge^7: ^2Custom Camera Created")
+
 		--if type(coords) == "number" then
 		--	SetCamCoord(camID, GetCamCoord(camID) + vec3(0, 0, 1.0))
 		--end
-
-		camLookAt(camID, coords)
+		if coords then
+			camLookAt(camID, coords)
+		end
 
 	end
 	return camID
@@ -69,9 +65,10 @@ local cachePrevCam = nil
 -- ```lua
 -- startTempCam(camID, 1000, true, { postFx = "HeistCelebEnd" })
 -- ```
-function startTempCam(cam, renderTime, loadScene, filter)
+function startTempCam(cam, renderTime, loadScene, filter, switchCam)
 	if cam and DoesCamExist(cam) then
-		if cachePrevCam then
+		-- if moving from a cached previous cam, or you've sent a camre id for it to switch from, interpolate to it
+		if switchCam or cachePrevCam then
 			SetCamActiveWithInterp(cam, cachePrevCam, renderTime or 1000, 0, 0)
 		else
 			SetCamActive(cam, true)
@@ -101,21 +98,7 @@ function startTempCam(cam, renderTime, loadScene, filter)
 		end
 
 		if loadScene then
-			local pos = GetCamCoord(cam)
-
-			local radius = 100.0
-
-			SetFocusPosAndVel(pos.x, pos.y, pos.z, 0.0, 0.0, 0.0)
-			RequestCollisionAtCoord(pos.x, pos.y, pos.z)
-			NewLoadSceneStart(pos.x, pos.y, pos.z, 0.0, 0.0, 0.0, radius, 0)
-
-			local t0 = GetGameTimer()
-			while not IsNewLoadSceneLoaded() and (GetGameTimer() - t0) < 2000 do
-				RequestCollisionAtCoord(pos.x, pos.y, pos.z)
-				Wait(0)
-			end
-
-			NewLoadSceneStop()
+			loadLocation(cam, nil, 100.0)
 		end
 
 		RenderScriptCams(true, true, renderTime or 1000, true, true)
@@ -124,7 +107,7 @@ end
 
 -- Follow cam or coords
 function camLookAt(cam, entCoords)
-	if cam and entCoords then
+	if cam and DoesCamExist(cam) and entCoords then
 		if type(entCoords) ~= "number" then
 			PointCamAtCoord(cam, entCoords.xyz)
 		else
@@ -132,6 +115,28 @@ function camLookAt(cam, entCoords)
 		end
 	end
 end
+
+function loadLocation(cam, pos, radius)
+	local pos = pos or GetCamCoord(cam)
+
+	SetFocusPosAndVel(pos.x, pos.y, pos.z, 0.0, 0.0, 0.0)
+	RequestCollisionAtCoord(pos.x, pos.y, pos.z)
+	NewLoadSceneStart(pos.x, pos.y, pos.z, 0.0, 0.0, 0.0, radius or 100.0, 0)
+
+	local t0 = GetGameTimer()
+	while not IsNewLoadSceneLoaded() and (GetGameTimer() - t0) < 2000 do
+		RequestCollisionAtCoord(pos.x, pos.y, pos.z)
+		Wait(0)
+	end
+
+	NewLoadSceneStop()
+end
+
+function clearLoadLocation()
+	ClearFocus()
+	NewLoadSceneStop()
+end
+
 
 --- Deactivates the temporary camera and stops rendering.
 --
@@ -144,7 +149,7 @@ end
 -- ```lua
 -- stopTempCam()
 -- ```
-function stopTempCam()
+function stopTempCam(renderTime)
 	CreateThread(function()
 		Wait(1000)
 
@@ -160,13 +165,18 @@ function stopTempCam()
             cacheCameraEffect.timecycle = nil
         end
 
-		RenderScriptCams(false, true, 500, true, true)
+		RenderScriptCams(false, true, renderTime or 500, true, true)
+
+		clearLoadLocation()
+
+		Wait(renderTime or 0)
 		for i = 1, #camCache do
 			DestroyCam(camCache[i], true)
 		end
 		camCache = {}
-		--DestroyAllCams()
-		ClearFocus()
-		NewLoadSceneStop()
 	end)
 end
+
+function createCam(...) createTempCam(...) end
+function startCam(...) startTempCam(...) end
+function stopTempCam(...) startCam(...) end
