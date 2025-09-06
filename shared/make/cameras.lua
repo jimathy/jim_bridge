@@ -179,4 +179,4 @@ end
 
 function createCam(...) createTempCam(...) end
 function startCam(...) startTempCam(...) end
-function stopTempCam(...) startCam(...) end
+function stopCam(...) stopTempCam(...) end
