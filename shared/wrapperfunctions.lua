@@ -15,8 +15,8 @@
 --- registerCommand("greet", {
 ---     "Greets the player",
 ---     { name = "name", help = "Name of the player to greet" },
----     function(source, args) print("Hello, "..args[1].."!") end,
 ---     nil,
+---     function(source, args) print("Hello, "..args[1].."!") end,
 ---     "admin"
 --- })
 --- ```

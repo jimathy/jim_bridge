@@ -10,7 +10,6 @@
       • ox
       • red (default)
       • gta (default)
-      • qs-interface
       • lation
       • esx
 ]]
@@ -35,17 +34,6 @@ local notifyFunc = {
         server =
             function(title, message, type, src)
                 TriggerClientEvent("QBCore:Notify", src, message, type)
-            end,
-    },
-
-    qs = {
-        client =
-            function(title, message, type)
-                exports['qs-interface']:AddNotify(message, title, 6000)
-            end,
-        server =
-            function(title, message, type, src)
-                TriggerClientEvent('interface:notification', src, message, title, 6000)
             end,
     },
 

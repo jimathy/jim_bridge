@@ -5,8 +5,6 @@
     Supported systems include:
       - gksphone
       - yflip-phone
-      - qs-smartphone
-      - qs-smartphone-pro
       - roadphone
       - lb-phone
       - qb-phone
@@ -42,24 +40,14 @@ local phoneFunc = {
                 )
             end,
     },
+
     {   phone = "yflip-phone",
         sendMail =
             function(mailData)
                 TriggerServerEvent(getScript()..":yflip:SendMail", mailData)
             end,
     },
-    {   phone = "qs-smartphone",
-        sendMail =
-            function(mailData)
-                TriggerServerEvent('qs-smartphone:server:sendNewMail', mailData)
-            end,
-    },
-    {   phone = "qs-smartphone-pro",
-        sendMail =
-            function(mailData)
-                TriggerServerEvent('phone:sendNewMail', mailData)
-            end,
-    },
+
     {   phone = "roadphone",
         sendMail =
             function(mailData)
@@ -68,6 +56,7 @@ local phoneFunc = {
                 exports["roadphone"]:sendMail(mailData)
             end,
     },
+
     {   phone = "lb-phone",
         sendMail =
             function(mailData)
@@ -76,6 +65,7 @@ local phoneFunc = {
                 TriggerServerEvent(getScript()..":lbphone:SendMail", mailData)
             end,
     },
+
     {   phone = "qb-phone",
         sendMail =
             function(mailData)
@@ -111,18 +101,21 @@ local phoneFunc = {
                 TriggerClientEvent('qb-phone:RefreshPhone', mailData.src)
             end,
     },
+
     {   phone = "npwd_qbx_mail",
         sendMail =
             function(mailData)
                 TriggerServerEvent('qb-phone:server:sendNewMail', mailData)
             end,
     },
+
     {   phone = "jpr-phonesystem",
         sendMail =
             function(mailData)
                 TriggerServerEvent(getScript()..":jpr:SendMail", mailData)
             end,
     },
+
     {   phone = "ef-phone",
         sendMail =
             function(mailData)

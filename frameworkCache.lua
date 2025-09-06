@@ -15,7 +15,6 @@ local Exports = {
     OXInv = "ox_inventory",
     QBInv = "qb-inventory",
     PSInv = "ps-inventory",
-    QSInv = "qs-inventory",
     CoreInv = "core_inventory",
     CodeMInv = "codem-inventory",
     OrigenInv = "origen_inventory",
@@ -149,11 +148,8 @@ local itemFunc = {
             -- If this is nil, they need to update to qbx_core 1.23.0+
             if not cache.Items then
                 -- if their inventory doesn't allow that (they refuse to update their butchered core replacement):
-                if GetResourceState(Exports.QSInv):find("start") then
-                    itemResource = Exports.QSInv
-                    cache.Items = exports[Exports.QSInv]:GetItemList()
 
-                elseif GetResourceState(Exports.OrigenInv):find("start") then
+                if GetResourceState(Exports.OrigenInv):find("start") then
                     itemResource = Exports.OrigenInv
                     cache.Items = exports[Exports.OrigenInv]:Items()
 
@@ -179,14 +175,10 @@ local itemFunc = {
     },
     {   script = Exports.ESXExport,
         cacheItem = function()
-            if GetResourceState(Exports.QSInv):find("start") then
-                cache.Items = exports[Exports.QSInv]:GetItemList()
-            else
+            cache.Items = ESX.GetItems()
+            while not next(cache.Items) do
                 cache.Items = ESX.GetItems()
-                while not next(cache.Items) do
-                    cache.Items = ESX.GetItems()
-                    Wait(1000)
-                end
+                Wait(1000)
             end
         end,
     },
@@ -437,9 +429,7 @@ local function getInventoryConfig(resource, data)
     }
 
     local fn, err = load(content, '@'..data.file, 't', env)
-    --local success, err = xpcall(fn, function(e)
-    --    print(debug.traceback("Error while executing qs-inventory config:\n" .. tostring(e), 2))
-    --end)
+
     if not fn then return nil, "Failed to compile config: " .. err end
     if not pcall(fn) then return nil, "Error executing config file" end
 
@@ -470,7 +460,6 @@ local invWeightTable = {
     },
     [Exports.JPRInv] =      { file = "configs/main_config.lua", path = { "MaxInventoryWeight" }, slotPath = { "MaxInventorySlots" } },
     [Exports.PSInv] =       { file = "config.lua",              path = { "MaxInventoryWeight" }, slotPath = { "MaxInventorySlots" } },
-    [Exports.QSInv] =       { file = "config/config.lua",       path = { "InventoryWeight", "weight" }, slotPath = { "InventoryWeight", "slots" } },
     [Exports.TgiannInv] =   { file = "configs/config.lua",      path = { "slotsMaxWeights", "player", "maxWeight" }, slotPath = { "slotsMaxWeights", "player", "slots" } },
     [Exports.CodeMInv] =    { file = "config/config.lua",       path = { "MaxWeight" }, slotPath = { "MaxSlots" } },
     [Exports.RSGInv] =      { file = "config/config.lua",       path = { "MaxWeight" }, slotPath = { "MaxSlots" } },

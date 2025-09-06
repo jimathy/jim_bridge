@@ -95,35 +95,6 @@ local progressFunc = {
             end,
     },
 
-    qs = {
-        start =
-            function(data)
-                if exports['qs-interface']:ProgressBar({
-                    duration = debugMode and 1000 or data.time,
-                    label = data.label,
-                    position = 'bottom',
-                    useWhileDead = data.dead or false,
-                    canCancel = data.cancel or true,
-                    disable = data.disableMovement or false,
-                    anim = {
-                        dict = data.dict,
-                        clip = data.anim,
-                        flag = data.flag or 32
-                    },
-                    prop = nil
-                })  then
-                    return true
-                else
-                    return false
-                end
-            end,
-        stop =
-            function()
-                --??
-                TriggerEvent("progressbar:client:cancel")
-            end,
-    },
-
     esx = {
         start =
             function(data)

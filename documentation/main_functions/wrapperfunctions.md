@@ -1,6 +1,6 @@
 ### wrapperfunctions.lua
 
-Provides wrapper compatibility functions for command and inventory stash systems across different frameworks (OX, QB, ESX, QS, etc).
+Provides wrapper compatibility functions for command and inventory stash systems across different frameworks (OX, QB, ESX, etc).
 
 - **registerCommand(command, options)**
 
@@ -23,7 +23,7 @@ Provides wrapper compatibility functions for command and inventory stash systems
 - **registerStash(name, label, slots?, weight?, owner?, coords?)**
 
   ⚠️ Server Side Only
-  - Registers a stash using OX, QS, or Origen inventory systems.
+  - Registers a stash using OX, or Origen inventory systems.
   - **Example:**
     ```lua
     registerStash(

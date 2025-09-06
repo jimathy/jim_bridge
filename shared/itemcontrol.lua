@@ -118,99 +118,6 @@ local InvFunc = {
             end,
     },
 
-    {   invName = QSInv,
-        removeItem =
-            function(src, item, remamount)
-                exports[QSInv]:RemoveItem(src, item, remamount)
-            end,
-        addItem =
-            function(src, item, amountToAdd, info, slot)
-                exports[QSInv]:AddItem(src, item, amountToAdd, slot, info)
-            end,
-        setItemMetadata =
-            function(data, src)
-                exports[QSInv]:SetItemMetadata(src, data.slot, data.metadata)
-            end,
-        hasItem =
-            function(item, amount, src)
-                if src then
-                    local serverItemCheck = exports[QSInv]:GetItemTotalAmount(src, item) or 0
-                    return serverItemCheck >= amount, serverItemCheck
-                else
-                    local localItemCheck = exports[QSInv]:Search(item) or 0
-                    return localItemCheck >= amount, localItemCheck
-                end
-            end,
-        canCarry =
-            function(itemTable, src)
-                local resultTable = {}
-                for k, v in pairs(itemTable) do
-                    resultTable[k] = exports[QSInv]:CanCarryItem(src, k, v)
-                end
-                return resultTable
-            end,
-        getMaxInvWeight =
-            function()
-                return InventoryWeight
-            end,
-        getPlayerInv =
-            function(src)
-                local grabInv = nil
-                if src then
-                    grabInv = exports[QSInv]:GetInventory(src)
-                else
-                    grabInv = exports[QSInv]:getUserInventory()
-                end
-                return grabInv
-            end,
-        invImg =
-            function(item)
-                return "nui://"..QSInv.."/html/images/"..(Items[item].image or "")
-            end,
-        openShop =
-            function(name, label, items)
-                TriggerServerEvent("inventory:server:OpenInventory", "shop", label, items)
-            end,
-        serverOpenShop = function(shopName)
-            --
-        end,
-        registerShop =
-            function(name, label, items, society)
-                --
-            end,
-        openStash =
-            function(data)
-                TriggerEvent("inventory:client:SetCurrentStash", data.stash)
-                TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, {
-                    slots = data.slots or 50,
-                    maxWeight = data.maxWeight or 600000
-                })
-            end,
-        clearStash =
-            function(stashId)
-                exports[QSInv]:ClearOtherInventory('stash', stashId)
-            end,
-        getStash =
-            function(stashName)
-                return exports[QSInv]:GetStashItems(stashName)
-            end,
-        stashAddItem =
-            function(stashItems, stashName, items)
-                --
-            end,
-        stashRemoveItem =
-            function(stashItems, stashName, items)
-                for k, v in pairs(items) do
-                    exports[QSInv]:RemoveItemIntoStash(stashName[1], k, v)
-                    debugPrint("^6Bridge^7: ^2Removing ^3"..QSInv.." ^2Stash item^7:", k, v)
-                end
-            end,
-        registerStash =
-            function(name, label, slots, weight, owner, coords)
-                --
-            end,
-    },
-
     {   invName = CoreInv,
         removeItem =
             function(src, item, remamount)
@@ -1889,13 +1796,6 @@ function getCurrentInvWeight()
         weight = exports[OXInv]:GetPlayerWeight()
     end
 
-    if isStarted(QSInv) then
-        local itemcheck = exports[QSInv]:getUserInventory()
-        for _, v in pairs(itemcheck) do
-            weight += ((v.weight * v.amount) or 0)
-        end
-    end
-
     if isStarted(CoreInv) then
         local itemcheck = exports[CoreInv]:getInventory()
         for _, v in pairs(itemcheck) do
@@ -2318,7 +2218,7 @@ RegisterNetEvent(getScript()..":server:stashRemoveItem", stashRemoveItem)
 --- local hasAll, details = stashhasItem(currentStashItems, { iron = 2, wood = 5 })
 --- ```
 function stashhasItem(stashItems, items, amount)
-    local invs = { OXInv, QSInv, CoreInv, CodeMInv, OrigenInv, TgiannInv, JPRInv, QBInv, PSInv, RSGInv }
+    local invs = { OXInv, CoreInv, CodeMInv, OrigenInv, TgiannInv, JPRInv, QBInv, PSInv, RSGInv }
     local foundInv = ""
 
     for _, inv in ipairs(invs) do
@@ -2357,7 +2257,7 @@ end
 
 
 --- Registers a stash with the active inventory system.
---- Supports either OXInv or QSInv.
+--- Not all
 ---
 --- @param name string Unique stash identifier.
 --- @param label string Display name for the stash.
