@@ -66,7 +66,7 @@ if not SUPPRESS_UPDATES then
                             CheckBridgeVersion()
                         end)
                     else
-                        print("^7'^3jim_bridge^7' - ^5You are running a newer version ^7(^3"..currentVersionRaw.."^7 ← ^3"..newestVersionRaw.."^7)")
+                        print("^7'^3jim_bridge^7' - ^5You are running a newer version ^7(^3"..currentVersionRaw.."^7 ← ^3"..newestVersionRaw.."^7) (^1Expect Errors^7)")
                     end
                 end)
             end)
