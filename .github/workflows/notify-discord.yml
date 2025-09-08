@@ -1,18 +1,20 @@
 name: Discord Commit Notifier
-
 on:
   push:
-    branches:
-      - '*'  # triggers on all branches
+    branches: ['*']
 
 jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
+      - name: Validate event JSON (sanity check)
+        run: jq -e . "$GITHUB_EVENT_PATH" >/dev/null
+
       - name: Send commit payload to Discord Bot
         env:
           URL: http://${{ secrets.DISCORDBOT }}:3000/github-commits
+        shell: bash
         run: |
-          curl -sS -X POST "$URL" \
+          curl -sS --fail-with-body -X POST "$URL" \
             -H 'Content-Type: application/json' \
-            --data-binary @"$GITHUB_EVENT_PATH"
+            --data-binary "@$GITHUB_EVENT_PATH"
