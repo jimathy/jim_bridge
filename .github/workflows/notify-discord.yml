@@ -8,10 +8,11 @@ on:
 jobs:
   notify:
     runs-on: ubuntu-latest
-
     steps:
       - name: Send commit payload to Discord Bot
+        env:
+          URL: http://${{ secrets.DISCORDBOT }}:3000/github-commits
         run: |
-          curl -X POST http://${{ secrets.DISCORDBOT }}:3000/github-commits \
-            -H "Content-Type: application/json" \
-            -d '${{ toJson(github.event) }}'
+          curl -sS -X POST "$URL" \
+            -H 'Content-Type: application/json' \
+            --data-binary @"$GITHUB_EVENT_PATH"
