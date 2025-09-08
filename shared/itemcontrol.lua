@@ -2106,14 +2106,14 @@ end
 function openStash(data)
     if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
 
-    --local exploitCheck = triggerCallback(getScript()..":getRegisteredStashLocations", data.stash)
-    --if not exploitCheck then
-    --    print("^3Warning^7: ^2This isn't a registered stash^1, refusing call^7")
-    --    return
-    --end
-    --if not distExploitCheck(exploitCheck) then
-    --    return
-    --end
+    local exploitCheck = triggerCallback(getScript()..":getRegisteredStashLocations", data.stash)
+    if not exploitCheck then
+        print("^3Warning^7: ^2This isn't a registered stash^1, refusing call^7")
+        return
+    end
+    if not distExploitCheck(exploitCheck) then
+        return
+    end
 
     for i = 1, #InvFunc do
         local inv = InvFunc[i]
@@ -2140,13 +2140,13 @@ end
 RegisterNetEvent(getScript()..":server:openServerStash", function(data)
     local src = source
 
-    --if not stashExploitCheck[data.stashName] then
-    --    print("^3Warning^7: ^1Source^7: ^3"..src.." ^1Tried to open a shop^7: ^2This isn't a registered stash^1, refusing call^7")
-    --    return
-    --end
-    --if not distExploitCheck(stashExploitCheck[data.stashName]) then
-    --    return
-    --end
+    if not stashExploitCheck[data.stashName] then
+        print("^3Warning^7: ^1Source^7: ^3"..src.." ^1Tried to open a shop^7: ^2This isn't a registered stash^1, refusing call^7")
+        return
+    end
+    if not distExploitCheck(stashExploitCheck[data.stashName], src) then
+        return
+    end
 
     if isStarted(TgiannInv) then
         exports[TgiannInv]:OpenInventory(source, 'stash', data.stashName, data)
@@ -2442,14 +2442,14 @@ end
 function sellMenu(data)
     local origData = data
 
-    --local exploitCheck = triggerCallback(getScript()..":getRegisteredSellShopLocation", data.name)
-    --if not exploitCheck then
-    --    print("^3Warning^7: ^2This isn't a registered store^1, refusing call^7")
-    --    return
-    --end
-    --if not distExploitCheck(exploitCheck) then
-    --    return
-    --end
+    local exploitCheck = triggerCallback(getScript()..":getRegisteredSellShopLocation", data.name)
+    if not exploitCheck then
+        print("^3Warning^7: ^2This isn't a registered store^1, refusing call^7")
+        return
+    end
+    if not distExploitCheck(exploitCheck) then
+        return
+    end
 
     local Menu = {}
     if data.sellTable.Items then
@@ -2628,14 +2628,14 @@ function openShop(data)
     if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
 
     -- If shop has registered coords, limit players from being too far away from it when opening
-    --local exploitCheck = triggerCallback(getScript()..":getRegisteredShopLocation", data.shop)
-    --if not exploitCheck then
-    --    print("^3Warning^7: ^2This isn't a registered store^1, refusing call^7")
-    --    return
-    --end
-    --if not distExploitCheck(exploitCheck) then
-    --    return
-    --end
+    local exploitCheck = triggerCallback(getScript()..":getRegisteredShopLocation", data.shop)
+    if not exploitCheck then
+        print("^3Warning^7: ^2This isn't a registered store^1, refusing call^7")
+        return
+    end
+    if not distExploitCheck(exploitCheck) then
+        return
+    end
 
     if Config.General.JimShops then
         TriggerServerEvent("jim-shops:ShopOpen", "shop", data.items.label, data.items)
@@ -2658,13 +2658,13 @@ RegisterNetEvent(getScript()..':server:openServerShop', function(shopName)
     local src = source
 
     -- If shop has registered coords, limit players from being too far away from it when opening
-    --if not shopExploitCheck[data.shop] then
-    --    print("^3Warning^7: ^1Source^7: ^3"..src.." ^1Tried to open a shop^7: ^2This isn't a registered store^1, refusing call^7")
-    --    return
-    --end
-    --if not distExploitCheck(shopExploitCheck[data.shop]) then
-    --    return
-    --end
+    if not shopExploitCheck[shopName] then
+        print("^3Warning^7: ^1Source^7: ^3"..src.." ^1Tried to open a shop^7: ^2This isn't a registered store^1, refusing call^7")
+        return
+    end
+    if not distExploitCheck(shopExploitCheck[shopName], src) then
+        return
+    end
 
     for i = 1, #InvFunc do
         local inv = InvFunc[i]

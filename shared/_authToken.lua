@@ -121,7 +121,7 @@ end
 function distExploitCheck(table, src)
 
     if not table then
-        --print("^1Error^7: ^1This wasn^7'^1t reigstered correctly or this is an exploit attempt^1")
+        print("^1Error^7: ^1This wasn^7'^1t reigstered correctly or this is an exploit attempt^1")
         return false
     end
 
@@ -138,7 +138,7 @@ function distExploitCheck(table, src)
     end
 
     if not allow then
-        debugPrint(src and ("^1Src ^3"..src.." ").."^1Tried to open a registered shop/stash from over the distance limit^7")
+        print(src and ("^1Src ^3"..src.." ").."^1Tried to open a registered shop/stash from over the distance limit^7")
         return false
     end
 
