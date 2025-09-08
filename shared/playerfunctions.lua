@@ -11,10 +11,6 @@
       • Getting active players near a coordinate.
 ]]
 
--------------------------------------------------------------
--- Server Event Handlers for Needs
--------------------------------------------------------------
-
 local hungerThirstFunc = {
     {   framework = QBXExport,
         setThirst =
@@ -72,6 +68,11 @@ local hungerThirstFunc = {
             end,
     },
 }
+
+
+-------------------------------------------------------------
+-- Server Event Handlers for Needs
+-------------------------------------------------------------
 
 --- Sets the player's thirst level.
 ---
@@ -363,6 +364,140 @@ end
 -- Player Job & Information Utilities
 -------------------------------------------------------------
 
+local hasGroupFunc = {
+    {   framework = QBXExport,
+        hasGroup =
+            function(group, grade, src)
+                local hasJobFlag, duty = false, true
+                local playerInfo = GetPlayer(src)
+                local jobinfo = playerInfo.job or playerInfo.PlayerData.job
+                if jobinfo.name == group then
+                    hasJobFlag = true
+                    duty = jobinfo.onduty
+                    if grade and not (grade <= jobinfo.grade.level) then
+                        hasJobFlag = false
+                    end
+                end
+                local ganginfo = playerInfo.gang or playerInfo.PlayerData.gang
+                if ganginfo.name == group then
+                    hasJobFlag = true
+                    if grade and not (grade <= ganginfo.grade.level) then
+                        hasJobFlag = false
+                    end
+                end
+                return hasJobFlag, duty
+            end,
+    },
+
+    {   framework = QBExport,
+        hasGroup =
+            function(group, grade, src)
+                local hasJobFlag, duty = false, true
+                local playerInfo = GetPlayer(src)
+                local jobinfo = playerInfo.job or playerInfo.PlayerData.job
+                if jobinfo.name == group then
+                    hasJobFlag = true
+                    duty = jobinfo.onduty
+                    if grade and not (grade <= jobinfo.grade.level) then
+                        hasJobFlag = false
+                    end
+                end
+                local ganginfo = playerInfo.gang or playerInfo.PlayerData.gang
+                if ganginfo.name == group then
+                    hasJobFlag = true
+                    if grade and not (grade <= ganginfo.grade.level) then
+                        hasJobFlag = false
+                    end
+                end
+                return hasJobFlag, duty
+            end,
+    },
+
+    {   framework = OXCoreExport,
+        hasGroup =
+            function(group, grade, src)
+                local hasJobFlag, duty = false, true
+                if src then
+                    local chunk = assert(load(LoadResourceFile('ox_core', ('imports/%s.lua'):format('server')), ('@@ox_core/%s'):format(file)))
+                    chunk()
+                    local player = Ox.GetPlayer(src)
+                    for k, v in pairs(player.getGroups()) do
+                        if k == group then hasJobFlag = true end
+                    end
+                end
+                local info = OxPlayer.getGroups()
+                for k, v in pairs(info) do
+                    if k == group then hasJobFlag = true break end
+                end
+                return hasJobFlag, duty
+            end,
+    },
+
+    {   framework = OXCoreExport,
+        hasGroup =
+            function(group, grade, src)
+                local hasJobFlag, duty = false, true
+                if src then
+                    local chunk = assert(load(LoadResourceFile('ox_core', ('imports/%s.lua'):format('server')), ('@@ox_core/%s'):format(file)))
+                    chunk()
+                    local player = Ox.GetPlayer(src)
+                    for k, v in pairs(player.getGroups()) do
+                        if k == group then hasJobFlag = true end
+                    end
+                end
+                local info = OxPlayer.getGroups()
+                for k, v in pairs(info) do
+                    if k == group then hasJobFlag = true break end
+                end
+                return hasJobFlag, duty
+            end,
+    },
+
+    {   framework = ESXExport,
+        hasGroup =
+            function(group, grade, src)
+                local hasJobFlag, duty = false, true
+
+                local playerInfo = GetPlayer(src)
+                local info = playerInfo.job
+                while not info do
+                    info = GetPlayer(src).job
+                    Wait(100)
+                end
+                if info.name == group then
+                    hasJobFlag = true
+                end
+
+                return hasJobFlag, duty
+            end,
+    },
+
+    {   framework = RSGExport,
+        hasGroup =
+            function(group, grade, src)
+                local hasJobFlag, duty = false, true
+                local playerInfo = GetPlayer(src)
+                local jobinfo = playerInfo.job or playerInfo.PlayerData.job
+                if jobinfo.name == group then
+                    hasJobFlag = true
+                    duty = jobinfo.onduty
+                    if grade and not (grade <= jobinfo.grade.level) then
+                        hasJobFlag = false
+                    end
+                end
+                local ganginfo = playerInfo.gang or playerInfo.PlayerData.gang
+                if ganginfo.name == group then
+                    hasJobFlag = true
+                    if grade and not (grade <= ganginfo.grade.level) then
+                        hasJobFlag = false
+                    end
+                end
+                return hasJobFlag, duty
+            end,
+    },
+}
+
+
 --- Checks if a player has a specific job or gang (and optionally meets a minimum grade).
 ---
 --- @param job string The job or gang name to check.
@@ -385,162 +520,17 @@ end
 --- end
 --- ```
 function hasJob(job, source, grade)
+    local src = source
     local hasJobFlag, duty = false, true
-    if source then
-        local src = tonumber(source)
-        if not src then print(tostring(source).." is not a valid player source") end
-        if isStarted(ESXExport) then
-            local info = ESX.GetPlayerFromId(src).job
-            while not info do
-                info = ESX.GetPlayerData(src).job
-                Wait(100)
-            end
-            if info.name == job then hasJobFlag = true end
 
-        elseif isStarted(OXCoreExport) then
-            local chunk = assert(load(LoadResourceFile('ox_core', ('imports/%s.lua'):format('server')), ('@@ox_core/%s'):format(file)))
-            chunk()
-            local player = Ox.GetPlayer(src)
-            for k, v in pairs(player.getGroups()) do
-                if k == job then hasJobFlag = true end
-            end
-
-        elseif isStarted(QBXExport) then
-            local jobinfo = exports[QBXExport]:GetPlayer(src).PlayerData.job
-            if jobinfo.name == job then
-                hasJobFlag = true
-                duty = exports[QBXExport]:GetPlayer(src).PlayerData.job.onduty
-                if grade and not (grade <= jobinfo.grade.level) then hasJobFlag = false end
-            end
-            local ganginfo = exports[QBXExport]:GetPlayer(src).PlayerData.gang
-            if ganginfo.name == job then
-                hasJobFlag = true
-                if grade and not (grade <= ganginfo.grade.level) then hasJobFlag = false end
-            end
-
-        elseif isStarted(QBExport) and not isStarted(QBXExport) then
-            if Core.Functions.GetPlayer then
-                local player = Core.Functions.GetPlayer(src)
-                if not player then goto skip end
-                local jobinfo = player.PlayerData.job
-                if jobinfo.name == job then
-                    hasJobFlag = true
-                    duty = player.PlayerData.job.onduty
-                    if grade and not (grade <= jobinfo.grade.level) then hasJobFlag = false end
-                end
-                local ganginfo = player.PlayerData.gang
-                if ganginfo.name == job then
-                    hasJobFlag = true
-                    if grade and not (grade <= ganginfo.grade.level) then hasJobFlag = false end
-                end
-            else
-                local jobinfo = exports[QBExport]:GetPlayer(src).PlayerData.job
-                if jobinfo.name == job then
-                    hasJobFlag = true
-                    duty = exports[QBExport]:GetPlayer(src).PlayerData.job.onduty
-                    if grade and not (grade <= jobinfo.grade.level) then hasJobFlag = false end
-                end
-                local ganginfo = exports[QBExport]:GetPlayer(src).PlayerData.gang
-                if ganginfo.name == job then
-                    hasJobFlag = true
-                    if grade and not (grade <= ganginfo.grade.level) then hasJobFlag = false end
-                end
-            end
-        elseif isStarted(RSGExport) then
-            if Core.Functions.GetPlayer then
-                local player = Core.Functions.GetPlayer(src)
-                if not player then goto skip end
-                local jobinfo = player.PlayerData.job
-                if jobinfo.name == job then
-                    hasJobFlag = true
-                    duty = player.PlayerData.job.onduty
-                    if grade and not (grade <= jobinfo.grade.level) then hasJobFlag = false end
-                end
-                local ganginfo = player.PlayerData.gang
-                if ganginfo.name == job then
-                    hasJobFlag = true
-                    if grade and not (grade <= ganginfo.grade.level) then hasJobFlag = false end
-                end
-            else
-                local jobinfo = exports[RSGExport]:GetPlayer(src).PlayerData.job
-                if jobinfo.name == job then
-                    hasJobFlag = true
-                    duty = exports[RSGExport]:GetPlayer(src).PlayerData.job.onduty
-                    if grade and not (grade <= jobinfo.grade.level) then hasJobFlag = false end
-                end
-                local ganginfo = exports[RSGExport]:GetPlayer(src).PlayerData.gang
-                if ganginfo.name == job then
-                    hasJobFlag = true
-                    if grade and not (grade <= ganginfo.grade.level) then hasJobFlag = false end
-                end
-            end
-        else
-            print("^4ERROR^7: ^2No Core detected for hasJob ^7- ^2Check ^3starter^1.^2lua^7")
-        end
-    else
-        -- Client-side check.
-        if isStarted(ESXExport) and ESX ~= nil then
-            local info = ESX.GetPlayerData().job
-            while not info do
-                info = ESX.GetPlayerData().job
-                Wait(100)
-            end
-            if info.name == job then hasJobFlag = true end
-
-        elseif isStarted(OXCoreExport) then
-            local info = OxPlayer.getGroups()
-            for k, v in pairs(info) do
-                if k == job then hasJobFlag = true break end
-            end
-
-        elseif isStarted(QBXExport) then
-            local info = exports[QBXExport]:GetPlayerData()
-            if info.job.name == job then
-                hasJobFlag = true
-                duty = info.job.onduty
-                if grade and not (grade <= info.job.grade.level) then hasJobFlag = false end
-            end
-            if info.gang.name == job then
-                hasJobFlag = true
-                if grade and not (grade <= info.gang.grade.level) then hasJobFlag = false end
-            end
-
-        elseif isStarted(QBExport) and not isStarted(QBXExport) then
-            local info = nil
-            Core.Functions.GetPlayerData(function(PlayerData) info = PlayerData end)
-            local jobinfo = info.job
-            if jobinfo.name == job then
-                hasJobFlag = true
-                duty = jobinfo.onduty
-                if grade and not (grade <= jobinfo.grade.level) then hasJobFlag = false end
-            end
-            local ganginfo = info.gang
-            if ganginfo.name == job then
-                hasJobFlag = true
-                if grade and not (grade <= ganginfo.grade.level) then hasJobFlag = false end
-            end
-
-        elseif isStarted(RSGExport) then
-            local info = nil
-            Core.Functions.GetPlayerData(function(PlayerData) info = PlayerData end)
-            local jobinfo = info.job
-            if jobinfo.name == job then
-                hasJobFlag = true
-                duty = jobinfo.onduty
-                if grade and not (grade <= jobinfo.grade.level) then hasJobFlag = false end
-            end
-            local ganginfo = info.gang
-            if ganginfo.name == job then
-                hasJobFlag = true
-                if grade and not (grade <= ganginfo.grade.level) then hasJobFlag = false end
-            end
-
-        else
-            print("^4ERROR^7: ^2No Core detected for hasJob() ^7- ^2Check ^3starter^1.^2lua^7")
+    for i = 1, #hasGroupFunc do
+        local framework = hasGroupFunc[i]
+        if isStarted(framework.framework) then
+            hasJobFlag, duty = framework.hasGroup(job, grade, src)
+            return hasJobFlag, duty
         end
     end
-    ::skip::
-    return hasJobFlag, duty
+    print("^4ERROR^7: ^2No Core detected for hasJob ^7- ^2Check ^3starter^1.^2lua^7")
 end
 
 ----------------------------------
