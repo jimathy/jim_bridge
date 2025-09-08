@@ -10,7 +10,10 @@ local metaDataFunc = {
     {   framework = QBXExport,
         GetPlayer =
             function(src)
-                return exports[QBXExport]:GetPlayer(src)
+                if src then
+                    return exports[QBXExport]:GetPlayer(src)
+                end
+                return exports[QBXExport]:GetPlayerData()
             end,
         GetPlayerMetadata =
             function(Player, dataToCheck)
@@ -25,7 +28,12 @@ local metaDataFunc = {
     {   framework = QBExport,
         GetPlayer =
             function(src)
-                return exports[QBExport]:GetCoreObject().Functions.GetPlayer(src)
+                if src then
+                    return exports[QBExport]:GetCoreObject().Functions.GetPlayer(src)
+                end
+                local info = nil
+                Core.Functions.GetPlayerData(function(PlayerData) info = PlayerData end)
+                return info
             end,
         GetPlayerMetadata =
             function(Player, dataToCheck)
@@ -40,7 +48,10 @@ local metaDataFunc = {
     {   framework = ESXExport,
         GetPlayer =
             function(src)
-                return ESX.GetPlayerFromId(src)
+                if src then
+                    return ESX.GetPlayerFromId(src)
+                end
+                return ESX.GetPlayerData()
             end,
         GetPlayerMetadata =
             function(Player, dataToCheck)
@@ -55,7 +66,10 @@ local metaDataFunc = {
     {   framework = OXCoreExport,
         GetPlayer =
             function(src)
-                return exports[OXCoreExport]:GetPlayer(src)
+                if src then
+                    return exports[OXCoreExport]:GetPlayer(src)
+                end
+                return {}
             end,
         GetPlayerMetadata =
             function(Player, dataToCheck)
@@ -68,9 +82,15 @@ local metaDataFunc = {
     },
 
     {   framework = RSGExport,
-        GetPlayer = function(src)
-            exports[RSGExport]:GetCoreObject().Functions.GetPlayer(source)
-        end,
+        GetPlayer =
+            function(src)
+                if src then
+                    return exports[RSGExport]:GetCoreObject().Functions.GetPlayer(src)
+                end
+                local info = nil
+                Core.Functions.GetPlayerData(function(PlayerData) info = PlayerData end)
+                return info
+            end,
         GetPlayerMetadata = function(Player, dataToCheck)
             return Player.PlayerData.metadata[dataToCheck]
         end,
