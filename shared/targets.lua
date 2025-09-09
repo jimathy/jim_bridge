@@ -535,10 +535,6 @@ function ShowFloatingHelpNotification(coord, text, highlight)
     EndTextCommandDisplayHelp(2, false, false, -1)
 end
 
-function updateCachedText(target)
-    target.text = table.concat(target.buttontext, "\n")
-end
-
 -------------------------------------------------------------
 -- Cleanup on Resource Stop
 -------------------------------------------------------------

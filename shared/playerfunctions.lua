@@ -898,3 +898,50 @@ function GetPlayersFromCoords(coords, radius)
     end
     return players
 end
+
+-------------------------------------------------------------
+-- Clothing Script Selection
+-------------------------------------------------------------
+
+local wardrobeFunc = {
+    {   name = "qb-clothing",
+        openWardrobe = function()
+            TriggerEvent("qb-clothing:client:OpenMenu")
+        end,
+    },
+    {   name = "esx_skin",
+        openWardrobe = function()
+            TriggerEvent("esx_skin:openSaveableMenu",
+                function()
+                    finished = true
+                end, function()
+                    finished = true
+            end)
+        end,
+    },
+    {   name = "illenium-appearance",
+        openWardrobe = function()
+            exports['illenium-appearance']:startPlayerCustomization(function(appearance)
+                if appearance then
+                    TriggerServerEvent("illenium-appearance:server:saveAppearance", appearance)
+                end
+            end, {
+                components = true, componentConfig = { masks = true, upperBody = true, lowerBody = true, bags = true, shoes = true, scarfAndChains = true, bodyArmor = true, shirts = true, decals = true, jackets = true },
+                props = true, propConfig = { hats = true, glasses = true, ear = true, watches = true, bracelets = true },
+                enableExit = true,
+            })
+        end,
+    },
+}
+
+--- Opens the clothing customization menu
+
+function openClothing()
+    for i = 1, #wardrobeFunc do
+        local script = wardrobeFunc[i]
+        if isStarted(script.name) then
+            script.openWardrobe()
+            break
+        end
+    end
+end
