@@ -56,6 +56,14 @@ function isServer()
     return IsDuplicityVersion()
 end
 
+--- Allows the user to check if an export exists before trying to call it
+--- @return boolean boolean True if it exists
+---@usage
+--- ```lua
+--- if checkExportExists("qb-inventory", "OpenInventory") then
+---     exports["qb-inventory"]:OpenInventory()
+--- end
+--- ```
 function checkExportExists(resource, export)
     if not resource or not export then return false end
 
@@ -417,6 +425,7 @@ end
 function drawLine(startCoords, endCoords, col)
     if not debugMode then return end
 
+    local col = col or vec4(255, 255, 255, 150)
     CreateThread(function()
         for i = 100, 0, -1 do
             DrawLine(startCoords.x, startCoords.y, startCoords.z, endCoords.x, endCoords.y, endCoords.z, col.x, col.y, col.z, col.w)
@@ -435,6 +444,7 @@ end
 function drawSphere(coords, col)
     if not debugMode then return end
 
+    local col = col or vec4(255, 255, 255, 150)
     CreateThread(function()
         for i = 100, 0, -1 do
             DrawSphere(coords.x, coords.y, coords.z, 0.5, col.x, col.y, col.z, col.w)
@@ -875,9 +885,9 @@ local materials = {
 --- local matHash, matName = GetGroundMaterialAtPosition(vector3(100,200,300))
 --- print("Material:", matName)
 --- ```
-function GetGroundMaterialAtPosition(coords, ped)
+function GetGroundMaterialAtPosition(coords, Ped)
     local endCoords = vec3(coords.x, coords.y, coords.z - 1.1)
-    local rayHandle = StartShapeTestCapsule(coords.x, coords.y, coords.z, endX, endY, endZ, 1.0, 1, Ped or PlayerPedId(), 7)
+    local rayHandle = StartShapeTestCapsule(coords.x, coords.y, coords.z, endCoords.x, endCoords.y, endCoords.z, 1.0, 1, Ped or PlayerPedId(), 7)
     local _, hit, _, _, materialHash, _ = GetShapeTestResultIncludingMaterial(rayHandle)
     local materialName = "Unknown"
     for k, v in pairs(materials) do

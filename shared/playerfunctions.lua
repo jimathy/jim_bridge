@@ -236,7 +236,6 @@ local moneyFunc = {
 --- ```lua
 --- chargePlayer(100, "cash", playerId)
 --- ```
----
 function chargePlayer(cost, moneyType, newsrc)
     local is_success = false
     local src = newsrc or source

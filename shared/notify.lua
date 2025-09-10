@@ -111,7 +111,7 @@ local notifyFunc = {
 --- triggerNotify("Alert", "You have been warned for misconduct.", "error", playerId)
 --- ```
 function triggerNotify(title, message, type, src)
-    if not Config.System or not Config.System.Notify then debugPrint("Notify triggered but not set up") return end
+    if not Config.System?.Notify then debugPrint("Notify triggered but not set up") return end
 
     if src then
         notifyFunc[Config.System.Notify].server(title, message, type, src)

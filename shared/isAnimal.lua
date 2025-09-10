@@ -73,8 +73,8 @@ if not isServer() then
     --- local isPlayerAnimal = isAnimal()
     --- local isSpecificPedAnimal = isAnimal(somePedEntity)
     --- ```
-    function isPedAnimal(ped)
-        local PedModel = GetEntityModel(ped or PlayerPedId())
+    function isPedAnimal(Ped)
+        local PedModel = GetEntityModel(Ped or PlayerPedId())
         for _, animalCategory in pairs(AnimalPeds) do
             for animalModelHash, _ in pairs(animalCategory) do
                 if PedModel == animalModelHash then
@@ -105,8 +105,8 @@ if not isServer() then
     ---     print("Driver is a cat!")
     --- end
     --- ```
-    function isCat(ped)
-        local PedModel = GetEntityModel(ped or PlayerPedId())
+    function isCat(Ped)
+        local PedModel = GetEntityModel(Ped or PlayerPedId())
         for modelHash, _ in pairs(AnimalPeds.CatPeds) do
             if PedModel == modelHash then
                 debugPrint("^4isAnimal^7: ^2Ped is ^4Cat")
@@ -148,8 +148,8 @@ if not isServer() then
     ---     end
     --- end
     --- ```
-    function isDog(ped)
-        local PedModel = GetEntityModel(ped or PlayerPedId())
+    function isDog(Ped)
+        local PedModel = GetEntityModel(Ped or PlayerPedId())
         for modelHash, _ in pairs(AnimalPeds.BigDogs) do
             if PedModel == modelHash then
                 debugPrint("^4isAnimal^7: ^2Ped is ^4Dog")
@@ -199,8 +199,8 @@ if not isServer() then
     --- local getAnim = getAnimalAnims(ped)
     --- playAnim(getAnim.sitDict, getAnim.sitAnim, -1, 1)
     --- ```
-    function getAnimalAnims(ped)
-        local model = GetEntityModel(ped)
+    function getAnimalAnims(Ped)
+        local model = GetEntityModel(Ped)
         local animalTable = {}
         for _, animalCategory in pairs(AnimalPeds) do
             for k, v in pairs(animalCategory) do
