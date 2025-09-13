@@ -1670,7 +1670,6 @@ end
 --- ```lua
 --- useToolDegrade({ item = "drill", maxUse = 10 })
 --- ```
-
 function useToolDegrade(data) -- WIP
     local metadata, slot = getItemMetadata(data.item)
     metadata = metadata or {}
@@ -1752,7 +1751,7 @@ end)
 --- ```lua
 --- getRandomReward("gold_ring")
 --- ```
-function getRandomReward(itemName)
+function getRandomReward(itemName, src)
     if Config.Rewards.RewardPool then
         local reward = false
         if type(Config.Rewards.RewardItem) == "string" then
@@ -1765,7 +1764,6 @@ function getRandomReward(itemName)
             end
         end
         if reward then
-            removeItem(itemName, 1)
             local totalRarity = 0
             for i = 1, #Config.Rewards.RewardPool do
                 totalRarity += Config.Rewards.RewardPool[i].rarity
@@ -1778,7 +1776,7 @@ function getRandomReward(itemName)
                 currentRarity += Config.Rewards.RewardPool[i].rarity
                 if randomNum <= currentRarity then
                     debugPrint("^6Bridge^7: ^3getRandomReward^7: ^2Selected toy ^7'^6"..Config.Rewards.RewardPool[i].item.."^7'")
-                    addItem(Config.Rewards.RewardPool[i].item, 1)
+                    addItem(Config.Rewards.RewardPool[i].item, 1, nil, src)
                     return
                 end
             end
@@ -2106,7 +2104,10 @@ end
 function openStash(data)
     if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
 
-    local exploitCheck = triggerCallback(getScript()..":getRegisteredStashLocations", data.stash)
+    local p = promise.new()
+    p:resolve(triggerCallback(getScript()..":getRegisteredStashLocations", data.stash))
+    local exploitCheck = Citizen.Await(p)
+
     if not exploitCheck then
         print("^3Warning^7: ^2This isn't a registered stash^1, refusing call^7")
         return
@@ -2350,18 +2351,18 @@ end
 --- )
 --- ```
 function registerStash(name, label, slots, weight, owner, coords)
+    if coords then
+        stashExploitCheck[name] = stashExploitCheck[name] or {}
+        stashExploitCheck[name][#stashExploitCheck[name]+1] = coords
+    else
+        print("^3Warning^7: ^1Stash ^4"..name.." ^1doesn^7'^1t have coords^7, ^1this is exploitable^7, ^1add coords to ^3regiterStash^7()")
+    end
     for i = 1, #InvFunc do
         local inv = InvFunc[i]
         if isStarted(inv.invName) then
             inv.registerStash(name, label, slots, weight, owner, coords)
             return
         end
-    end
-    if coords then
-        stashExploitCheck[name] = stashExploitCheck[name] or {}
-        stashExploitCheck[name][#stashExploitCheck[name]+1] = coords
-    else
-        print("^3Warning^7: ^1Stash ^4"..name.." ^1doesn^7'^1t have coords^7, ^1this is exploitable^7, ^1add coords to ^3regiterStash^7()")
     end
 end
 

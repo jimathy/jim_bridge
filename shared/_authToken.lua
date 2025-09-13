@@ -1,6 +1,8 @@
 -------------------------------------------------------------
 -- Exploit Auth System
 -------------------------------------------------------------
+
+forceDisableExplotProtection = false -- dangerous, this allows exploits
 AuthEvent = nil
 currentToken = nil
 if isServer() then
@@ -81,6 +83,8 @@ if isServer() then
 
     -- Multiuse function to check if the generated client token is valid
     function checkToken(src, token, genType, name)
+        if forceDisableExplotProtection == true then return true end
+
         if token == nil then
             debugPrint("^1Auth^7: ^1No token recieved^7")
             if genType == "stash" then
@@ -119,6 +123,7 @@ else
 end
 
 function distExploitCheck(table, src)
+    if forceDisableExplotProtection == true then return true end
 
     if not table then
         print("^1Error^7: ^1This wasn^7'^1t reigstered correctly or this is an exploit attempt^1")
@@ -130,7 +135,7 @@ function distExploitCheck(table, src)
     local allow = false
 
     for i = 1, #table do
-        if #(table[i]  - srcCoords) <= 10 then
+        if #(table[i].xyz  - srcCoords) <= 10 then
             return true
         else
             allow = false
