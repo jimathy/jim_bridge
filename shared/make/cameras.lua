@@ -35,7 +35,7 @@ function createTempCam(ent, coords)
 		camID = CreateCamWithParams("DEFAULT_SCRIPTED_CAMERA", camCoords.x, camCoords.y, camCoords.z + 0.5, 1.0, 0.0, 0.0, 60.00, false, 0)
 		camCache[#camCache+1] = camID
 
-		debugPrint("^6Bridge^7: ^2Custom Camera Created")
+		debugPrint("^6Bridge^7: ^2Custom Camera Created", camID)
 
 		--if type(coords) == "number" then
 		--	SetCamCoord(camID, GetCamCoord(camID) + vec3(0, 0, 1.0))
@@ -67,6 +67,7 @@ local cachePrevCam = nil
 -- ```
 function startTempCam(cam, renderTime, loadScene, filter, switchCam)
 	if cam and DoesCamExist(cam) then
+		debugPrint("Starting camera")
 		-- if moving from a cached previous cam, or you've sent a camre id for it to switch from, interpolate to it
 		if switchCam or cachePrevCam then
 			SetCamActiveWithInterp(cam, cachePrevCam, renderTime or 1000, 0, 0)
@@ -177,6 +178,6 @@ function stopTempCam(renderTime)
 	end)
 end
 
-function createCam(...) createTempCam(...) end
-function startCam(...) startTempCam(...) end
-function stopCam(...) stopTempCam(...) end
+function createCam(...) return createTempCam(...) end
+function startCam(...) return startTempCam(...) end
+function stopCam(...) return stopTempCam(...) end
