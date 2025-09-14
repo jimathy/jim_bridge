@@ -25,7 +25,6 @@ local function awaitWithTimeout(registerFn, timeoutMs)
     return nil, res
 end
 
-
 --- Registers a callback function with the appropriate framework.
 ---
 --- This function checks which framework is started (e.g., OX, QB, ESX) and registers the callback accordingly.

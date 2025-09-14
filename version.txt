@@ -1,15 +1,16 @@
-2.0.22
+2.1.0
 
-- Support for qs-interface
-- Fix polyzone minZ + maxZ handling
-- Fix ox_target zone location to match qb-target
-- Fix "Waiting for script start" loop bug
-- Add condition for fading in entities
-- Fix typo breaking scripts on gta skillbar fail
-- Fix typo for gksphone invoice event
-- Fix latio_ui TextUI placement
-- Remove registerShop debug message
-- Fix typo in print when removing codem stash item
-- Fix function typo from origen inv documenation
+- Script Overhaul, replace whole script
+- Very alpha support for VorpCore
+- Improve security
+- Removal of Quasar Script Support
+- Support Tgiann-inv's new item system
+- Refactor most multi-functions to be more optimized and smarter
+- Added multifunction bossmenu and clothing functions
+- Added ability to supress update notifcations in fxmanfiest.lua
+- Added coordinate checks to registerStash, registerShop and sellShop
+- Optimize and Enhance built-in progressbar + target functions
+- Improve weird multicharacter issue triggering onPlayerLoaded more than once
+- Scripts that use this will need updating too, as things like stashes won't open
 
-https://github.com/jimathy/jim_bridge
+https://github.com/jimathy/jim_bridge/releases/latest
