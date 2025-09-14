@@ -130,12 +130,13 @@ end)
 --- @param type string "thirst" or "hunger".
 --- @param amount number New value to set.
 RegisterNetEvent(getScript()..":server:setNeed", function(needType, amount)
-    local src = source
-    if needType == "thirst" then
-        setThirst(src, amount)
-    elseif needType == "hunger" then
-        setHunger(src, amount)
-    end
+    print("^1Deprecated function ':server:setNeed' called, please update your scripts^7")
+--    local src = source
+--    if needType == "thirst" then
+--        setThirst(src, amount)
+--    elseif needType == "hunger" then
+--        setHunger(src, amount)
+--    end
 end)
 
 -------------------------------------------------------------
@@ -322,41 +323,42 @@ end
 --- ConsumeSuccess("beer", "alcohol")
 --- ```
 function ConsumeSuccess(itemName, type, data)
-    local hunger = data and data.hunger or Items[itemName].hunger
-    local thirst = data and data.thirst or Items[itemName].thirst
-
-    ExecuteCommand("e c")
-    removeItem(itemName, 1)
-
-    if isStarted(ESXExport) then
-        if hunger then
-            TriggerServerEvent(getScript()..":server:setNeed", "hunger", tonumber(hunger) * 10000)
-        end
-        if thirst then
-            TriggerServerEvent(getScript()..":server:setNeed", "thirst", tonumber(thirst) * 10000)
-        end
-    else
-        if hunger then
-            TriggerServerEvent(getScript()..":server:setNeed", "hunger", Core.Functions.GetPlayerData().metadata["hunger"] + tonumber(hunger))
-        end
-        if thirst then
-            TriggerServerEvent(getScript()..":server:setNeed", "thirst", Core.Functions.GetPlayerData().metadata["thirst"] + tonumber(thirst))
-        end
-    end
-
-    if type == "alcohol" then
-        alcoholCount = (alcoholCount or 0) + 1
-        if alcoholCount > 1 and alcoholCount < 4 then
-            TriggerEvent("evidence:client:SetStatus", "alcohol", 200)
-        elseif alcoholCount >= 4 then
-            TriggerEvent("evidence:client:SetStatus", "heavyalcohol", 200)
-            AlienEffect()
-        end
-    end
-
-    if Config.Reward then
-        getRandomReward(itemName)
-    end
+    print("^1Deprecated function 'ConsumeSuccess' called, please update your scripts^7")
+    --local hunger = data and data.hunger or Items[itemName].hunger
+    --local thirst = data and data.thirst or Items[itemName].thirst
+    --
+    --ExecuteCommand("e c")
+    --removeItem(itemName, 1)
+    --
+    --if isStarted(ESXExport) then
+    --    if hunger then
+    --        TriggerServerEvent(getScript()..":server:setNeed", "hunger", tonumber(hunger) * 10000)
+    --    end
+    --    if thirst then
+    --        TriggerServerEvent(getScript()..":server:setNeed", "thirst", tonumber(thirst) * 10000)
+    --    end
+    --else
+    --    if hunger then
+    --        TriggerServerEvent(getScript()..":server:setNeed", "hunger", Core.Functions.GetPlayerData().metadata["hunger"] + tonumber(hunger))
+    --    end
+    --    if thirst then
+    --        TriggerServerEvent(getScript()..":server:setNeed", "thirst", Core.Functions.GetPlayerData().metadata["thirst"] + tonumber(thirst))
+    --    end
+    --end
+    --
+    --if type == "alcohol" then
+    --    alcoholCount = (alcoholCount or 0) + 1
+    --    if alcoholCount > 1 and alcoholCount < 4 then
+    --        TriggerEvent("evidence:client:SetStatus", "alcohol", 200)
+    --    elseif alcoholCount >= 4 then
+    --        TriggerEvent("evidence:client:SetStatus", "heavyalcohol", 200)
+    --        AlienEffect()
+    --    end
+    --end
+    --
+    --if Config.Reward then
+    --    getRandomReward(itemName)
+    --end
 end
 
 -------------------------------------------------------------
