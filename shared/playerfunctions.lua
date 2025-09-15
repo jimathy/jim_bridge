@@ -920,17 +920,10 @@ local wardrobeFunc = {
             end)
         end,
     },
-    {   name = "illenium-appearance",
+    {
+        name = "illenium-appearance",
         openWardrobe = function()
-            exports['illenium-appearance']:startPlayerCustomization(function(appearance)
-                if appearance then
-                    TriggerServerEvent("illenium-appearance:server:saveAppearance", appearance)
-                end
-            end, {
-                components = true, componentConfig = { masks = true, upperBody = true, lowerBody = true, bags = true, shoes = true, scarfAndChains = true, bodyArmor = true, shirts = true, decals = true, jackets = true },
-                props = true, propConfig = { hats = true, glasses = true, ear = true, watches = true, bracelets = true },
-                enableExit = true,
-            })
+            TriggerEvent("illenium-appearance:client:openOutfitMenu")
         end,
     },
 }
