@@ -2104,9 +2104,7 @@ end
 function openStash(data)
     if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
 
-    local p = promise.new()
-    p:resolve(triggerCallback(getScript()..":getRegisteredStashLocations", data.stash))
-    local exploitCheck = Citizen.Await(p)
+    local exploitCheck = triggerCallback(getScript()..":getRegisteredStashLocations", data.stash)
 
     if not exploitCheck then
         print("^3Warning^7: ^2This isn't a registered stash^1, refusing call^7")
@@ -2351,18 +2349,22 @@ end
 --- )
 --- ```
 function registerStash(name, label, slots, weight, owner, coords)
-    if coords then
-        stashExploitCheck[name] = stashExploitCheck[name] or {}
-        stashExploitCheck[name][#stashExploitCheck[name]+1] = coords
-    else
-        print("^3Warning^7: ^1Stash ^4"..name.." ^1doesn^7'^1t have coords^7, ^1this is exploitable^7, ^1add coords to ^3regiterStash^7()")
-    end
+
+    -- ensure tables exist
+    stashExploitCheck = stashExploitCheck or {}
+    stashExploitCheck[name] = stashExploitCheck[name] or {}
     for i = 1, #InvFunc do
         local inv = InvFunc[i]
         if isStarted(inv.invName) then
             inv.registerStash(name, label, slots, weight, owner, coords)
-            return
+            break
         end
+    end
+
+    if coords then
+        stashExploitCheck[name][#stashExploitCheck[name]+1] = coords.xyz
+    else
+        print("^3Warning^7: ^1Stash ^4"..name.." ^1doesn^7'^1t have coords^7, ^1this is exploitable^7, ^1add coords to ^3regiterStash^7()")
     end
 end
 
@@ -2689,6 +2691,9 @@ end)
 --- ```
 function registerShop(name, label, items, society, coords)
     local shopResource = ""
+    -- ensure tables exist
+    shopExploitCheck = shopExploitCheck or {}
+    shopExploitCheck[name] = shopExploitCheck[name] or {}
 
     for i = 1, #InvFunc do
         local inv = InvFunc[i]
@@ -2700,9 +2705,7 @@ function registerShop(name, label, items, society, coords)
     end
 
     -- If received coords, pass them to distance check cache
-    if coords and type(coords) == "vector3" then
-        --print("Registered Shop Correctly")
-        shopExploitCheck[name] = shopExploitCheck[name] or {}
+    if coords then
         shopExploitCheck[name][#shopExploitCheck[name]+1] = coords
     else
         print("^3Warning^7: ^1Store ^4"..name.." ^1doesn^7'^1t have coords^7, ^1this is exploitable^7, ^1add coords to ^3regiterShop^7()")
