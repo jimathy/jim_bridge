@@ -1,4 +1,4 @@
-2.1.0
+2.1.01
 
 - Script Overhaul, replace whole script
 - Very alpha support for VorpCore
@@ -12,5 +12,6 @@
 - Optimize and Enhance built-in progressbar + target functions
 - Improve weird multicharacter issue triggering onPlayerLoaded more than once
 - Scripts that use this will need updating too, as things like stashes won't open
+- **Hotfix for stores and stashes not registering properly**
 
 https://github.com/jimathy/jim_bridge/releases/latest
