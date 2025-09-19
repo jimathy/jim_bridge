@@ -88,7 +88,6 @@ local InvFunc = {
                     inventory = items,
                     society = society,
                 })
-                debugPrint("^6Bridge^7: ^2Registering ^5"..OXInv.." ^3Store^7:", name, "^4Label^7: "..label)
             end,
         openStash =
             function(data)
@@ -123,7 +122,6 @@ local InvFunc = {
         registerStash =
             function(name, label, slots, weight, owner, coords)
                 exports[OXInv]:RegisterStash(name, label, slots or 50, weight or 4000000, owner or nil)
-                debugPrint("^6Bridge^7: ^2Registering ^4"..OXInv.." ^3Stash^7:", name, "^4Label^7: "..label)
             end,
     },
 
@@ -322,7 +320,6 @@ local InvFunc = {
         registerStash =
             function(name, label, slots, weight, owner, coords)
                 exports[OrigenInv]:registerStash(name, label, slots or 50, weight or 4000000)
-                debugPrint("^6Bridge^7: ^2Registering ^4"..OrigenInv.." ^3Stash^7:", name, "^4Label^7: "..label)
             end,
     },
 
@@ -514,7 +511,6 @@ local InvFunc = {
         registerShop =
             function(name, label, items, society)
                 exports[TgiannInv]:RegisterShop(name, items)
-                debugPrint("^6Bridge^7: ^2Registering ^5"..TgiannInv.." ^3Store^7:", name, "^4Label^7: "..label)
             end,
         openStash =
             function(data)
@@ -548,7 +544,6 @@ local InvFunc = {
         registerStash =
             function(name, label, slots, weight, owner, coords)
                 exports[TgiannInv]:RegisterStash(name, label, slots or 50, weight or 4000000)
-                debugPrint("^6Bridge^7: ^2Registering ^4"..TgiannInv.." ^3Stash^7:", name, "^4Label^7: "..label)
             end,
     },
 
@@ -841,7 +836,6 @@ local InvFunc = {
                         items = items,
                         society = society,
                     })
-                    debugPrint("^6Bridge^7: ^2Registering ^5"..QBInv.." ^3Store^7:", name, "^4Label^7: "..label)
                 end
             end,
         openStash =
@@ -1040,7 +1034,6 @@ local InvFunc = {
                         items = items,
                         society = society,
                     })
-                    debugPrint("^6Bridge^7: ^2Registering ^5"..PSInv.." ^3Store^7:", name, "^4Label^7: "..label)
                 end
             end,
         openStash =
@@ -1206,7 +1199,6 @@ local InvFunc = {
                     items = items,
                     society = society,
                 })
-                debugPrint("^6Bridge^7: ^2Registering ^5"..RSGInv.." ^3Store^7:", name, "^4Label^7: "..label)
             end,
         openStash =
             function(data)
@@ -2357,6 +2349,7 @@ function registerStash(name, label, slots, weight, owner, coords)
         local inv = InvFunc[i]
         if isStarted(inv.invName) then
             inv.registerStash(name, label, slots, weight, owner, coords)
+            debugPrint("^6Bridge^7: ^2Registering ^4"..inv.invName.." ^3Stash^7:", name, "^4Label^7: "..label, coords and "- ^4Coord^7: "..formatCoord(coords) or "NO COORD SET")
             break
         end
     end
@@ -2487,6 +2480,7 @@ function sellMenu(data)
                             sellMenu(origData)
                         end
                         v.sellTable = data.sellTable[k]
+                        v.name = data.name
                         sellMenu(v)
                     end,
                 }
@@ -2589,8 +2583,8 @@ RegisterNetEvent(getScript()..":Sellitems", function(data, token)
 end)
 
 function registerSellShop(name, coords)
-    if coords and type(coords) == "vector3" then
-        print("Registered Sell Shop "..name.." Correctly")
+    if coords then
+        debugPrint("^6Bridge^7: ^2Registering ^3Sell Store^7: "..name, coords and "- ^4Coord^7: "..formatCoord(coords) or "NO COORD SET")
         sellShopExploitCheck[name] = sellShopExploitCheck[name] or {}
         sellShopExploitCheck[name][#sellShopExploitCheck[name]+1] = coords
     end
@@ -2690,7 +2684,6 @@ end)
 --- registerShop("weaponShop", "Weapon Shop", weaponItems, "society_weapons")
 --- ```
 function registerShop(name, label, items, society, coords)
-    local shopResource = ""
     -- ensure tables exist
     shopExploitCheck = shopExploitCheck or {}
     shopExploitCheck[name] = shopExploitCheck[name] or {}
@@ -2698,8 +2691,8 @@ function registerShop(name, label, items, society, coords)
     for i = 1, #InvFunc do
         local inv = InvFunc[i]
         if isStarted(inv.invName) then
-            shopResource = inv.invName
             inv.registerShop(name, label, items, society)
+            debugPrint("^6Bridge^7: ^2Registering ^5"..inv.invName.." ^3Store^7:", name, "^4Label^7: "..label, coords and "- ^4Coord^7: "..formatCoord(coords) or "NO COORD SET")
             break
         end
     end
@@ -2709,11 +2702,5 @@ function registerShop(name, label, items, society, coords)
         shopExploitCheck[name][#shopExploitCheck[name]+1] = coords
     else
         print("^3Warning^7: ^1Store ^4"..name.." ^1doesn^7'^1t have coords^7, ^1this is exploitable^7, ^1add coords to ^3regiterShop^7()")
-    end
-
-    if shopResource ~= "" then
-        debugPrint("^6Bridge^7: ^2Registering ^5"..shopResource.." ^3Store^7:", name, "^4Label^7: "..label)
-    else
-    --    debugPrint("^1ERROR^7: ^1Couldn't find supported inventory to register shop^7:", name)
     end
 end

@@ -124,7 +124,6 @@ end
 
 function distExploitCheck(table, src)
     if forceDisableExplotProtection == true then return true end
-
     if not table then
         print("^1Error^7: ^1This wasn^7'^1t reigstered correctly or this is an exploit attempt^1")
         return false
@@ -135,7 +134,7 @@ function distExploitCheck(table, src)
     local allow = false
 
     for i = 1, #table do
-        if #(table[i].xyz  - srcCoords) <= 10 then
+        if #(table[i].xy  - srcCoords.xy) <= 10 then
             return true
         else
             allow = false
@@ -143,7 +142,7 @@ function distExploitCheck(table, src)
     end
 
     if not allow then
-        print(src and ("^1Src ^3"..src.." ").."^1Tried to open a registered shop/stash from over the distance limit^7")
+        print(src and ("^1Src ^3"..src.." ") or "", "^1Tried to open a registered shop/stash from over the distance limit^7")
         return false
     end
 
