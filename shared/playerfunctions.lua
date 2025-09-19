@@ -16,14 +16,18 @@ local hungerThirstFunc = {
         setThirst =
             function(src, thirst)
                 local Player = Core.Functions.GetPlayer(src)
-                Player.Functions.SetMetaData('thirst', thirst)
-                TriggerClientEvent("hud:client:UpdateNeeds", src, Player.PlayerData.metadata.hunger, thirst)
+                local newThirst = Player.PlayerData.metadata.thirst + thirst
+                newThirst = (newThirst >= 100.0 and 100.0) or (newThirst <= 0 and 0) or newThirst
+                Player.Functions.SetMetaData('thirst', newThirst)
+                TriggerClientEvent("hud:client:UpdateNeeds", src, Player.PlayerData.metadata.hunger, newThirst)
             end,
         setHunger =
             function(src, hunger)
                 local Player = Core.Functions.GetPlayer(src)
-                Player.Functions.SetMetaData('hunger', hunger)
-                TriggerClientEvent("hud:client:UpdateNeeds", src, hunger, Player.PlayerData.metadata.thirst)
+                local newHunger = Player.PlayerData.metadata.hunger + hunger
+                newHunger = (newHunger >= 100.0 and 100.0) or (newHunger <= 0 and 0) or newHunger
+                Player.Functions.SetMetaData('hunger', newHunger)
+                TriggerClientEvent("hud:client:UpdateNeeds", src, newHunger, Player.PlayerData.metadata.thirst)
             end,
     },
 
@@ -31,14 +35,18 @@ local hungerThirstFunc = {
         setThirst =
             function(src, thirst)
                 local Player = Core.Functions.GetPlayer(src)
-                Player.Functions.SetMetaData('thirst', thirst)
-                TriggerClientEvent("hud:client:UpdateNeeds", src, Player.PlayerData.metadata.hunger, thirst)
+                local newThirst = Player.PlayerData.metadata.thirst + thirst
+                newThirst = (newThirst >= 100.0 and 100.0) or (newThirst <= 0 and 0) or newThirst
+                Player.Functions.SetMetaData('thirst', newThirst)
+                TriggerClientEvent("hud:client:UpdateNeeds", src, Player.PlayerData.metadata.hunger, newThirst)
             end,
         setHunger =
             function(src, hunger)
                 local Player = Core.Functions.GetPlayer(src)
-                Player.Functions.SetMetaData('hunger', hunger)
-                TriggerClientEvent("hud:client:UpdateNeeds", src, hunger, Player.PlayerData.metadata.thirst)
+                local newHunger = Player.PlayerData.metadata.hunger + hunger
+                newHunger = (newHunger >= 100.0 and 100.0) or (newHunger <= 0 and 0) or newHunger
+                Player.Functions.SetMetaData('hunger', newHunger)
+                TriggerClientEvent("hud:client:UpdateNeeds", src, newHunger, Player.PlayerData.metadata.thirst)
             end,
     },
 
@@ -46,25 +54,29 @@ local hungerThirstFunc = {
         setThirst =
             function(src, thirst)
                 local Player = Core.Functions.GetPlayer(src)
-                Player.Functions.SetMetaData('thirst', thirst)
-                TriggerClientEvent("hud:client:UpdateNeeds", src, Player.PlayerData.metadata.hunger, thirst)
+                local newThirst = Player.PlayerData.metadata.thirst + thirst
+                newThirst = (newThirst >= 100.0 and 100.0) or (newThirst <= 0 and 0) or newThirst
+                Player.Functions.SetMetaData('thirst', newThirst)
+                TriggerClientEvent("hud:client:UpdateNeeds", src, Player.PlayerData.metadata.hunger, newThirst)
             end,
         setHunger =
             function(src, hunger)
                 local Player = Core.Functions.GetPlayer(src)
-                Player.Functions.SetMetaData('hunger', hunger)
-                TriggerClientEvent("hud:client:UpdateNeeds", src, hunger, Player.PlayerData.metadata.thirst)
+                local newHunger = Player.PlayerData.metadata.hunger + hunger
+                newHunger = (newHunger >= 100.0 and 100.0) or (newHunger <= 0 and 0) or newHunger
+                Player.Functions.SetMetaData('hunger', newHunger)
+                TriggerClientEvent("hud:client:UpdateNeeds", src, newHunger, Player.PlayerData.metadata.thirst)
             end,
     },
 
     {   framework = ESXExport,
         setThirst =
             function(src, thirst)
-                TriggerClientEvent('esx_status:add', src, 'thirst', thirst)
+                TriggerClientEvent('esx_status:add', src, 'thirst', tonumber(thirst) * 10000)
             end,
         setHunger =
             function(src, hunger)
-                TriggerClientEvent('esx_status:add', src, 'hunger', hunger)
+                TriggerClientEvent('esx_status:add', src, 'hunger', tonumber(hunger) * 10000)
             end,
     },
 }
