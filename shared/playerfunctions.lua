@@ -384,19 +384,21 @@ local hasGroupFunc = {
                 local hasJobFlag, duty = false, true
                 local playerInfo = GetPlayer(src)
                 local jobinfo = playerInfo.job or playerInfo.PlayerData.job
-                if jobinfo.name == group then
+                if jobinfo and jobinfo.name == group then
                     hasJobFlag = true
                     duty = jobinfo.onduty
                     if grade and not (grade <= jobinfo.grade.level) then
                         hasJobFlag = false
                     end
+                    return hasJobFlag, duty
                 end
                 local ganginfo = playerInfo.gang or playerInfo.PlayerData.gang
-                if ganginfo.name == group then
+                if ganginfo and ganginfo.name == group then
                     hasJobFlag = true
                     if grade and not (grade <= ganginfo.grade.level) then
                         hasJobFlag = false
                     end
+                    return hasJobFlag, duty
                 end
                 return hasJobFlag, duty
             end,
@@ -408,7 +410,7 @@ local hasGroupFunc = {
                 local hasJobFlag, duty = false, true
                 local playerInfo = GetPlayer(src)
                 local jobinfo = playerInfo.job or playerInfo.PlayerData.job
-                if jobinfo.name == group then
+                if jobinfo and jobinfo.name == group then
                     hasJobFlag = true
                     duty = jobinfo.onduty
                     if grade and not (grade <= jobinfo.grade.level) then
@@ -416,31 +418,11 @@ local hasGroupFunc = {
                     end
                 end
                 local ganginfo = playerInfo.gang or playerInfo.PlayerData.gang
-                if ganginfo.name == group then
+                if ganginfo and ganginfo.name == group then
                     hasJobFlag = true
                     if grade and not (grade <= ganginfo.grade.level) then
                         hasJobFlag = false
                     end
-                end
-                return hasJobFlag, duty
-            end,
-    },
-
-    {   framework = OXCoreExport,
-        hasGroup =
-            function(group, grade, src)
-                local hasJobFlag, duty = false, true
-                if src then
-                    local chunk = assert(load(LoadResourceFile('ox_core', ('imports/%s.lua'):format('server')), ('@@ox_core/%s'):format(file)))
-                    chunk()
-                    local player = Ox.GetPlayer(src)
-                    for k, v in pairs(player.getGroups()) do
-                        if k == group then hasJobFlag = true end
-                    end
-                end
-                local info = OxPlayer.getGroups()
-                for k, v in pairs(info) do
-                    if k == group then hasJobFlag = true break end
                 end
                 return hasJobFlag, duty
             end,
@@ -491,7 +473,7 @@ local hasGroupFunc = {
                 local hasJobFlag, duty = false, true
                 local playerInfo = GetPlayer(src)
                 local jobinfo = playerInfo.job or playerInfo.PlayerData.job
-                if jobinfo.name == group then
+                if jobinfo and jobinfo.name == group then
                     hasJobFlag = true
                     duty = jobinfo.onduty
                     if grade and not (grade <= jobinfo.grade.level) then
@@ -499,7 +481,7 @@ local hasGroupFunc = {
                     end
                 end
                 local ganginfo = playerInfo.gang or playerInfo.PlayerData.gang
-                if ganginfo.name == group then
+                if ganginfo and ganginfo.name == group then
                     hasJobFlag = true
                     if grade and not (grade <= ganginfo.grade.level) then
                         hasJobFlag = false
