@@ -2688,6 +2688,13 @@ function registerShop(name, label, items, society, coords)
     shopExploitCheck = shopExploitCheck or {}
     shopExploitCheck[name] = shopExploitCheck[name] or {}
 
+    if isStarted("jim-shops") then
+        -- Add support for new jim-shops registration export
+        if checkExportExists("jim-shops", "registerShop") then
+            exports["jim-shops"]:registerShop(name, label, items, society, coords)
+        end
+    end
+
     for i = 1, #InvFunc do
         local inv = InvFunc[i]
         if isStarted(inv.invName) then
