@@ -394,7 +394,6 @@ function createCircleTarget(data, opts, dist)
         if isStarted(script.targetName) then
             debugPrint("^6Bridge^7: ^2Creating new ^3Sphere ^2target with ^6"..script.targetName.." ^7"..data[1])
             local target = script.circleTarget(data, opts, dist)
-            print(target)
             circleTargets[#circleTargets + 1] = target
             return target
         end
