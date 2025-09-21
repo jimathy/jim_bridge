@@ -33,7 +33,7 @@ local targetFunc = {
                         canInteract = opts[i].canInteract or nil,
                     }
                 end
-                exports[OXTargetExport]:addLocalEntity(entity, options)
+                return exports[OXTargetExport]:addLocalEntity(entity, options)
             end,
 
         boxTarget =
@@ -105,7 +105,7 @@ local targetFunc = {
                         canInteract = opts[i].canInteract or nil,
                     }
                 end
-                exports[OXTargetExport]:addModel(models, options)
+                return exports[OXTargetExport]:addModel(models, options)
             end,
 
         removeTargetEntity =
@@ -128,7 +128,7 @@ local targetFunc = {
         entityTarget =
             function(entity, opts, dist)
                 local options = { options = opts, distance = dist }
-                exports[QBTargetExport]:AddTargetEntity(entity, options)
+                return exports[QBTargetExport]:AddTargetEntity(entity, options)
             end,
 
         boxTarget =
@@ -148,7 +148,7 @@ local targetFunc = {
         modelTarget =
             function(models, opts, dist)
                 local options = { options = opts, distance = dist }
-                exports[QBTargetExport]:AddTargetModel(models, options)
+                return exports[QBTargetExport]:AddTargetModel(models, options)
             end,
 
         removeTargetEntity =
@@ -213,11 +213,10 @@ local targetFunc = {
 
 
 -- Tables for storing created targets for the fallback system and zone management.
-local TextTargets    = {}   -- For fallback DrawText3D targets.
 local targetEntities = {}   -- For entity targets.
 local boxTargets     = {}   -- For box-shaped zone targets.
 local circleTargets  = {}   -- For circular zone targets.
-
+local modelTargets   = {}
 -------------------------------------------------------------
 -- Entity Target Creation
 -------------------------------------------------------------
@@ -395,6 +394,7 @@ function createCircleTarget(data, opts, dist)
         if isStarted(script.targetName) then
             debugPrint("^6Bridge^7: ^2Creating new ^3Sphere ^2target with ^6"..script.targetName.." ^7"..data[1])
             local target = script.circleTarget(data, opts, dist)
+            print(target)
             circleTargets[#circleTargets + 1] = target
             return target
         end
@@ -442,7 +442,7 @@ function createModelTarget(models, opts, dist)
         if isStarted(script.targetName) then
             debugPrint("^6Bridge^7: ^2Creating new ^3Model ^2target with ^6"..script.targetName.."^7")
             local target = script.modelTarget(models, opts, dist)
-            circleTargets[#circleTargets + 1] = target
+            modelTargets[#modelTargets + 1] = target
             return target
         end
     end
@@ -553,7 +553,7 @@ local function CleanupTargets()
         if isStarted(OXTargetExport) then
             exports[OXTargetExport]:removeZone(boxTargets[i], true)
         elseif isStarted(QBTargetExport) then
-            exports[QBTargetExport]:RemoveZone(boxTargets[i].name)
+            exports[QBTargetExport]:RemoveZone(boxTargets[i])
         end
     end
     -- Remove circle zone targets.
@@ -561,7 +561,7 @@ local function CleanupTargets()
         if isStarted(OXTargetExport) then
             exports[OXTargetExport]:removeZone(circleTargets[i], true)
         elseif isStarted(QBTargetExport) then
-            exports[QBTargetExport]:RemoveZone(circleTargets[i].name)
+            exports[QBTargetExport]:RemoveZone(circleTargets[i])
         end
     end
 end
