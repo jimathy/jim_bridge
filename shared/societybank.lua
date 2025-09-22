@@ -12,52 +12,6 @@
 ]]
 
 local societyFunc = {
-    {   bankName = "qb-banking",
-        getAccount =
-            function(society)
-                if not exports["qb-banking"]:GetAccount(society) then
-                    if Jobs[society] then
-                        print("^6Bridge^7: ^2Making new bank account in ^7'^3qb-banking^7' ^2for ^7'^3"..society.."^7'")
-                        exports["qb-banking"]:CreateJobAccount(society, 0)
-                        Wait(150)
-                    elseif Gangs[society] then
-                        print("^6Bridge^7: ^2Making new bank account in ^7'^3qb-banking^7' ^2for ^7'^3"..society.."^7'")
-                        exports["qb-banking"]:CreateGangAccount(society, 0)
-                        Wait(150)
-                    end
-                end
-                return exports["qb-banking"]:GetAccountBalance(society)
-            end,
-        chargeSociety =
-            function(society, amount)
-                if not exports["qb-banking"]:GetAccount(society) then
-                    if Jobs[society] then
-                        print("^6Bridge^7: ^2Making new bank account in ^7'^3qb-banking^7' ^2for ^7'^3"..society.."^7'")
-                        exports["qb-banking"]:CreateJobAccount(society, 0) Wait(150) -- make new account if return "null"
-                    elseif Gangs[society] then
-                        print("^6Bridge^7: ^2Making new bank account in ^7'^3qb-banking^7' ^2for ^7'^3"..society.."^7'")
-                        exports["qb-banking"]:CreateGangAccount(society, 0) Wait(150) -- make new account if return "null"
-                    end
-                end
-                exports["qb-banking"]:RemoveMoney(society, amount)
-            end,
-        fundSociety =
-            function(society, amount)
-                if not exports["qb-banking"]:GetAccount(society) then
-                    if Jobs[society] then
-                        print("^6Bridge^7: ^2Making new bank account in ^7'^3qb-banking^7' ^2for ^7'^3"..society.."^7'")
-                        exports["qb-banking"]:CreateJobAccount(society, 0)
-                        Wait(150)
-                    elseif Gangs[society] then
-                        print("^6Bridge^7: ^2Making new bank account in ^7'^3qb-banking^7' ^2for ^7'^3"..society.."^7'")
-                        exports["qb-banking"]:CreateGangAccount(society, 0)
-                        Wait(150)
-                    end
-                end
-                exports["qb-banking"]:AddMoney(society, amount)
-            end,
-    },
-
     {   bankName = "Renewed-Banking",
         getAccount =
             function(society)
@@ -129,6 +83,115 @@ local societyFunc = {
                 end
             end,
     },
+
+    {   bankName = "qb-banking",
+        getAccount =
+            function(society)
+                if not exports["qb-banking"]:GetAccount(society) then
+                    if Jobs[society] then
+                        print("^6Bridge^7: ^2Making new bank account in ^7'^3qb-banking^7' ^2for ^7'^3"..society.."^7'")
+                        exports["qb-banking"]:CreateJobAccount(society, 0)
+                        Wait(150)
+                    elseif Gangs[society] then
+                        print("^6Bridge^7: ^2Making new bank account in ^7'^3qb-banking^7' ^2for ^7'^3"..society.."^7'")
+                        exports["qb-banking"]:CreateGangAccount(society, 0)
+                        Wait(150)
+                    end
+                end
+                return exports["qb-banking"]:GetAccountBalance(society)
+            end,
+        chargeSociety =
+            function(society, amount)
+                if not exports["qb-banking"]:GetAccount(society) then
+                    if Jobs[society] then
+                        print("^6Bridge^7: ^2Making new bank account in ^7'^3qb-banking^7' ^2for ^7'^3"..society.."^7'")
+                        exports["qb-banking"]:CreateJobAccount(society, 0) Wait(150) -- make new account if return "null"
+                    elseif Gangs[society] then
+                        print("^6Bridge^7: ^2Making new bank account in ^7'^3qb-banking^7' ^2for ^7'^3"..society.."^7'")
+                        exports["qb-banking"]:CreateGangAccount(society, 0) Wait(150) -- make new account if return "null"
+                    end
+                end
+                exports["qb-banking"]:RemoveMoney(society, amount)
+            end,
+        fundSociety =
+            function(society, amount)
+                if not exports["qb-banking"]:GetAccount(society) then
+                    if Jobs[society] then
+                        print("^6Bridge^7: ^2Making new bank account in ^7'^3qb-banking^7' ^2for ^7'^3"..society.."^7'")
+                        exports["qb-banking"]:CreateJobAccount(society, 0)
+                        Wait(150)
+                    elseif Gangs[society] then
+                        print("^6Bridge^7: ^2Making new bank account in ^7'^3qb-banking^7' ^2for ^7'^3"..society.."^7'")
+                        exports["qb-banking"]:CreateGangAccount(society, 0)
+                        Wait(150)
+                    end
+                end
+                exports["qb-banking"]:AddMoney(society, amount)
+            end,
+    },
+
+    {   bankName = "esx_society",
+        getAccount =
+            function(society)
+                local checkExist = exports.esx_society:GetSociety(society)
+                if checkExist == nil then
+                    print("^6Bridge^7: ^2Making new bank account in ^7'^3esx_society^7' ^2for ^7'^3"..society.."^7'")
+                    exports.esx_society:registerSociety(
+                        society,
+                        Gangs[society] and Gangs[society].label or Jobs[society] and Jobs[society].label,
+                        society,
+                        society,
+                        society,
+                        {type = "public"}
+                    )
+                end
+                local p = promise.new()
+                TriggerEvent('esx_addonaccount:getSharedAccount', checkExist.account, function(account)
+                    p:resolve(account.money)
+                end)
+                local newAmount = Citizen.Await(p)
+                return newAmount
+            end,
+        chargeSociety =
+            function(society, amount)
+                local checkExist = exports.esx_society:GetSociety(society)
+                if checkExist == nil then
+                    print("^6Bridge^7: ^2Making new bank account in ^7'^3esx_society^7' ^2for ^7'^3"..society.."^7'")
+                    exports.esx_society:registerSociety(
+                        society,
+                        Gangs[society] and Gangs[society].label or Jobs[society] and Jobs[society].label,
+                        society,
+                        society,
+                        society,
+                        {type = "public"}
+                    )
+                end
+                TriggerEvent('esx_addonaccount:getSharedAccount', checkExist.account, function(account)
+                    if amount > 0 and account.money >= amount then
+                        account.removeMoney(amount)
+                    end
+                end)
+            end,
+        fundSociety =
+            function(society, amount)
+                local checkExist = exports.esx_society:GetSociety(society)
+                if checkExist == nil then
+                    print("^6Bridge^7: ^2Making new bank account in ^7'^3esx_society^7' ^2for ^7'^3"..society.."^7'")
+                    exports.esx_society:registerSociety(
+                        society,
+                        Gangs[society] and Gangs[society].label or Jobs[society] and Jobs[society].label,
+                        society,
+                        society,
+                        society,
+                        {type = "public"}
+                    )
+                end
+                TriggerEvent('esx_addonaccount:getSharedAccount', checkExist.account, function(account)
+                    account.addMoney(amount)
+                end)
+            end,
+    },
+
 }
 
 
@@ -200,14 +263,4 @@ function fundSociety(society, amount)
     end
 
     print("^1Error^7: ^3FundSociety^7: ^2No supported banking script found")
-end
-
-
--- other
-if isStarted("esx_society") then
-    createCallback(getScript()..":getESXSocietyAccount", function(source, society)
-        -- Example query – adjust table/field names to match your esx_society implementation.
-        local result = MySQL.scalar.await('SELECT money FROM society_money WHERE society = ?', { society })
-        return result or 0
-    end)
 end

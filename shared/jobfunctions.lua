@@ -33,6 +33,7 @@ local bossMenuFunc = {
 
     {   name = "esx_society",
         openBossMenu = function(isGang, group)
+            TriggerServerEvent(getScript()..":registerESXSociety", isGang, group)
             TriggerEvent('esx_society:openBossMenu', group, function() end, { wash = false })
         end,
     },
@@ -60,6 +61,20 @@ function openBossMenu(isGang, group)
     end
 end
 
+-- Register ESX Society account in the server
+RegisterNetEvent(getScript()..":registerESXSociety", function(group)
+    local checkExist = exports.esx_society:GetSociety(group)
+    if checkExist == nil then
+        exports.esx_society:registerSociety(
+            group,
+            Gangs[group] and Gangs[group].label or Jobs[group] and Jobs[group].label,
+            group,
+            group,
+            group,
+            {type = "public"}
+        )
+    end
+end)
 
 -------------------------------------------------------------
 -- Global Duty Status
