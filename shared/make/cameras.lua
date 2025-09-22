@@ -71,6 +71,7 @@ function startTempCam(cam, renderTime, loadScene, filter, switchCam)
 		-- if moving from a cached previous cam, or you've sent a camre id for it to switch from, interpolate to it
 		if switchCam or cachePrevCam then
 			SetCamActiveWithInterp(cam, cachePrevCam, renderTime or 1000, 0, 0)
+			SetCamActive(cachePrevCam, false) -- Set previous cam inactive (shouldn't be needed but just in case)
 		else
 			SetCamActive(cam, true)
 		end
