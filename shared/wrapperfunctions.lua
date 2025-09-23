@@ -1,4 +1,3 @@
-
 --- Registers a command with the active command system.
 --- This function supports multiple command systems (OXLib, qb-core, ESX Legacy).
 ---
@@ -47,7 +46,7 @@ function registerCommand(command, options)
             optionTable.helpInfo,
             optionTable.subText,
             optionTable.argsRequired,
-            optionTable.funt,
+            optionTable.funct,
             optionTable.restriction or nil
         )
 
@@ -57,7 +56,7 @@ function registerCommand(command, options)
             optionTable.helpInfo,
             optionTable.subText,
             optionTable.argsRequired,
-            optionTable.funt,
+            optionTable.funct,
             optionTable.restriction or nil
         )
 
