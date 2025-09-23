@@ -52,7 +52,7 @@ local progressFunc = {
                     if exports[OXLibExport]:progressBar(options) then
                         return true
                     else
-                        print("^1progressBar was not successful")
+                        return false
                     end
                 end
             end,
