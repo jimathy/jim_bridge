@@ -56,7 +56,7 @@ local InvFunc = {
                 local weight = 0
                 local itemcheck = getPlayerInv(src)
                 for _, v in pairs(itemcheck) do
-                    weight += ((v.weight * v.amount) or 0)
+                    weight += ((v.weight * (v.amount or v.count)) or 0)
                 end
                 return weight
             end,
