@@ -341,7 +341,7 @@ local InvFunc = {
                 local count = 0
                 for _, itemData in pairs(invCache) do
                     if itemData and itemData.name == item then
-                        count += (itemData.amount or itemData.count or 1)
+                        count += (itemData.amount or 0)
                     end
                 end
                 return count >= amount, count
@@ -384,7 +384,7 @@ local InvFunc = {
                 if src then
                     grabInv = exports[CodeMInv]:GetInventory(getPlayer(src).citizenId, src)
                 else
-                    grabInv = exports[CodeMInv]:getUserInventory()
+                    grabInv = exports[CodeMInv]:GetClientPlayerInventory()
                 end
                 return grabInv
             end,
@@ -1279,6 +1279,7 @@ end
 function hasItem(items, amount, src)
     local amount = amount and amount or 1
     local grabInv, foundInv = getPlayerInv(src)
+    jsonPrint(grabInv)
     if type(items) ~= "table" then items = { [items] = amount and amount or 1, } end
 
     local hasTable = {}
