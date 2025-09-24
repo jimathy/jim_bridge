@@ -1279,7 +1279,7 @@ end
 function hasItem(items, amount, src)
     local amount = amount and amount or 1
     local grabInv, foundInv = getPlayerInv(src)
-    jsonPrint(grabInv)
+
     if type(items) ~= "table" then items = { [items] = amount and amount or 1, } end
 
     local hasTable = {}
