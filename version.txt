@@ -1,9 +1,13 @@
-2.1.02
+2.1.03
 
-- Script Overhaul, replace whole script
-- Removal of Quasar Script Support
-- Support Tgiann-inv's new item system
-- **Hotfix for stores and stashes not registering properly**
-- **Hotfix "nil" print and use .xy for distance check**
+- Fix hunger and thirst math (add instead of set)
+- Fix cleanup of targets qb-targets on unload
+- Add support for new jim-shops exploit protection
+- Add full support for esx_society (fixes esx bossmenu errors)
+- Fix possible issue with qb-core /command registering
+- Make ox_lib progressbars return false correctly
+- Fix ox_inv players current weight checks
+- User alternate function for inventory retreival for CodeM Inv
+- Rework _loaders.lua tobe more organised/optimizied
 
 https://github.com/jimathy/jim_bridge/releases/latest
