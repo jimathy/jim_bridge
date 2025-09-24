@@ -56,7 +56,7 @@ local InvFunc = {
                 local weight = 0
                 local itemcheck = getPlayerInv(src)
                 for _, v in pairs(itemcheck) do
-                    weight += ((v.weight * (v.amount or v.count)) or 0)
+                    weight += v.weight
                 end
                 return weight
             end,
@@ -2516,7 +2516,7 @@ end
 --- ```
 function sellAnim(data, token)
     if not hasItem(data.item, 1) then
-        triggerNotify(nil, Loc[Config.Lan].error["dont_have"].." "..getItemLabel(data.item), "error")
+        triggerNotify(nil, (Loc[Config.Lan].error["dont_have"] or "You don't have any") .." "..getItemLabel(data.item), "error")
         return
     end
 
