@@ -2390,17 +2390,17 @@ if isServer() then
 end
 
 RegisterNetEvent(getScript()..":openGrabBox", function(data)
-	if isStarted(OXInv) then
-		return
-	end
-	local id = ""
-	if data.metadata then
-		id = data.metadata.id
-	elseif data.info then
-		id = data.info.id
-	end
+    local Ped = PlayerPedId()
+	local id = data.metadata and data.metadata.id or data.info and data.info.id or ""
+
+    if isStarted(OXInv) then
+
+        return
+    end
+
 	openStash({
 		stash = id,
+        coords = GetEntityCoords(Ped)
 	})
 end)
 
