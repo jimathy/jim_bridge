@@ -17,7 +17,7 @@ local excludeKeys = {
     amount = true, metadata = true, description = true, info = true,
     job = true, gang = true, oneUse = true, slot = true,
     blueprintRef = true, craftingLevel = true, craftedItems = true,
-    hasCrafted = true, exp = true, anim = true, time = true,
+    hasCrafted = true, exp = true, anim = true, time = true, id = true,
 }
 
 -------------------------------------------------------------
@@ -72,6 +72,25 @@ function craftingMenu(data)
     -- Normalize stash name.
     data.stashName = data.stashTable or data.stashName
 
+    -- Wrapper to convert new style crafting recipes to be handled by the menu properly
+    --if not data.craftTable.Recipes[1] then -- in theory if not a numbered table its the new style
+    --    local compatTable = {}
+    --    for k, v in pairs(data.craftTable.Recipes) do
+    --        for l, b in pairs(v) do
+    --            if not excludeKeys[l] then
+    --                compatTable[data.craftTable.Recipes[k].info.id or #compatTable+1] = {
+    --                    [l] = v.ingredients,
+    --                    amount = v.info and v.info.amount or 1,
+    --                    metadata = v.info and v.info.metadata or nil,
+    --                    job = v.info and v.info.job or nil,
+    --                    gang = v.info and v.info.gang or nil
+    --                }
+    --            end
+    --        end
+    --    end
+    --    data.craftTable.Recipes = compatTable
+    --end
+
     local Menu = {}
     local Recipes = data.craftable.Recipes
     local craftedItems = {}
@@ -80,7 +99,7 @@ function craftingMenu(data)
     -- Build a table of all required ingredients (default quantity is 1).
     for i = 1, #Recipes do
         for k in pairs(Recipes[i]) do
-            if k ~= "amount" and k ~= "metadata" and k ~= "job" and k ~= "gang" then
+            if k ~= "amount" and k ~= "metadata" and k ~= "job" and k ~= "gang" and k == "id" then
                 tempCarryTable[k] = Recipes[i].amount or 1
             end
         end
