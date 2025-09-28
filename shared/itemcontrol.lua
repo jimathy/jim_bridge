@@ -1568,7 +1568,7 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
 
                 end
             else
-                debugPrint("^6Bridge^7: ^3"..action.."^7["..invName.."] Player("..src..") "..getItemLabel(item).."("..item..") x"..(amount or 1))
+                debugPrint("^6Bridge^7: ^3"..action.."^7[^6"..invName.."^7] Player(^3"..src.."^7) "..getItemLabel(item).."("..item..") x"..(amount or 1))
             end
         end
     else
@@ -1593,7 +1593,7 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
                 ESX.GetPlayerFromId(src).addInventoryItem(item, amountToAdd)
             end
         else
-            debugPrint("^6Bridge^7: ^3"..action.."^7["..invName.."] Player("..src..") "..getItemLabel(item).."("..item..") x"..(amount or 1))
+            debugPrint("^6Bridge^7: ^3"..action.."^7[^6"..invName.."^7] Player(^3"..src.."^7) "..getItemLabel(item).."("..item..") x"..(amount or 1))
         end
     end
 end)
