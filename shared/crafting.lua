@@ -18,6 +18,7 @@ local excludeKeys = {
     job = true, gang = true, oneUse = true, slot = true,
     blueprintRef = true, craftingLevel = true, craftedItems = true,
     hasCrafted = true, exp = true, anim = true, time = true, id = true,
+    ingredients = true,
 }
 
 -------------------------------------------------------------
@@ -40,9 +41,14 @@ local excludeKeys = {
 ---      craftable = {
 ---          Header = "Weapon Crafting",
 ---          Recipes = {
----              [1] = {
----                  ["weapon_pistol"] = { ["steel"] = 5, ["plastic"] = 2 },
----                  amount = 1,
+---              weapon_pistol = {
+---                  id = 1,
+---                  ingredients = {
+---                      steel = 5, plastic = 5,
+---                  },
+---                  info = {
+---                      amount = 1,
+---                  },
 ---              },
 ---              -- More recipes...
 ---          },
@@ -56,6 +62,7 @@ local excludeKeys = {
 ---      job = "mechanic",
 ---      onBack = function() print("Returning to previous menu") end,
 --- })
+--- ```
 function craftingMenu(data)
     if CraftLock then return end
 
@@ -72,35 +79,49 @@ function craftingMenu(data)
     -- Normalize stash name.
     data.stashName = data.stashTable or data.stashName
 
-    -- Wrapper to convert new style crafting recipes to be handled by the menu properly
-    --if not data.craftTable.Recipes[1] then -- in theory if not a numbered table its the new style
-    --    local compatTable = {}
-    --    for k, v in pairs(data.craftTable.Recipes) do
-    --        for l, b in pairs(v) do
-    --            if not excludeKeys[l] then
-    --                compatTable[data.craftTable.Recipes[k].info.id or #compatTable+1] = {
-    --                    [l] = v.ingredients,
-    --                    amount = v.info and v.info.amount or 1,
-    --                    metadata = v.info and v.info.metadata or nil,
-    --                    job = v.info and v.info.job or nil,
-    --                    gang = v.info and v.info.gang or nil
-    --                }
-    --            end
-    --        end
-    --    end
-    --    data.craftTable.Recipes = compatTable
-    --end
+    -- Wrapper to convert old style crafting recipes to be handled by the menu properly
+    if data.craftable.Recipes[1] then -- assume old style crafting table
+        local compatTable = {}
+        local id = 0
+        for k, v in ipairs(data.craftable.Recipes) do
+            local Recipe = v
+            for l, b in pairs(Recipe) do
+                id += 1
+                if doesItemExist(l) then
+                    compatTable[l] = {
+                        ingredients = b,
+                        id = id,
+                        info = {
+                            amount = Recipe.amount or 1,
+                            metadata = Recipe.metadata or nil,
+                            job = Recipe.job or nil,
+                            gang = Recipe.gang or nil,
+                            hasCrafted = Recipe.hasCrafted or nil,
+                        },
+                    }
+                end
+            end
+        end
+        data.craftable.Recipes = compatTable
+    end
+
+    -- Convert to array
+    local RecipesArray = {}
+    for k, v in pairs(data.craftable.Recipes) do
+        RecipesArray[v.id] = { [k] = v }
+    end
 
     local Menu = {}
     local Recipes = data.craftable.Recipes
     local craftedItems = {}
-    local tempCarryTable = {}
 
-    -- Build a table of all required ingredients (default quantity is 1).
-    for i = 1, #Recipes do
-        for k in pairs(Recipes[i]) do
-            if k ~= "amount" and k ~= "metadata" and k ~= "job" and k ~= "gang" and k == "id" then
-                tempCarryTable[k] = Recipes[i].amount or 1
+    local tempCarryTable = {}
+    -- Build a temporary table of all required ingredients (default quantity is 1).
+    for i = 1, #RecipesArray do
+        for k, v in pairs(RecipesArray[i]) do
+            if doesItemExist(k) then
+                if not v.info.amount then v.info.amount = 1 end
+                tempCarryTable[k] = tempCarryTable[k] and (tempCarryTable[k] < v.info.amount) or v.info.amount
             end
         end
     end
@@ -116,75 +137,89 @@ function craftingMenu(data)
         disabled = true,
     }
 
-    -- Process each recipe to create menu entries.
-    for i = 1, #Recipes do
-        if not Recipes[i]["amount"] then Recipes[i]["amount"] = 1 end
-        for k, _ in pairs(Recipes[i]) do
+    for i = 1, #RecipesArray do
+        local item = ""
+        for k in pairs(RecipesArray[i]) do
             if not excludeKeys[k] then
-                local hasjob = true
-                if Recipes[i].job then
-                    for l, b in pairs(Recipes[i].job) do
-                        hasjob = hasJob(l, nil, b)
-                        if hasjob then break end
-                    end
-                end
-                if hasjob then
-                    local setheader, settext, disable, metadata = "", "", false, (Recipes[i]["metadata"] or Recipes[i]["info"] or nil)
-                    local itemTable = {}
-                    local metaTable = {}
-                    -- Build ingredient details.
-                    for l, b in pairs(Recipes[i][tostring(k)]) do
-                        local label = getItemLabel(l)
-                        local hasItem = checkStashItem(data.stashName, { [l] = b })
-                        local missingMark = not hasItem and " ❌" or " "
-                        settext = settext..(settext ~= "" and br or "").."[ x"..b.." ] - "..label..missingMark
-
-                        metaTable[label] = b
-                        itemTable[l] = b
-                    end
-
-                    while not canCarryTable do
-                        Wait(10)
-                    end
-                    disable = not checkStashItem(data.stashName, itemTable)
-                    setheader = ((metadata and metadata.label) or getItemLabel(k))
-                                ..(Recipes[i]["amount"] > 1 and " x"..Recipes[i]["amount"] or "")
-
-                    local statusEmoji = disable and " " or not canCarryTable[k] and " 📦" or " ✔️"
-                    local isNew = (Recipes[i]["hasCrafted"] ~= nil and craftedItems[k] == nil) and "✨ " or ""
-                    setheader = isNew .. setheader .. statusEmoji
-
-                    Menu[#Menu + 1] = {
-                        arrow = isOx() and (not disable and canCarryTable[k]),
-                        isMenuHeader = disable or not canCarryTable[k],
-                        icon = invImg((metadata and metadata.image) or tostring(k)),
-                        image = invImg((metadata and metadata.image) or tostring(k)),
-                        header = setheader,
-                        txt = settext or nil,
-                        metadata = metaTable,
-                        onSelect = (not disable and canCarryTable[k]) and function()
-                            local transdata = {
-                                item = k,
-                                craft = data.craftable.Recipes[i],
-                                craftable = data.craftable,
-                                coords = data.coords,
-                                stashName = data.stashName,
-                                onBack = data.onBack,
-                                metadata = metadata,
-                            }
-                            if Config.Crafting.MultiCraft then
-                                multiCraft(transdata)
-                            else
-                                makeItem(transdata)
-                            end
-                        end or nil,
-                    }
-                end
+                item = k
+                break
             end
-            --Wait(0)
+        end
+        local Recipe = RecipesArray[i][item]
+
+        -- Job Check
+        local hasGroup = true
+        if Recipe.info.job then
+            for l, b in pairs(Recipe.info.job) do
+                hasGroup = hasJob(l, nil, b)
+                if hasGroup then goto skipcheck end
+            end
+        end
+        if Recipe.info.gang then
+            for l, b in pairs(Recipe.info.gang) do
+                hasGroup = hasJob(l, nil, b)
+                if hasGroup then goto skipcheck end
+            end
+        end
+        ::skipcheck::
+
+        -- if has group requirement, continue
+        if hasGroup then
+            local setheader, settext, disable, metadata = "", "", false, (Recipe.info.metadata or Recipe.info.info or nil)
+            local itemTable = {}
+            local metaTable = {}
+            -- Build ingredient details.
+
+            for l, b in pairs(Recipe.ingredients) do
+                local label = getItemLabel(l)
+                local hasItem = checkStashItem(data.stashName, { [l] = b })
+                local missingMark = not hasItem and " ❌" or " "
+                settext = settext..(settext ~= "" and br or "").."[ x"..b.." ] - "..label..missingMark
+
+                metaTable[label] = b
+                itemTable[l] = b
+            end
+
+            -- Make sure "canCarryTable" exists
+            while not canCarryTable do Wait(10) end
+
+            disable = not checkStashItem(data.stashName, itemTable)
+            setheader = ((metadata and metadata.label) or getItemLabel(item))
+                        ..(Recipe.info.amount > 1 and " x"..Recipe.info.amount or "")
+
+            local statusEmoji = disable and " " or not canCarryTable[item] and " 📦" or " ✔️"
+            local isNew = (Recipe.info.hasCrafted ~= nil and craftedItems[item] == nil) and "✨ " or ""
+            setheader = isNew .. setheader .. statusEmoji
+
+            -- Build menu option using info
+            Menu[#Menu + 1] = {
+                arrow = isOx() and (not disable and canCarryTable[item]),
+                isMenuHeader = disable or not canCarryTable[item],
+                icon = invImg((metadata and metadata.image) or item),
+                image = invImg((metadata and metadata.image) or item),
+                header = setheader,
+                txt = settext or nil,
+                metadata = metaTable,
+                onSelect = (not disable and canCarryTable[item]) and function()
+                    local transdata = {
+                        item = item,
+                        craft = RecipesArray[i][item],
+                        craftable = data.craftable,
+                        coords = data.coords,
+                        stashName = data.stashName,
+                        onBack = data.onBack,
+                        metadata = metadata,
+                    }
+                    if Config.Crafting.MultiCraft then
+                        multiCraft(transdata)
+                    else
+                        makeItem(transdata)
+                    end
+                end or nil,
+            }
         end
     end
-
+    -- open context menu
     openMenu(Menu, {
         header = data.craftable.Header,
         headertxt = data.craftable.Headertxt,
@@ -235,7 +270,7 @@ function multiCraft(data)
 
     for i = 1, maxCreation do
         multiItemTable[i] = {}
-        for l, b in pairs(data.craft[data.item]) do
+        for l, b in pairs(data.craft.ingredients) do
             multiItemTable[i][l] = (b * i)
         end
     end
@@ -356,112 +391,62 @@ function makeItem(data)
     local craftAmount = (data.amount and data.amount ~= 1) and data.amount or 1
     local metadata = data.metadata or nil
     local prop = data.craftable.Anims and data.craftable.Anims.prop or nil
+    jsonPrint(prop)
     local canReturn = true
 
     local crafted, crafting = true, true
-    local cam = createTempCam(Ped, data.coords)
-    startTempCam(cam)
+    local cam = createCam(Ped, data.coords.xyz - vec3(0,0, 0.7))
+    startCam(cam, 5000)
 
     -- Calculate total bartime if SingleProgress is enabled
     local totalBartime = (bartime * craftAmount)
 
+    local craftProp = nil
+    if prop then
+        craftProp = makeProp({ prop = prop.model, coords = GetEntityCoords(PlayerPedId()), true, true })
+        AttachEntityToEntity(craftProp, Ped, GetPedBoneIndex(Ped, prop.bone), prop.pos.x, prop.pos.y, prop.pos.z, prop.rot.x, prop.rot.y, prop.rot.z, true, true, false, true, 1, true)
+    end
+    if data.sound then
+        local s = data.sound
+        PlaySoundFromEntity(s.soundId, s.audioName, Ped, s.audioRef, true, 0)
+    end
     if not Config.Crafting.SingleProgress then -- if SingleProgress is disabled, dont do ingredient progressbars
         -- Run ingredient check and usage separately first
         for i = 1, craftAmount do
-            for k, v in pairs(data.craft) do
-                if not excludeKeys[k] and type(v) == "table" then
-                    for l, b in pairs(v) do
-                        if isInventoryOpen() then
-                            print("^1Error^7: ^2Inventory is open, you tried to break things")
-                            stopTempCam()
-                            ClearPedTasks(Ped)
-                            if canReturn then craftingMenu(data) end
-                            CraftLock = false
-                            return
-                        end
-                        if crafting and progressBar({
-                            label = "Using "..b.." "..getItemLabel(l),
-                            time = 800,
-                            cancel = true,
-                            dict = 'pickup_object',
-                            anim = "putdown_low",
-                            flag = 49,
-                            icon = l,
-                        }) then
-                            TriggerEvent((isStarted(QBInv) and QBInvNew and "qb-" or "")..'inventory:client:ItemBox', Items[l], "use", b)
-                        else
-                            crafted, crafting = false, false
-                            break
-                        end
-                        Wait(200)
-                    end
+            for k, v in pairs(data.craft.ingredients) do
+                if isInventoryOpen() then
+                    print("^1Error^7: ^2Inventory is open, you tried to break things")
+                    stopCam(0)
+                    ClearPedTasks(Ped)
+                    if canReturn then craftingMenu(data) end
+                    CraftLock = false
+                    return
                 end
+                if crafting and progressBar({
+                    label = "Using "..v.." "..getItemLabel(k),
+                    time = 800,
+                    cancel = true,
+                    dict = 'pickup_object',
+                    anim = "putdown_low",
+                    flag = 49,
+                    icon = k,
+                }) then
+                    TriggerEvent((isStarted(QBInv) and QBInvNew and "qb-" or "")..'inventory:client:ItemBox', Items[k], "use", v)
+                else
+                    crafted, crafting = false, false
+                    break
+                end
+                Wait(200)
             end
-        end
-    end
 
-    if not crafted then
-        stopTempCam()
-        ClearPedTasks(Ped)
-        if canReturn then craftingMenu(data) end
-        CraftLock = false
-        return
-    end
+            if not crafted then
+                stopCam(0)
+                ClearPedTasks(Ped)
+                if canReturn then craftingMenu(data) end
+                CraftLock = false
+                return
+            end
 
-    -- Handle SingleProgress option
-    if Config.Crafting.SingleProgress then
-        local craftProp = nil
-        if prop then
-            craftProp = makeProp({ prop = prop.model, coords = vec4(0, 0, 0, 0), true, true })
-            AttachEntityToEntity(craftProp, Ped, GetPedBoneIndex(Ped, prop.bone), prop.pos.x, prop.pos.y, prop.pos.z, prop.rot.x, prop.rot.y, prop.rot.z, true, true, false, true, 1, true)
-        end
-        if data.sound then
-            local s = data.sound
-            PlaySoundFromEntity(s.soundId, s.audioName, Ped, s.audioRef, true, 0)
-        end
-        if crafting and progressBar({
-            label = bartext..((metadata and metadata.label) or getItemLabel(data.item)).." x"..craftAmount,
-            time = totalBartime,
-            cancel = true,
-            dict = animDict,
-            anim = anim,
-            flag = 49,
-            icon = data.item,
-            request = true,
-        }) then
-            data.craft.amount = craftAmount
-            for k, v in pairs(data.craft[data.item]) do
-                -- multiply igredient requirement in sent crafting table for removal
-                data.craft[data.item][k] = (v * craftAmount)
-            end
-            TriggerServerEvent(getScript()..":Crafting:GetItem", data.item, data.craft, data.stashName, metadata, currentToken)
-            currentToken = nil -- clear client cached token
-            -- handle metadata and experience in a single go
-            if data.craft["hasCrafted"] ~= nil then
-                data.craftable.craftedItems[data.item] = true
-                triggerCallback(getScript()..":server:setPlayerMetadata", "craftedItems", data.craftable.craftedItems)
-            end
-            if data.craft["exp"] ~= nil then
-                craftingLevel += data.craft["exp"].give * craftAmount
-                triggerCallback(getScript()..":server:setPlayerMetadata", "craftingLevel", craftingLevel)
-            end
-            if data.craftable.Recipes[1].oneUse == true then
-                removeItem("craftrecipe", 1, nil, data.craftable.Recipes[1].slot)
-                local breakId = GetSoundId()
-                PlaySoundFromEntity(breakId, "Drill_Pin_Break", Ped, "DLC_HEIST_FLEECA_SOUNDSET", 1, 0)
-                canReturn = false
-            end
-            if data.sound then
-                StopSound(data.sound.soundId)
-            end
-            if data.requiredItemfunc then
-                data.requiredItemfunc()
-            end
-        end
-        if craftProp then destroyProp(craftProp) end
-    else
-        -- Run the original loop for multiple progress bars
-        for i = 1, craftAmount do
             if crafting and progressBar({
                 label = bartext..((metadata and metadata.label) or getItemLabel(data.item)),
                 time = bartime,
@@ -474,31 +459,73 @@ function makeItem(data)
             }) then
                 TriggerServerEvent(getScript()..":Crafting:GetItem", data.item, data.craft, data.stashName, metadata, currentToken)
                 currentToken = nil
-                if data.craft["hasCrafted"] ~= nil then
+                if data.craft.info.hasCrafted ~= nil then
                     data.craftable.craftedItems[data.item] = true
                     triggerCallback(getScript()..":server:setPlayerMetadata", "craftedItems", data.craftable.craftedItems)
                 end
-                if data.craft["exp"] ~= nil then
-                    craftingLevel += data.craft["exp"].give
+                if data.craft.info.exp ~= nil then
+                    craftingLevel += data.craft.exp.give
                     triggerCallback(getScript()..":server:setPlayerMetadata", "craftingLevel", craftingLevel)
                 end
-                if data.craftable.Recipes[1].oneUse == true then
-                    removeItem("craftrecipe", 1, nil, data.craftable.Recipes[1].slot)
-                    local breakId = GetSoundId()
-                    PlaySoundFromEntity(breakId, "Drill_Pin_Break", Ped, "DLC_HEIST_FLEECA_SOUNDSET", 1, 0)
-                    canReturn = false
-                end
+                --if data.craftable.Recipes[1].oneUse == true then
+                --    removeItem("craftrecipe", 1, nil, data.craftable.Recipes[1].slot)
+                --    local breakId = GetSoundId()
+                --    PlaySoundFromEntity(breakId, "Drill_Pin_Break", Ped, "DLC_HEIST_FLEECA_SOUNDSET", 1, 0)
+                --    canReturn = false
+                --end
                 if data.requiredItemfunc then
                     data.requiredItemfunc()
                 end
             else
                 break
             end
+
+        end
+    else
+        if crafting and progressBar({
+            label = bartext..((metadata and metadata.label) or getItemLabel(data.item)).." x"..craftAmount,
+            time = totalBartime,
+            cancel = true,
+            dict = animDict,
+            anim = anim,
+            flag = 49,
+            icon = data.item,
+            request = true,
+        }) then
+            data.craft.info.amount = craftAmount
+            for k, v in pairs(data.craft.ingredients) do
+                -- multiply igredient requirement in sent crafting table for removal
+                data.craft.ingredients[k] = (v * craftAmount)
+            end
+            TriggerServerEvent(getScript()..":Crafting:GetItem", data.item, data.craft, data.stashName, metadata, currentToken)
+            currentToken = nil -- clear client cached token
+            -- handle metadata and experience in a single go
+            if data.craft.info.hasCrafted ~= nil then
+                data.craftable.craftedItems[data.item] = true
+                triggerCallback(getScript()..":server:setPlayerMetadata", "craftedItems", data.craftable.craftedItems)
+            end
+            if data.craft.info.exp ~= nil then
+                craftingLevel += data.craft["exp"].give * craftAmount
+                triggerCallback(getScript()..":server:setPlayerMetadata", "craftingLevel", craftingLevel)
+            end
+            --if data.craft.Recipes[1].oneUse == true then
+            --    removeItem("craftrecipe", 1, nil, data.craftable.Recipes[1].slot)
+            --    local breakId = GetSoundId()
+            --    PlaySoundFromEntity(breakId, "Drill_Pin_Break", Ped, "DLC_HEIST_FLEECA_SOUNDSET", 1, 0)
+            --    canReturn = false
+            --end
+            if data.sound then
+                StopSound(data.sound.soundId)
+            end
+            if data.requiredItemfunc then
+                data.requiredItemfunc()
+            end
         end
     end
+    if craftProp then destroyProp(craftProp) end
 
-    Wait(500)
-    stopTempCam()
+    --Wait(500)
+    stopCam(0)
     CraftLock = false
     if canReturn then craftingMenu(data) end
     ClearPedTasks(Ped)
@@ -531,14 +558,13 @@ RegisterNetEvent(getScript()..":Crafting:GetItem", function(ItemMake, craftable,
         return
     end
 
-
     local hasItems, hasTable = hasItem(ItemMake, 1, src)
     if stashName then
         local itemRemove = {}
         if type(stashName) == "table" then
             for _, name in pairs(stashName) do
                 stashItems = getStash(name)
-                for k, v in pairs(craftable[ItemMake] or {}) do
+                for k, v in pairs(craftable.ingredients) do
                     for _, b in pairs(stashItems or {}) do
                         if k == b.name then
                             itemRemove[k] = v
@@ -548,7 +574,7 @@ RegisterNetEvent(getScript()..":Crafting:GetItem", function(ItemMake, craftable,
             end
         else
             stashItems = getStash(stashName)
-            for k, v in pairs(craftable[ItemMake] or {}) do
+            for k, v in pairs(craftable.ingredients) do
                 for _, b in pairs(stashItems or {}) do
                     if k == b.name then
                         itemRemove[k] = v
@@ -559,12 +585,12 @@ RegisterNetEvent(getScript()..":Crafting:GetItem", function(ItemMake, craftable,
         stashRemoveItem(stashItems, stashName, itemRemove)
     else
         if craftable then
-            for k, v in pairs(craftable[ItemMake] or {}) do
+            for k, v in pairs(craftable.ingredients or {}) do
                 removeItem(tostring(k), v, src)
             end
         end
     end
-    addItem(ItemMake, craftable.amount or 1, metadata, src)
+    addItem(ItemMake, craftable.info.amount or 1, metadata, src)
     -- Optionally, add experience here:
     -- for example:
     -- if isStarted("core_skills") then exports["core_skills"]:AddExperience(src, 2) end
