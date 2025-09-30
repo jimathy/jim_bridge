@@ -395,7 +395,7 @@ function makeItem(data)
     local canReturn = true
 
     local crafted, crafting = true, true
-    local cam = createCam(Ped, data.coords.xyz - vec3(0,0, 0.7))
+    local cam = createCam(Ped, data.coords.xyz)
     startCam(cam, 5000)
 
     -- Calculate total bartime if SingleProgress is enabled
