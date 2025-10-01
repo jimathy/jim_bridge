@@ -231,7 +231,6 @@ function gtaProgressBar(data)
     while result == nil do Wait(10) end
     inProgress = false
 
-    print(tostring(result))
     -- Cleanup animations/tasks
     if data.dict then
         stopAnim(data.dict, data.anim, ped)
@@ -239,7 +238,6 @@ function gtaProgressBar(data)
     if data.task then
         ClearPedTasks(ped)
     end
-
 
     -- Cleanup
     FreezeEntityPosition(ped, false)
