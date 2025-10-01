@@ -376,7 +376,10 @@ end
 --- })
 --- ```
 
-function makeItem(data)
+function makeItem(origData)
+
+    local data = cloneTable(origData)
+
     local Ped = PlayerPedId()
     if CraftLock then return end
     CraftLock = true
@@ -418,7 +421,7 @@ function makeItem(data)
                     print("^1Error^7: ^2Inventory is open, you tried to break things")
                     stopCam(0)
                     ClearPedTasks(Ped)
-                    if canReturn then craftingMenu(data) end
+                    if canReturn then craftingMenu(origData) end
                     CraftLock = false
                     return
                 end
@@ -442,7 +445,7 @@ function makeItem(data)
             if not crafted then
                 stopCam(0)
                 ClearPedTasks(Ped)
-                if canReturn then craftingMenu(data) end
+                if canReturn then craftingMenu(origData) end
                 CraftLock = false
                 return
             end
@@ -527,7 +530,7 @@ function makeItem(data)
     --Wait(500)
     stopCam(0)
     CraftLock = false
-    if canReturn then craftingMenu(data) end
+    if canReturn then craftingMenu(origData) end
     ClearPedTasks(Ped)
 end
 

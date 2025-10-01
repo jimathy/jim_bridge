@@ -651,6 +651,29 @@ function lookEnt(entity)
     end
 end
 
+-- Function to clone tables, to use when referencing tables that need to be hard set
+function cloneTable(obj, opts, seen)
+    if type(obj) ~= "table" then return obj end
+    seen = seen or {}
+    if seen[obj] then return seen[obj] end
+
+    local copy = {}
+    seen[obj] = copy
+
+    -- Copy entries
+    for k, v in pairs(obj) do
+        local k2 = (opts and opts.copy_keys) and cloneTable(k, opts, seen) or k
+        copy[k2] = cloneTable(v, opts, seen)
+    end
+
+    -- Preserve metatable unless told not to
+    if not (opts and opts.strip_meta) then
+        local mt = getmetatable(obj)
+        if mt ~= nil then setmetatable(copy, mt) end
+    end
+
+    return copy
+end
 
 -------------------------------------------------------------
 -- Material and Prop Functions
