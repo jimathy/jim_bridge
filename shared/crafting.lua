@@ -86,8 +86,8 @@ function craftingMenu(data)
         for k, v in ipairs(data.craftable.Recipes) do
             local Recipe = v
             for l, b in pairs(Recipe) do
-                id += 1
                 if doesItemExist(l) then
+                    id += 1
                     compatTable[l] = {
                         ingredients = b,
                         id = id,
