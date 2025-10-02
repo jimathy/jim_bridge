@@ -1,9 +1,7 @@
-2.1.04
+2.1.05
 
-- Crafting fixes (prop/sound/remove ingredients)
-- "SingleProgress" is now one progressbar
-- Add ropeControl.lua - to help create and edit custom ropes/wires
-- Support for new crafting recipe style
-- create setStress() multiframework function
+- Fix "true/false" print from built-in gta progressbars
+- Revert Crafting system to previous style (I was too quick to do this)
+- Fix singleprogress multiplying crafting recipes
 
 https://github.com/jimathy/jim_bridge/releases/latest
