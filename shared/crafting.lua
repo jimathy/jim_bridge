@@ -65,7 +65,7 @@ local excludeKeys = {
 --- ```
 function craftingMenu(data)
     if CraftLock then return end
-
+    local data = cloneTable(data)
     -- Job or gang check; exit if not authorized.
     if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
 
@@ -80,48 +80,48 @@ function craftingMenu(data)
     data.stashName = data.stashTable or data.stashName
 
     -- Wrapper to convert old style crafting recipes to be handled by the menu properly
-    if data.craftable.Recipes[1] then -- assume old style crafting table
-        local compatTable = {}
-        local id = 0
-        for k, v in ipairs(data.craftable.Recipes) do
-            local Recipe = v
-            for l, b in pairs(Recipe) do
-                if doesItemExist(l) then
-                    id += 1
-                    compatTable[l] = {
-                        ingredients = b,
-                        id = id,
-                        info = {
-                            amount = Recipe.amount or 1,
-                            metadata = Recipe.metadata or nil,
-                            job = Recipe.job or nil,
-                            gang = Recipe.gang or nil,
-                            hasCrafted = Recipe.hasCrafted or nil,
-                        },
-                    }
-                end
-            end
-        end
-        data.craftable.Recipes = compatTable
-    end
+    --if data.craftable.Recipes[1] then -- assume old style crafting table
+    --    local compatTable = {}
+    --    local id = 0
+    --    for k, v in ipairs(data.craftable.Recipes) do
+    --        local Recipe = v
+    --        for l, b in pairs(Recipe) do
+    --            if doesItemExist(l) then
+    --                id += 1
+    --                compatTable[l] = {
+    --                    ingredients = b,
+    --                    id = id,
+    --                    info = {
+    --                        amount = Recipe.amount or 1,
+    --                        metadata = Recipe.metadata or nil,
+    --                        job = Recipe.job or nil,
+    --                        gang = Recipe.gang or nil,
+    --                        hasCrafted = Recipe.hasCrafted or nil,
+    --                    },
+    --                }
+    --            end
+    --        end
+    --    end
+    --    data.craftable.Recipes = compatTable
+    --end
 
     -- Convert to array
-    local RecipesArray = {}
-    for k, v in pairs(data.craftable.Recipes) do
-        RecipesArray[v.id] = { [k] = v }
-    end
+    --local RecipesArray = {}
+    --for k, v in pairs(data.craftable.Recipes) do
+    --    RecipesArray[v.id] = { [k] = v }
+    --end
 
     local Menu = {}
-    local Recipes = data.craftable.Recipes
+    local Recipes = cloneTable(data.craftable.Recipes)
     local craftedItems = {}
 
     local tempCarryTable = {}
     -- Build a temporary table of all required ingredients (default quantity is 1).
-    for i = 1, #RecipesArray do
-        for k, v in pairs(RecipesArray[i]) do
-            if doesItemExist(k) then
-                if not v.info.amount then v.info.amount = 1 end
-                tempCarryTable[k] = tempCarryTable[k] and (tempCarryTable[k] < v.info.amount) or v.info.amount
+    for i = 1, #Recipes do
+        for k, v in pairs(Recipes[i]) do
+            if not excludeKeys[k] then
+                if not Recipes[i].amount then Recipes[i].amount = 1 end
+                tempCarryTable[k] = tempCarryTable[k] and (tempCarryTable[k] < Recipes[i].amount) or Recipes[i].amount
             end
         end
     end
@@ -136,27 +136,29 @@ function craftingMenu(data)
         header = "Material Source: "..(usingStash and "Job Stash" or "Player Inventory"),
         disabled = true,
     }
-
-    for i = 1, #RecipesArray do
+    for i = 1, #Recipes do
+        local menuId = #Menu+1
         local item = ""
-        for k in pairs(RecipesArray[i]) do
+        local Recipe = {}
+        for k, v in pairs(Recipes[i]) do
             if not excludeKeys[k] then
                 item = k
+                Recipe = Recipes[i]
+                Recipe.amount = Recipe.amount or 1
                 break
             end
         end
-        local Recipe = RecipesArray[i][item]
 
         -- Job Check
         local hasGroup = true
-        if Recipe.info.job then
-            for l, b in pairs(Recipe.info.job) do
+        if Recipe.job then
+            for l, b in pairs(Recipe.job) do
                 hasGroup = hasJob(l, nil, b)
                 if hasGroup then goto skipcheck end
             end
         end
-        if Recipe.info.gang then
-            for l, b in pairs(Recipe.info.gang) do
+        if Recipe.gang then
+            for l, b in pairs(Recipe.gang) do
                 hasGroup = hasJob(l, nil, b)
                 if hasGroup then goto skipcheck end
             end
@@ -165,12 +167,11 @@ function craftingMenu(data)
 
         -- if has group requirement, continue
         if hasGroup then
-            local setheader, settext, disable, metadata = "", "", false, (Recipe.info.metadata or Recipe.info.info or nil)
+            local setheader, settext, disable, metadata = "", "", false, (Recipe.metadata or Recipe.info or nil)
             local itemTable = {}
             local metaTable = {}
             -- Build ingredient details.
-
-            for l, b in pairs(Recipe.ingredients) do
+            for l, b in pairs(Recipe[item]) do
                 local label = getItemLabel(l)
                 local hasItem = checkStashItem(data.stashName, { [l] = b })
                 local missingMark = not hasItem and " ❌" or " "
@@ -182,17 +183,16 @@ function craftingMenu(data)
 
             -- Make sure "canCarryTable" exists
             while not canCarryTable do Wait(10) end
-
             disable = not checkStashItem(data.stashName, itemTable)
             setheader = ((metadata and metadata.label) or getItemLabel(item))
-                        ..(Recipe.info.amount > 1 and " x"..Recipe.info.amount or "")
+                        ..(Recipe.amount > 1 and " x"..Recipe.amount or "")
 
             local statusEmoji = disable and " " or not canCarryTable[item] and " 📦" or " ✔️"
-            local isNew = (Recipe.info.hasCrafted ~= nil and craftedItems[item] == nil) and "✨ " or ""
+            local isNew = (Recipe.hasCrafted ~= nil and craftedItems[item] == nil) and "✨ " or ""
             setheader = isNew .. setheader .. statusEmoji
 
             -- Build menu option using info
-            Menu[#Menu + 1] = {
+            Menu[menuId] = {
                 arrow = isOx() and (not disable and canCarryTable[item]),
                 isMenuHeader = disable or not canCarryTable[item],
                 icon = invImg((metadata and metadata.image) or item),
@@ -203,9 +203,10 @@ function craftingMenu(data)
                 onSelect = (not disable and canCarryTable[item]) and function()
                     local transdata = {
                         item = item,
-                        craft = RecipesArray[i][item],
+                        craft = Recipe,
                         craftable = data.craftable,
                         coords = data.coords,
+                        amount = Recipe.amount,
                         stashName = data.stashName,
                         onBack = data.onBack,
                         metadata = metadata,
@@ -270,7 +271,7 @@ function multiCraft(data)
 
     for i = 1, maxCreation do
         multiItemTable[i] = {}
-        for l, b in pairs(data.craft.ingredients) do
+        for l, b in pairs(data.craft[data.item]) do
             multiItemTable[i][l] = (b * i)
         end
     end
@@ -394,7 +395,7 @@ function makeItem(origData)
     local craftAmount = (data.amount and data.amount ~= 1) and data.amount or 1
     local metadata = data.metadata or nil
     local prop = data.craftable.Anims and data.craftable.Anims.prop or nil
-    jsonPrint(prop)
+
     local canReturn = true
 
     local crafted, crafting = true, true
@@ -416,7 +417,7 @@ function makeItem(origData)
     if not Config.Crafting.SingleProgress then -- if SingleProgress is disabled, dont do ingredient progressbars
         -- Run ingredient check and usage separately first
         for i = 1, craftAmount do
-            for k, v in pairs(data.craft.ingredients) do
+            for k, v in pairs(data.craft[data.item]) do
                 if isInventoryOpen() then
                     print("^1Error^7: ^2Inventory is open, you tried to break things")
                     stopCam(0)
@@ -443,11 +444,7 @@ function makeItem(origData)
             end
 
             if not crafted then
-                stopCam(0)
-                ClearPedTasks(Ped)
-                if canReturn then craftingMenu(origData) end
-                CraftLock = false
-                return
+                goto finishEarly
             end
 
             if crafting and progressBar({
@@ -462,22 +459,19 @@ function makeItem(origData)
             }) then
                 TriggerServerEvent(getScript()..":Crafting:GetItem", data.item, data.craft, data.stashName, metadata, currentToken)
                 currentToken = nil
-                if data.craft.info.hasCrafted ~= nil then
+                if data.craft.hasCrafted ~= nil then
                     data.craftable.craftedItems[data.item] = true
                     triggerCallback(getScript()..":server:setPlayerMetadata", "craftedItems", data.craftable.craftedItems)
                 end
-                if data.craft.info.exp ~= nil then
+                if data.craft.exp ~= nil then
                     craftingLevel += data.craft.exp.give
                     triggerCallback(getScript()..":server:setPlayerMetadata", "craftingLevel", craftingLevel)
                 end
-                --if data.craftable.Recipes[1].oneUse == true then
-                --    removeItem("craftrecipe", 1, nil, data.craftable.Recipes[1].slot)
-                --    local breakId = GetSoundId()
-                --    PlaySoundFromEntity(breakId, "Drill_Pin_Break", Ped, "DLC_HEIST_FLEECA_SOUNDSET", 1, 0)
-                --    canReturn = false
-                --end
-                if data.requiredItemfunc then
-                    data.requiredItemfunc()
+                if data.craftable.Recipes[1].oneUse == true then
+                    removeItem("craftrecipe", 1, nil, data.craftable.Recipes[1].slot)
+                    local breakId = GetSoundId()
+                    PlaySoundFromEntity(breakId, "Drill_Pin_Break", Ped, "DLC_HEIST_FLEECA_SOUNDSET", 1, 0)
+                    canReturn = false
                 end
             else
                 break
@@ -495,19 +489,19 @@ function makeItem(origData)
             icon = data.item,
             request = true,
         }) then
-            data.craft.info.amount = craftAmount
-            for k, v in pairs(data.craft.ingredients) do
+            data.craft.amount *= craftAmount
+            for k, v in pairs(data.craft[data.item]) do
                 -- multiply igredient requirement in sent crafting table for removal
-                data.craft.ingredients[k] = (v * craftAmount)
+                data.craft[data.item][k] = (v * craftAmount)
             end
             TriggerServerEvent(getScript()..":Crafting:GetItem", data.item, data.craft, data.stashName, metadata, currentToken)
             currentToken = nil -- clear client cached token
             -- handle metadata and experience in a single go
-            if data.craft.info.hasCrafted ~= nil then
+            if data.craft.hasCrafted ~= nil then
                 data.craftable.craftedItems[data.item] = true
                 triggerCallback(getScript()..":server:setPlayerMetadata", "craftedItems", data.craftable.craftedItems)
             end
-            if data.craft.info.exp ~= nil then
+            if data.craft.exp ~= nil then
                 craftingLevel += data.craft["exp"].give * craftAmount
                 triggerCallback(getScript()..":server:setPlayerMetadata", "craftingLevel", craftingLevel)
             end
@@ -517,15 +511,17 @@ function makeItem(origData)
             --    PlaySoundFromEntity(breakId, "Drill_Pin_Break", Ped, "DLC_HEIST_FLEECA_SOUNDSET", 1, 0)
             --    canReturn = false
             --end
-            if data.sound then
-                StopSound(data.sound.soundId)
-            end
-            if data.requiredItemfunc then
-                data.requiredItemfunc()
-            end
         end
     end
+    ::finishEarly::
     if craftProp then destroyProp(craftProp) end
+
+    if data.sound then
+        StopSound(data.sound.soundId)
+    end
+    if data.requiredItemfunc then
+        data.requiredItemfunc()
+    end
 
     --Wait(500)
     stopCam(0)
@@ -567,7 +563,7 @@ RegisterNetEvent(getScript()..":Crafting:GetItem", function(ItemMake, craftable,
         if type(stashName) == "table" then
             for _, name in pairs(stashName) do
                 stashItems = getStash(name)
-                for k, v in pairs(craftable.ingredients) do
+                for k, v in pairs(craftable[ItemMake]) do
                     for _, b in pairs(stashItems or {}) do
                         if k == b.name then
                             itemRemove[k] = v
@@ -577,7 +573,7 @@ RegisterNetEvent(getScript()..":Crafting:GetItem", function(ItemMake, craftable,
             end
         else
             stashItems = getStash(stashName)
-            for k, v in pairs(craftable.ingredients) do
+            for k, v in pairs(craftable[ItemMake]) do
                 for _, b in pairs(stashItems or {}) do
                     if k == b.name then
                         itemRemove[k] = v
@@ -587,13 +583,13 @@ RegisterNetEvent(getScript()..":Crafting:GetItem", function(ItemMake, craftable,
         end
         stashRemoveItem(stashItems, stashName, itemRemove)
     else
-        if craftable then
-            for k, v in pairs(craftable.ingredients or {}) do
+        if craftable[ItemMake] then
+            for k, v in pairs(craftable[ItemMake]) do
                 removeItem(tostring(k), v, src)
             end
         end
     end
-    addItem(ItemMake, craftable.info.amount or 1, metadata, src)
+    addItem(ItemMake, craftable.amount or 1, metadata, src)
     -- Optionally, add experience here:
     -- for example:
     -- if isStarted("core_skills") then exports["core_skills"]:AddExperience(src, 2) end
