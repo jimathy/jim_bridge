@@ -29,6 +29,14 @@ local hungerThirstFunc = {
                 Player.Functions.SetMetaData('hunger', newHunger)
                 TriggerClientEvent("hud:client:UpdateNeeds", src, newHunger, Player.PlayerData.metadata.thirst)
             end,
+        setStress =
+            function(src, stress)
+                local Player = Core.Functions.GetPlayer(src)
+                local newStress = Player.PlayerData.metadata.stress + stress
+                newStress = (newStress >= 100.0 and 100.0)or (newStress <= 0 and 0) or newStress
+                Player.Functions.SetMetaData('stress', newStress)
+                TriggerClientEvent('hud:client:UpdateStress', src, newStress)
+            end,
     },
 
     {   framework = QBExport,
@@ -47,6 +55,14 @@ local hungerThirstFunc = {
                 newHunger = (newHunger >= 100.0 and 100.0) or (newHunger <= 0 and 0) or newHunger
                 Player.Functions.SetMetaData('hunger', newHunger)
                 TriggerClientEvent("hud:client:UpdateNeeds", src, newHunger, Player.PlayerData.metadata.thirst)
+            end,
+        setStress =
+            function(src, stress)
+                local Player = Core.Functions.GetPlayer(src)
+                local newStress = Player.PlayerData.metadata.stress + stress
+                newStress = (newStress >= 100.0 and 100.0)or (newStress <= 0 and 0) or newStress
+                Player.Functions.SetMetaData('stress', newStress)
+                TriggerClientEvent('hud:client:UpdateStress', src, newStress)
             end,
     },
 
@@ -67,6 +83,14 @@ local hungerThirstFunc = {
                 Player.Functions.SetMetaData('hunger', newHunger)
                 TriggerClientEvent("hud:client:UpdateNeeds", src, newHunger, Player.PlayerData.metadata.thirst)
             end,
+        setStress =
+            function(src, stress)
+                local Player = Core.Functions.GetPlayer(src)
+                local newStress = Player.PlayerData.metadata.stress + stress
+                newStress = (newStress >= 100.0 and 100.0) or (newStress <= 0 and 0) or newStress
+                Player.Functions.SetMetaData('stress', newStress)
+                TriggerClientEvent('hud:client:UpdateStress', src, newStress)
+            end,
     },
 
     {   framework = ESXExport,
@@ -77,6 +101,10 @@ local hungerThirstFunc = {
         setHunger =
             function(src, hunger)
                 TriggerClientEvent('esx_status:add', src, 'hunger', tonumber(hunger) * 10000)
+            end,
+        setStress =
+            function(src, stress)
+                TriggerClientEvent("esx_status:add", src, "stress", tonumber(stress) * 10000)
             end,
     },
 }
@@ -121,6 +149,26 @@ function setHunger(src, hunger)
         if isStarted(framework.framework) then
             debugPrint("^4Debug^7: ^2Adding ^3"..framework.framework.." ^2hunger^7: ^3"..hunger.." ^2to player^7: ^3"..src.."^7")
             framework.setHunger(src, hunger)
+            return
+        end
+    end
+end
+
+--- Sets the player's stress level.
+---
+--- @param src number The player's server ID.
+--- @param stress number The new stress level.
+---
+--- @usage
+--- ```lua
+--- setStress(playerId, 60)
+--- ```
+function setStress(src, stress)
+    for i = 1, #hungerThirstFunc do
+        local framework = hungerThirstFunc[i]
+        if isStarted(framework.framework) then
+            debugPrint("^4Debug^7: ^2Adding ^3"..framework.framework.." ^2stress^7: ^3"..stress.." ^2to player^7: ^3"..src.."^7")
+            framework.setStress(src, stress)
             return
         end
     end

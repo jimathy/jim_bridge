@@ -1,13 +1,7 @@
-2.1.03
+2.1.05
 
-- Fix hunger and thirst math (add instead of set)
-- Fix cleanup of targets qb-targets on unload
-- Add support for new jim-shops exploit protection
-- Add full support for esx_society (fixes esx bossmenu errors)
-- Fix possible issue with qb-core /command registering
-- Make ox_lib progressbars return false correctly
-- Fix ox_inv players current weight checks
-- User alternate function for inventory retreival for CodeM Inv
-- Rework _loaders.lua tobe more organised/optimizied
+- Fix "true/false" print from built-in gta progressbars
+- Revert Crafting system to previous style (I was too quick to do this)
+- Fix singleprogress multiplying crafting recipes
 
 https://github.com/jimathy/jim_bridge/releases/latest

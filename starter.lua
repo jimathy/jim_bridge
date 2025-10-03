@@ -176,6 +176,7 @@ for _, v in pairs({ -- This is a specific load order
     'scaleEntity.lua',
     'vehicles.lua',
     'effects.lua',
+    'make/ropeControl.lua',
 
     --'warmenu.lua',
     '_authToken.lua',
