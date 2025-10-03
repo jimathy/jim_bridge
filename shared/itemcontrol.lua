@@ -1338,10 +1338,12 @@ end
 --- ```
 function getPlayerInv(src)
     local grabInv = nil
+    local foundInv = ""
 
     for i = 1, #InvFunc do
         local inv = InvFunc[i]
         if isStarted(inv.invName) then
+            foundInv = inv.invName
             grabInv = inv.getPlayerInv(src)
             break
         end
@@ -1364,6 +1366,7 @@ function getPlayerInv(src)
                 grabInv = xPlayer and xPlayer.inventory or {}
             end
         end
+        --jsonPrint(grabInv)
     end
 
     if grabInv == nil then
@@ -1958,7 +1961,7 @@ function getCurrentInvWeight(src)
     if weight == 0 then
         local itemcheck = getPlayerInv(src)
         for _, v in pairs(itemcheck) do
-            weight += ((v.weight * v.amount) or 0)
+            weight += ((v.weight * (v.amount or v.count)) or 0)
         end
     end
     return weight
@@ -2356,6 +2359,8 @@ function stashRemoveItem(stashItems, stashName, items)
             return
         end
     end
+
+    -- Fallback to core functions
     if isStarted(QBExport) then
         local stashItems = getStash(stashName[1])
         for k, v in pairs(items) do
@@ -2381,6 +2386,10 @@ function stashRemoveItem(stashItems, stashName, items)
     print("^4ERROR^7: ^2No supported Inventory detected ^7- ^2Check ^3starter^1.^2lua^7")
 end
 RegisterNetEvent(getScript()..":server:stashRemoveItem", stashRemoveItem)
+
+function stashAddItem(stashItems, stashName, items)
+    -- wip
+end
 
 -------------------------------------------------------------
 -- Stash Item Availability Check
