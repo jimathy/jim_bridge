@@ -1147,7 +1147,7 @@ local InvFunc = {
             function(itemTable, src)
                 local resultTable = {}
                 for k, v in pairs(itemTable) do
-                    resultTable[k] = exports[OXInv]:CanCarryItem(src, k, v)
+                    resultTable[k] = exports[RSGInv]:CanCarryItem(src, k, v)
                 end
                 return resultTable
             end,
@@ -1301,6 +1301,20 @@ function hasItem(items, amount, src)
             end
         end
     end
+
+    -- Fallback to default hasItem function
+    if not hasTable or not next(hasTable) then
+        for item, amt in pairs(items) do
+            local count = 0
+            for _, itemData in pairs(grabInv) do
+                if itemData and itemData.name == item then
+                    count += (itemData.amount or itemData.count or 1)
+                end
+            end
+            hasTable[item] = { hasItem = count >= amt, count = count }
+        end
+    end
+
     for _, v in pairs(hasTable) do
         if not v.hasItem then
             return false, hasTable
@@ -1324,17 +1338,35 @@ end
 --- ```
 function getPlayerInv(src)
     local grabInv = nil
-    local foundInv = ""
 
     for i = 1, #InvFunc do
         local inv = InvFunc[i]
         if isStarted(inv.invName) then
-            foundInv = inv.invName
             grabInv = inv.getPlayerInv(src)
             break
         end
     end
-    if foundInv == "" then
+
+    -- Fallback to framework functions
+    if not grabInv then
+        if isStarted(QBExport) then
+            if src then
+                grabInv = Core.Functions.GetPlayer(src).PlayerData.items
+            else
+                grabInv = Core.Functions.GetPlayerData().items
+            end
+        elseif isStarted(ESXExport) then
+            if src then
+                local xPlayer = ESX.GetPlayerFromId(src)
+                grabInv = xPlayer and xPlayer.getInventory() or {}
+            else
+                local xPlayer = ESX.GetPlayerData()
+                grabInv = xPlayer and xPlayer.inventory or {}
+            end
+        end
+    end
+
+    if grabInv == nil then
         print("^4ERROR^7: ^2No Supported Inventory detected ^7- ^2Check ^3starter^1.^2lua^7")
     end
     return grabInv, foundInv
@@ -1423,6 +1455,17 @@ function createUseableItem(item, funct)
                 return
             end
         end
+
+        -- Fallback to framework functiosn
+        if isStarted(QBExport) then
+            debugPrint("^6Bridge^7: ^2Registering ^3UsableItem^2 with ^4"..QBExport.."^7:", item)
+            Core.Functions.CreateUseableItem(item, funct)
+        elseif isStarted(ESXExport) then
+            debugPrint("^6Bridge^7: ^2Registering ^3UsableItem^2 with ^4"..ESXExport.."^7:", item)
+            while not ESX do Wait(0) end
+            ESX.RegisterUsableItem(item, funct)
+        end
+
         debugPrint("^4ERROR^7: No supported framework detected for registering usable item: ^3"..item.."^7")
     else
         print("^1ERROR^7: ^1Tried to make item usable but it didn't exist^7: "..item)
@@ -1448,7 +1491,7 @@ end
 --- addItem("health_potion", 2, { quality = "high" })
 --- ```
 function addItem(item, amount, info, src)
-    if not Items[item] then
+    if not doesItemExist(item) then
         print("^6Bridge^7: ^1Error^7 - ^2Tried to give ^7'^3"..item.."^7'^2 but it doesn't exist")
         return
     end
@@ -1477,7 +1520,7 @@ end
 --- removeItem("health_potion", 1)
 --- ```
 function removeItem(item, amount, src, slot)
-    if not Items[item] then
+    if not doesItemExist(item) then
         print("^6Bridge^7: ^1Error^7 - ^2Tried to remove ^7'^3"..item.."^7'^2 but it doesn't exist")
         return
     end
@@ -1725,8 +1768,21 @@ RegisterNetEvent(getScript()..":server:setItemMetaData", function(data, src)
         local inv = InvFunc[i]
         if isStarted(inv.invName) then
             inv.setItemMetadata(data, src)
-            break
+            return
         end
+    end
+
+    -- Fallback functions
+    if isStarted(QBExport) or isStarted(QBXExport) then -- if qbcore or qbxcore, just use core functions
+        local Player = Core.Functions.GetPlayer(src)
+        Player.PlayerData.items[data.slot].info = data.metadata
+        if data.metadata.durability then
+            Player.PlayerData.items[data.slot].description = "HP : "..data.metadata.durability
+        end
+        Player.Functions.SetInventory(Player.PlayerData.items)
+
+    elseif ESX and isStarted(ESXExport) then  -- if esx then use core functions
+        --?
     end
 end)
 
@@ -1804,6 +1860,22 @@ function canCarry(itemTable, src)
             return inv.canCarry(itemTable, src)
         end
     end
+
+    -- Fallback to default canCarry function
+    local items = getPlayerInv(src)
+    local totalWeight = 0
+    if not items then return false end
+    for _, item in pairs(items) do
+        totalWeight += (item.weight * item.amount)
+    end
+    for k, v in pairs(itemTable) do
+        local itemInfo = Items[k]
+        if not itemInfo then
+            resultTable[k] = true
+        else
+            resultTable[k] = (totalWeight + (itemInfo.weight * v)) <= InventoryWeight
+        end
+    end
     return resultTable
 end
 
@@ -1855,6 +1927,11 @@ function getMaxInvWeight()
             break
         end
     end
+
+    -- Fallback function
+    if weight == 0 then
+        weight = InventoryWeight
+    end
     return weight
 end
 
@@ -1877,6 +1954,13 @@ function getCurrentInvWeight(src)
         end
     end
 
+    -- fallback function
+    if weight == 0 then
+        local itemcheck = getPlayerInv(src)
+        for _, v in pairs(itemcheck) do
+            weight += ((v.weight * v.amount) or 0)
+        end
+    end
     return weight
 end
 
@@ -2185,7 +2269,6 @@ end
 --- local items = getStash("playerStash")
 --- ```
 function getStash(stashName)
-    local stashResource = ""
     if stashName == "" or type(stashName) ~= "string" then
         print("^6Bridge^7: ^2Stash name was not a string ^3"..stashName.."^7(^3"..type(stashName).."^7)")
         return {}
@@ -2199,6 +2282,19 @@ function getStash(stashName)
             stashItems = inv.getStash(stashName)
             break
         end
+    end
+
+    -- Fallback to sql checks if no supported inventory found
+    if not stashItems or not next(stashItems) then
+        if isStarted(QBExport) or isStarted(QBXExport) then
+            local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
+            if result then
+                stashItems = json.decode(result)
+            end
+        elseif ESX and isStarted(ESXExport) then  -- if esx then use core functions
+            --?
+        end
+
     end
 
     if stashItems then
@@ -2224,7 +2320,7 @@ function getStash(stashName)
         end
         debugPrint("^6Bridge^7: ^3GetStashItems^7: ^2Stash information for '^6"..stashName.."^7' retrieved")
     end
-    jsonPrint(items)
+    --jsonPrint(items)
     return items
 end
 
@@ -2260,7 +2356,28 @@ function stashRemoveItem(stashItems, stashName, items)
             return
         end
     end
-
+    if isStarted(QBExport) then
+        local stashItems = getStash(stashName[1])
+        for k, v in pairs(items) do
+            for l in pairs(stashItems) do
+                if stashItems[l].name == k then
+                    if (stashItems[l].amount - v) <= 0 then
+                        stashItems[l] = nil
+                    else
+                        debugPrint("^6Bridge^7: ^2Removing ^3"..PSInv.." ^2Stash item^7:", k, v)
+                        stashItems[l].amount -= v
+                    end
+                end
+            end
+        end
+        debugPrint("^6Bridge^7: ^3saveStash^7: ^2Saving ^3QBCORE^2 stash ^7'^6"..stashName[1].."^7'")
+        MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+            ['stash'] = stashName[1],
+            ['items'] = json.encode(stashItems)
+        })
+    elseif isStarted(ESXExport) then
+        --?
+    end
     print("^4ERROR^7: ^2No supported Inventory detected ^7- ^2Check ^3starter^1.^2lua^7")
 end
 RegisterNetEvent(getScript()..":server:stashRemoveItem", stashRemoveItem)
@@ -2394,7 +2511,7 @@ RegisterNetEvent(getScript()..":openGrabBox", function(data)
 	local id = data.metadata and data.metadata.id or data.info and data.info.id or ""
 
     if isStarted(OXInv) then
-
+        -- this SHOLD be handled within ox_inventory if set up right
         return
     end
 
@@ -2646,8 +2763,15 @@ function openShop(data)
         if isStarted(inv.invName) then
             inv.openShop(data.shop, data.items.label, data.items)
             lookEnt(data.coords)
-            break
+            return
         end
+    end
+
+    if isStarted(QBExport) then
+        TriggerServerEvent(getScript()..':server:openServerShop', data.shop)
+        TriggerServerEvent("inventory:server:OpenInventory", "shop", data.items.label, data.items)
+    elseif isStarted(ESXExport) then
+        --?
     end
 
 end
