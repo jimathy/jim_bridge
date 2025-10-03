@@ -7,14 +7,22 @@ AuthEvent = nil
 currentToken = nil
 if isServer() then
 
+    local excludeRes = {
+        [Exports.QBExport] = true,
+        [Exports.ESXExport] = true,
+        [Exports.VorpExport] = true,
+    }
+
     local AuthEvent = getScript()..":"..keyGen()..keyGen()..keyGen()..keyGen()..":"..keyGen()..keyGen()..keyGen()..keyGen()
     validTokens = validTokens or {}
 
     createCallback(AuthEvent, function(source)
         local src = source
         local token = keyGen()..keyGen()..keyGen()..keyGen()  -- Use a secure random generator here
-        --debugPrint(GetInvokingResource())
-        if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= Exports.QBExport and GetInvokingResource() ~= Exports.VorpExport then
+        local invokingRes = GetInvokingResource()
+
+        debugPrint(invokingRes)
+        if invokingRes and invokingRes ~= getScript() and not excludeRes[invokingRes] then
             debugPrint("^1Error^7: ^1Possible exploit^7, ^1vital function was called from an external resource^7")
             return  ""
         end
@@ -47,9 +55,9 @@ if isServer() then
 
     createCallback(getScript()..":callback:GetAuthEvent", function(source)
         local src = source
-        --debugPrint(GetInvokingResource())
+        local invokingRes = GetInvokingResource()
 
-        if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= Exports.QBExport and GetInvokingResource() ~= Exports.VorpExport then
+        if invokingRes and invokingRes ~= getScript() and not excludeRes[invokingRes] then
             debugPrint("^1Error^7: ^1Possible exploit^7, ^1vital callback was called from an external resource^7")
             return ""
         end
