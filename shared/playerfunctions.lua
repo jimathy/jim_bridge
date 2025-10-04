@@ -86,7 +86,7 @@ local hungerThirstFunc = {
         setStress =
             function(src, stress)
                 local Player = Core.Functions.GetPlayer(src)
-                local newStress = Player.PlayerData.metadata.stress + stress
+                local newStress = Player.PlayerData.metadata.stress - stress
                 newStress = (newStress >= 100.0 and 100.0) or (newStress <= 0 and 0) or newStress
                 Player.Functions.SetMetaData('stress', newStress)
                 TriggerClientEvent('hud:client:UpdateStress', src, newStress)
@@ -187,10 +187,10 @@ end)
 --- Server event handler for setting player needs (thirst or hunger).
 ---
 --- @event
---- @param type string "thirst" or "hunger".
+--- @param needType string "thirst" or "hunger".
 --- @param amount number New value to set.
 RegisterNetEvent(getScript()..":server:setNeed", function(needType, amount)
-    print("^1Deprecated function ':server:setNeed' called, please update your scripts^7")
+    print("^1Deprecated function ':server:setNeed' called, please update the scripts that use it^7")
 --    local src = source
 --    if needType == "thirst" then
 --        setThirst(src, amount)
