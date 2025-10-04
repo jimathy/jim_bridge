@@ -1304,14 +1304,26 @@ function hasItem(items, amount, src)
 
     -- Fallback to default hasItem function
     if not hasTable or not next(hasTable) then
-        for item, amt in pairs(items) do
-            local count = 0
-            for _, itemData in pairs(grabInv) do
-                if itemData and itemData.name == item then
-                    count += (itemData.amount or itemData.count or 1)
+        if isStarted(ESXExport) then
+            for item, amt in pairs(items) do
+                local count = 0
+                for itemName, amount in pairs(grabInv) do
+                    if itemName and itemName == item then
+                        count += (amount or 1)
+                    end
                 end
+                hasTable[item] = { hasItem = count >= amt, count = count }
             end
-            hasTable[item] = { hasItem = count >= amt, count = count }
+        else
+            for item, amt in pairs(items) do
+                local count = 0
+                for _, itemData in pairs(grabInv) do
+                    if itemData and itemData.name == item then
+                        count += (itemData.amount or itemData.count or 1)
+                    end
+                end
+                hasTable[item] = { hasItem = count >= amt, count = count }
+            end
         end
     end
 
@@ -1362,8 +1374,7 @@ function getPlayerInv(src)
                 local xPlayer = ESX.GetPlayerFromId(src)
                 grabInv = xPlayer and xPlayer.getInventory() or {}
             else
-                local xPlayer = ESX.GetPlayerData()
-                grabInv = xPlayer and xPlayer.inventory or {}
+                grabInv = triggerCallback(getScript()..":GetESXInv")
             end
         end
         --jsonPrint(grabInv)
@@ -1373,6 +1384,15 @@ function getPlayerInv(src)
         print("^4ERROR^7: ^2No Supported Inventory detected ^7- ^2Check ^3starter^1.^2lua^7")
     end
     return grabInv, foundInv
+end
+
+if isServer() then
+    createCallback(getScript()..":GetESXInv", function(source)
+        local src = source
+        local xPlayer = ESX.GetPlayerFromId(src)
+        local inv = xPlayer.getInventory()
+        return xPlayer.getInventory(src)
+    end)
 end
 
 function isInventoryOpen()
@@ -1559,14 +1579,21 @@ end
 
 
 RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount, newsrc, info, slot, token)
+    local excludeRes = {
+        [QBExport] = true,
+        [ESXExport] = true,
+        [VorpExport] = true,
+    }
+    local invokingRes = GetInvokingResource()
+
     --debugPrint(GetInvokingResource())
-	if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= "qb-core" then
+	if invokingRes and invokingRes ~= getScript() and not excludeRes[invokingRes] then
         debugPrint("^1Error^7: ^1Possible exploit^7, ^1vital function was called from an external resource^7")
         return
     end
 
-    if not Items[item] then
-        print("^6Bridge^7: ^1Error^7 - ^2Tried to "..(tostring(give) == "true" and "add" or "remove").." '^3"..item.."^7' but it doesn't exist")
+    if not doesItemExist(item) then
+        print("^1Error^7 - ^2Tried to "..(tostring(give) == "true" and "add" or "remove").." '^3"..item.."^7' but it doesn't exist")
         return
     end
 
@@ -1960,8 +1987,14 @@ function getCurrentInvWeight(src)
     -- fallback function
     if weight == 0 then
         local itemcheck = getPlayerInv(src)
-        for _, v in pairs(itemcheck) do
-            weight += ((v.weight * (v.amount or v.count)) or 0)
+        if isStarted(ESXExport) then
+            for _, amount in pairs(itemcheck) do
+                weight += (amount or 0)
+            end
+        else
+            for _, v in pairs(itemcheck) do
+                weight += ((v.weight * (v.amount or v.count)) or 0)
+            end
         end
     end
     return weight
