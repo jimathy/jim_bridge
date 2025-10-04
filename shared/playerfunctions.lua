@@ -32,7 +32,7 @@ local hungerThirstFunc = {
         setStress =
             function(src, stress)
                 local Player = Core.Functions.GetPlayer(src)
-                local newStress = Player.PlayerData.metadata.stress + stress
+                local newStress = Player.PlayerData.metadata.stress - stress
                 newStress = (newStress >= 100.0 and 100.0)or (newStress <= 0 and 0) or newStress
                 Player.Functions.SetMetaData('stress', newStress)
                 TriggerClientEvent('hud:client:UpdateStress', src, newStress)
@@ -59,7 +59,7 @@ local hungerThirstFunc = {
         setStress =
             function(src, stress)
                 local Player = Core.Functions.GetPlayer(src)
-                local newStress = Player.PlayerData.metadata.stress + stress
+                local newStress = Player.PlayerData.metadata.stress - stress
                 newStress = (newStress >= 100.0 and 100.0)or (newStress <= 0 and 0) or newStress
                 Player.Functions.SetMetaData('stress', newStress)
                 TriggerClientEvent('hud:client:UpdateStress', src, newStress)
