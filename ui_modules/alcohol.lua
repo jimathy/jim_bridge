@@ -12,13 +12,13 @@ local maxAlcoholCount = 7
 local alcoholEffectData = {
     levels = {
         ["min"] = {
-            effect = "DrugsMichaelAliensFight",
+            effect = "DrugsMichaelAliensFightIn",
             movement = "move_m@drunk@slightlydrunk",
             camShake = 0.5,
             canStumble = false,
         },
         ["mid"] = {
-            effect = "DrugsMichaelAliensFight",
+            effect = "DrugsMichaelAliensFightIn",
             movement = "move_m@drunk@moderatedrunk",
             canRagdoll = true,
             camShake = 0.5,
@@ -27,7 +27,7 @@ local alcoholEffectData = {
             drunkDriving = true,
         },
         ["max"] = {
-            effect = "DrugsMichaelAliensFight",
+            effect = "DrugsMichaelAliensFightIn",
             movement = "move_m@drunk@verydrunk",
             canRagdoll = true,
             camShake = 2.8,
@@ -187,7 +187,7 @@ function startAlcoholEffect(data, level)
                     end
                     Wait(1000)
                 end
-                print("Effect loop broken")
+                --print("Effect loop broken")
             end)
 
         end

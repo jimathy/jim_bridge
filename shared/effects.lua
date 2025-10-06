@@ -7,7 +7,10 @@ function AlienEffect()
     Wait(math.random(5000, 8000))
     local Ped = PlayerPedId()
     local animDict = "MOVE_M@DRUNK@VERYDRUNK"
-    loadAnimDict(animDict)
+    RequestAnimSet(animDict)
+    while not HasAnimSetLoaded(animDict) do
+        Wait(100)
+    end
     SetPedCanRagdoll(Ped, true)
     ShakeGameplayCam('DRUNK_SHAKE', 2.80)
     SetTimecycleModifier("Drunk")
