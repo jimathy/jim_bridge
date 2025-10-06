@@ -1,7 +1,8 @@
-2.1.05
+2.1.06
 
-- Fix "true/false" print from built-in gta progressbars
-- Revert Crafting system to previous style (I was too quick to do this)
-- Fix singleprogress multiplying crafting recipes
+- Fix stress calculations adding instead of taking away
+- Add basic support for fallback functions for inventory management (esx isn't very well supported currently)
+- Create ui_modules/alcohol.lua to handle alcohol and drug effects between scripts
+- Fix AnimSet loading for "AlienEffect()"
 
 https://github.com/jimathy/jim_bridge/releases/latest
