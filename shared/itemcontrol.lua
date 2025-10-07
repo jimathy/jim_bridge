@@ -2785,11 +2785,12 @@ function openShop(data)
     if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
 
     -- If shop has registered coords, limit players from being too far away from it when opening
-    local exploitCheck = triggerCallback(getScript()..":getRegisteredShopLocation", data.shop)
+    local exploitCheck = triggerCallback(getScript()..":getRegisteredShopLocation", data.originShop or data.shop)
     if not exploitCheck then
         print("^3Warning^7: ^2This isn't a registered store^1, refusing call^7")
         return
     end
+
     if not distExploitCheck(exploitCheck) then
         return
     end
@@ -2799,6 +2800,29 @@ function openShop(data)
         lookEnt(data.coords)
         return
     end
+    if not data.items.items[1] then
+        local shopMenu = {}
+        --jsonPrint(data.items)
+        for k, v in pairs(data.items.items) do
+            print(v.header)
+            local clonedTable = cloneTable(data)
+            local itemsTable = v.items or v.Items
+            shopMenu[#shopMenu+1] = {
+                header = v.header or k,
+                txt = countTable(itemsTable).." Products",
+                onSelect = function()
+                    clonedTable.originShop = data.shop
+                    clonedTable.shop = data.shop.."_"..k
+                    clonedTable.label = data.items.label.." - "..(v.header or k)
+                    clonedTable.slots = #itemsTable
+                    clonedTable.items.items = itemsTable
+                    openShop(clonedTable)
+                end,
+            }
+        end
+        return openMenu(shopMenu, { header = data.items.label, canClose = true, })
+    end
+
 
     for i = 1, #InvFunc do
         local inv = InvFunc[i]
@@ -2865,8 +2889,15 @@ function registerShop(name, label, items, society, coords)
     for i = 1, #InvFunc do
         local inv = InvFunc[i]
         if isStarted(inv.invName) then
-            inv.registerShop(name, label, items, society)
-            debugPrint("^6Bridge^7: ^2Registering ^5"..inv.invName.." ^3Store^7:", name, "^4Label^7: "..label, coords and "- ^4Coord^7: "..formatCoord(coords) or "NO COORD SET")
+            if not items[1] then
+                for k, v in pairs(items) do
+                    inv.registerShop(name.."_"..k, label.." - "..(v.header or k), v.items, society)
+                    debugPrint("^6Bridge^7: ^2Registering ^5"..inv.invName.." ^3Store^7:", name.."_"..k, "^4Label^7: "..label.." - "..(v.header or k), coords and "- ^4Coord^7: "..formatCoord(coords) or "NO COORD SET")
+                end
+            else
+                inv.registerShop(name, label, items, society)
+                debugPrint("^6Bridge^7: ^2Registering ^5"..inv.invName.." ^3Store^7:", name, "^4Label^7: "..label, coords and "- ^4Coord^7: "..formatCoord(coords) or "NO COORD SET")
+            end
             break
         end
     end
