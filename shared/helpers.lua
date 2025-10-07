@@ -957,3 +957,17 @@ function GetEntityForwardVector(entity)
     local heading = math.rad(GetEntityHeading(entity) + 90)
     return vec3(math.cos(heading), math.sin(heading), 0.0)
 end
+
+function adjustMinMaxZ(coord, table)
+    local table = table
+    local adMinZ, adMaxZ = false, false
+    if table.minZ > coord.z then
+        adMinZ = true
+        table.minZ = (coord.z - 1.05)
+    end
+    if table.maxZ < coord.z then
+        adMinZ = true
+        table.maxZ = (coord.z + 0.80)
+    end
+    return table.minZ, table.maxZ, adMinZ, adMaxZ
+end

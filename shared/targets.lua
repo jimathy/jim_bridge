@@ -336,6 +336,13 @@ function createBoxTarget(data, opts, dist)
         local script = targetFunc[i]
         if isStarted(script.targetName) then
             debugPrint("^6Bridge^7: ^2Creating new ^3Box ^2target with ^6"..script.targetName.." ^7"..data[1])
+            if data[5].minZ or data[5].maxZ then
+                local adMinZ, adMaxZ
+                data[5].minZ, data[5].maxZ, adMinZ, adMaxZ = adjustMinMaxZ(data[2], { minZ = data[5].minZ, maxZ = data[5].maxZ })
+                if adMinZ or adMaxZ then
+                    print("^5Debug^7: ^2Auto adjusted ^7'^4"..data[1].."^7' ^2minZ and maxZ because ^1they weren't set correctly ^2remove or fix them for this target")
+                end
+            end
             local target = script.boxTarget(data, opts, dist)
             boxTargets[#boxTargets + 1] = target
             return target
