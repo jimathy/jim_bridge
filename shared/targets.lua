@@ -252,7 +252,7 @@ function createEntityTarget(entity, opts, dist)
     -- Store the target entity for later cleanup.
     targetEntities[#targetEntities + 1] = entity
 
-    -- if force target off, use jim_bridge buiilt in target functions
+    -- if force target off, use jim_bridge built in target functions
     if Config.System.DontUseTarget then
         exports.jim_bridge:createEntityTarget(entity, opts, dist)
         debugPrint("^6Bridge^7: ^2Creating new ^3Entity ^2target with ^6jim_bridge ^2for entity ^7"..entity)
@@ -325,7 +325,7 @@ end
 ---```
 function createBoxTarget(data, opts, dist)
 
-    -- if force target off, use jim_bridge buiilt in target functions
+    -- if force target off, use jim_bridge built in target functions
     if Config.System.DontUseTarget then
         debugPrint("^6Bridge^7: ^2Creating new ^3Box ^2target with ^6jim_bridge ^7"..data[1])
         return exports.jim_bridge:createZoneTarget(data, opts, dist)
@@ -350,6 +350,45 @@ function createBoxTarget(data, opts, dist)
     end
     return nil
 end
+
+
+function createPropTarget(data, opts, dist)
+    -- Audo create a location based on a coord and a prop models dimensions
+    local width, depth, _ = GetPropDimensions(data[3])
+    local min, max = GetModelDimensions(data[3])
+    local coordAdjustment = data[2] - vec4(0, 0, 1.03, 0)
+    local newData = {
+        [1] = data[1],
+        [2] = coordAdjustment.xyz,
+        [3] = width + 0.1,
+        [4] = depth + 0.1,
+        [5] = {
+            name = data[1],
+            heading = coordAdjustment.w - 90.0,
+            debugPoly = debugMode,
+            minZ = coordAdjustment.z + (min.z) - 0.1,
+            maxZ = coordAdjustment.z + (max.z) + 0.1,
+        }
+    }
+    -- if force target off, use jim_bridge built in target functions
+    if Config.System.DontUseTarget then
+        debugPrint("^6Bridge^7: ^2Creating new ^3Box ^2target with ^6jim_bridge ^7"..data[1])
+        return exports.jim_bridge:createZoneTarget(newData, opts, dist)
+    end
+
+    -- Check for target script and use that
+    for i = 1, #targetFunc do
+        local script = targetFunc[i]
+        if isStarted(script.targetName) then
+            debugPrint("^6Bridge^7: ^2Creating new ^3Box ^2target with ^6"..script.targetName.." ^7"..data[1])
+            local target = script.boxTarget(newData, opts, dist)
+            boxTargets[#boxTargets + 1] = target
+            return target
+        end
+    end
+    return nil
+end
+
 
 -------------------------------------------------------------
 -- Circle Zone Target Creation
@@ -389,7 +428,7 @@ end
 --- ```
 function createCircleTarget(data, opts, dist)
 
-    -- if force target off, use jim_bridge buiilt in target functions
+    -- if force target off, use jim_bridge built in target functions
     if Config.System.DontUseTarget then
         debugPrint("^6Bridge^7: ^2Creating new ^3Sphere ^2target with ^6jim_bridge ^7"..data[1])
         return exports.jim_bridge:createZoneTarget(data, opts, dist)
@@ -436,7 +475,7 @@ end
 ---```
 function createModelTarget(models, opts, dist)
 
-    -- if force target off, use jim_bridge buiilt in target functions
+    -- if force target off, use jim_bridge built in target functions
     if Config.System.DontUseTarget then
         debugPrint("^6Bridge^7: ^2Creating new ^3Model ^2target with ^6jim_bridge^7")
         return exports.jim_bridge:createModelTarget(models, opts, dist)
