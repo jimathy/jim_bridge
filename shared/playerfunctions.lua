@@ -217,6 +217,10 @@ local billPlayerFunc = {
         function(data)
             TriggerEvent("okokBilling:ToggleCreateInvoice")
         end,
+    codem =
+        function(data)
+            TriggerEvent("codem-billing:client:OpenMenu")
+        end,
 }
 
 --- BillPlayer
