@@ -369,6 +369,11 @@ function createPropTarget(data, opts, dist)
             maxZ = coordAdjustment.z + (max.z) + 0.1,
         }
     }
+
+    if data[3] then -- If spawning a prop, make entity target instead (ignores depth and width stuff)
+        makeDistProp({ prop = data[3], coords = data[2] }, true, false)
+    end
+
     -- if force target off, use jim_bridge built in target functions
     if Config.System.DontUseTarget then
         debugPrint("^6Bridge^7: ^2Creating new ^3Box ^2target with ^6jim_bridge ^7"..data[1])
