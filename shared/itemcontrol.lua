@@ -272,15 +272,15 @@ local InvFunc = {
             function(src)
                 local grabInv = nil
                 if src then
-                    grabInv = exports[OXInv]:GetInventoryItems(src)
+                    grabInv = exports[OrigenInv]:GetInventoryItems(src)
                 else
-                    grabInv = exports[OXInv]:GetPlayerItems()
+                    grabInv = exports[OrigenInv]:GetInventory()
                 end
                 return grabInv
             end,
         invImg =
             function(item)
-                return "nui://"..OrigenInv.."/html/img/"..(Items[item].image or "")
+                return "nui://"..OrigenInv.."/html/images/"..(Items[item].image or "")
             end,
         openShop =
             function(name, label, items)
