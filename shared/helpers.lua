@@ -961,11 +961,11 @@ end
 function adjustMinMaxZ(coord, table)
     local table = table
     local adMinZ, adMaxZ = false, false
-    if table.minZ > coord.z then
+    if table.minZ > (coord.z + 0.1) then
         adMinZ = true
         table.minZ = (coord.z - 1.05)
     end
-    if table.maxZ < coord.z then
+    if table.maxZ < (coord.z - 0.1) then
         adMinZ = true
         table.maxZ = (coord.z + 0.80)
     end

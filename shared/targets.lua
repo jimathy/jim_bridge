@@ -324,7 +324,6 @@ end
 ---}, 2.0)
 ---```
 function createBoxTarget(data, opts, dist)
-
     -- if force target off, use jim_bridge built in target functions
     if Config.System.DontUseTarget then
         debugPrint("^6Bridge^7: ^2Creating new ^3Box ^2target with ^6jim_bridge ^7"..data[1])
