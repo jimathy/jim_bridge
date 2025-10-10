@@ -2558,7 +2558,7 @@ RegisterNetEvent(getScript()..":openGrabBox", function(data, stashData)
 	openStash({
 		stash = id,
         coords = GetEntityCoords(Ped),
-        maxWeight = stashData and stashData.slots or 100000,
+        maxWeight = stashData and stashData.maxWeight or 100000,
         slots = stashData and stashData.slots or 5,
 	})
 end)

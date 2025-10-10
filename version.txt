@@ -1,8 +1,11 @@
-2.1.06
+2.1.07
 
-- Fix stress calculations adding instead of taking away
-- Add basic support for fallback functions for inventory management (esx isn't very well supported currently)
-- Create ui_modules/alcohol.lua to handle alcohol and drug effects between scripts
-- Fix AnimSet loading for "AlienEffect()"
+- Support for new embeded shop recipes
+- Add checks for targets set with minZ and maxZ set too high or low
+- New target function `createPropTarget()` which creates a box target based on a prop model
+- Add CodeM as option for billing
+- Add 17Mov progressbar support
+- Fix OrigenInv calling OX_Inv to get player inventory
+- Allow "Grab Boxes" to have custom slots and weight
 
 https://github.com/jimathy/jim_bridge/releases/latest
