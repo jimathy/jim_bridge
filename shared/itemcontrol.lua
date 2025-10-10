@@ -2548,7 +2548,7 @@ if isServer() then
     end)
 end
 
-RegisterNetEvent(getScript()..":openGrabBox", function(data)
+RegisterNetEvent(getScript()..":openGrabBox", function(data, stashData)
     local Ped = PlayerPedId()
 	local id = data.metadata and data.metadata.id or data.info and data.info.id or ""
 
@@ -2559,7 +2559,9 @@ RegisterNetEvent(getScript()..":openGrabBox", function(data)
 
 	openStash({
 		stash = id,
-        coords = GetEntityCoords(Ped)
+        coords = GetEntityCoords(Ped),
+        maxWeight = stashData and stashData.slots or 100000,
+        slots = stashData and stashData.slots or 5,
 	})
 end)
 
