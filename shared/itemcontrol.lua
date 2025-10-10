@@ -1377,7 +1377,6 @@ function getPlayerInv(src)
                 grabInv = triggerCallback(getScript()..":GetESXInv")
             end
         end
-        --jsonPrint(grabInv)
     end
 
     if grabInv == nil then
@@ -2356,7 +2355,6 @@ function getStash(stashName)
         end
         debugPrint("^6Bridge^7: ^3GetStashItems^7: ^2Stash information for '^6"..stashName.."^7' retrieved")
     end
-    --jsonPrint(items)
     return items
 end
 
@@ -2783,11 +2781,10 @@ end
 --- })
 --- ```
 function openShop(data)
-    --jsonPrint(data)
     if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
 
     -- If shop has registered coords, limit players from being too far away from it when opening
-    local exploitCheck = triggerCallback(getScript()..":getRegisteredShopLocation", data.originShop or data.shop)
+    local exploitCheck = triggerCallback(getScript()..":getRegisteredShopLocation", data.shop)
     if not exploitCheck then
         print("^3Warning^7: ^2This isn't a registered store^1, refusing call^7")
         return
@@ -2804,16 +2801,14 @@ function openShop(data)
     end
     if not data.items.items[1] then
         local shopMenu = {}
-        --jsonPrint(data.items)
         for k, v in pairs(data.items.items) do
-            print(v.header)
             local clonedTable = cloneTable(data)
             local itemsTable = v.items or v.Items
             shopMenu[#shopMenu+1] = {
                 header = v.header or k,
                 txt = countTable(itemsTable).." Products",
                 onSelect = function()
-                    clonedTable.originShop = data.shop
+                    --clonedTable.originShop = data.shop
                     clonedTable.shop = data.shop.."_"..k
                     clonedTable.label = data.items.label.." - "..(v.header or k)
                     clonedTable.slots = #itemsTable
@@ -2849,7 +2844,7 @@ RegisterNetEvent(getScript()..':server:openServerShop', function(shopName)
 
     -- If shop has registered coords, limit players from being too far away from it when opening
     if not shopExploitCheck[shopName] then
-        print("^3Warning^7: ^1Source^7: ^3"..src.." ^1Tried to open a shop^7: ^2This isn't a registered store^1, refusing call^7")
+        print("^3Warning^7: ^1Source^7: ^3"..src.." ^1Tried to open a shop ^7'"..shopName.."' ^2This isn't a registered store^7, ^1refusing call^7")
         return
     end
     if not distExploitCheck(shopExploitCheck[shopName], src) then
@@ -2894,6 +2889,9 @@ function registerShop(name, label, items, society, coords)
             if not items[1] then
                 for k, v in pairs(items) do
                     inv.registerShop(name.."_"..k, label.." - "..(v.header or k), v.items, society)
+                    shopExploitCheck[name.."_"..k] = shopExploitCheck[name.."_"..k] or {}
+                    shopExploitCheck[name.."_"..k][#shopExploitCheck[name.."_"..k]+1] = coords
+
                     debugPrint("^6Bridge^7: ^2Registering ^5"..inv.invName.." ^3Store^7:", name.."_"..k, "^4Label^7: "..label.." - "..(v.header or k), coords and "- ^4Coord^7: "..formatCoord(coords) or "NO COORD SET")
                 end
             else
