@@ -972,6 +972,12 @@ local wardrobeFunc = {
             TriggerEvent("illenium-appearance:client:openOutfitMenu")
         end,
     },
+    {
+        name = "rcore_clothing",
+        openWardrobe = function()
+            TriggerEvent('rcore_clothing:openChangingRoom')
+        end,
+    }
 }
 
 --- Opens the clothing customization menu
@@ -984,4 +990,5 @@ function openClothing()
             break
         end
     end
+
 end
