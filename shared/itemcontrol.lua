@@ -2315,7 +2315,7 @@ function getStash(stashName)
         if isStarted(inv.invName) then
             debugPrint("^6Bridge^7: ^2Retrieving ^3"..inv.invName.." ^2Stash^7:", stashName)
             stashItems = inv.getStash(stashName)
-            break
+            goto skip
         end
     end
 
@@ -2331,7 +2331,7 @@ function getStash(stashName)
         end
 
     end
-
+    ::skip::
     if stashItems then
         for _, item in pairs(stashItems) do
             local itemInfo = Items[item.name:lower()]
