@@ -103,6 +103,10 @@ local InvFunc = {
                 -- Add fallback if ox can't find the stash and returns a boolean
                 return type(stash) == "table" and stash.items or {}
             end,
+        stashEditMetadata =
+            function(stash, slot, metadata)
+                exports[OXInv]:SetMetadata(stash, slot, metadata)
+            end,
         stashAddItem =
             function(stashItems, stashName, items)
 
@@ -207,6 +211,13 @@ local InvFunc = {
             function(stashName)
                 return exports[CoreInv]:getInventory(stashName)
             end,
+        stashEditMetadata =
+            function(stash, slot, metadata)
+                local itemData = exports[CoreInv]:getItemBySlot(stash, slot) or {}
+                if itemData then
+                    exports[CoreInv]:setItem(stash, itemData.item, itemData.count, metadata)
+                end
+            end,
         stashAddItem =
             function(stashItems, stashName, items)
                 --
@@ -305,6 +316,10 @@ local InvFunc = {
         getStash =
             function(stashName)
                 return exports[OrigenInv]:getInventory(stashName)
+            end,
+        stashEditMetadata =
+            function(stash, slot, metadata)
+                exports[OrigenInv]:setMetadata(stash, slot, metadata)
             end,
         stashAddItem =
             function(stashItems, stashName, items)
@@ -415,6 +430,10 @@ local InvFunc = {
         getStash =
             function(stashName)
                 return exports[CodeMInv]:GetStashItems(stashName)
+            end,
+        stashEditMetadata =
+            function(stash, slot, metadata)
+
             end,
         stashAddItem =
             function(stashItems, stashName, items)
@@ -528,6 +547,10 @@ local InvFunc = {
         getStash =
             function(stashName)
                 return exports[TgiannInv]:GetSecondaryInventoryItems("stash", stashName)
+            end,
+        stashEditMetadata =
+            function(stash, slot, metadata)
+
             end,
         stashAddItem =
             function(stashItems, stashName, items)
@@ -691,6 +714,10 @@ local InvFunc = {
                     local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
                     return result and json.decode(result) or {}
                 end
+            end,
+        stashEditMetadata =
+            function(stash, slot, metadata)
+
             end,
         stashAddItem =
             function(stashItems, stashName, items)
@@ -879,6 +906,23 @@ local InvFunc = {
                         return {}
                     end
                 end
+            end,
+        stashEditMetadata =
+            function(stash, slot, metadata)
+                local stashData = getStash(stash)
+                for i = 1, #stashData do
+                    if stashData[i].slot == slot then
+                        print("found slot")
+                        stashData[i].info = metadata
+                    end
+                    jsonPrint(stashData[i])
+                end
+
+                debugPrint("^6Bridge^7: ^3stashEditMetadata^7: ^2Saving ^3QB^2 stash '^6"..stash.."^7'")
+                MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+                    ['stash'] = stash,
+                    ['items'] = json.encode(stashData)
+                })
             end,
         stashAddItem =
             function(stashItems, stashName, items)
@@ -2245,6 +2289,16 @@ function openStash(data)
     lookEnt(data.coords)
 end
 
+
+function stashEditMetadata(stash, slot, metadata)
+    for i = 1, #InvFunc do
+        local inv = InvFunc[i]
+        if isStarted(inv.invName) then
+            inv.stashEditMetadata(stash, slot, metadata)
+            return
+        end
+    end
+end
 
 -- Wrapper function for opening stash from the server.
 -- Messy but not much else I can do about it.
