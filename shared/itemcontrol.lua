@@ -103,6 +103,10 @@ local InvFunc = {
                 -- Add fallback if ox can't find the stash and returns a boolean
                 return type(stash) == "table" and stash.items or {}
             end,
+        stashEditMetadata =
+            function(stash, slot, metadata)
+                exports[OXInv]:SetMetadata(stash, slot, metadata)
+            end,
         stashAddItem =
             function(stashItems, stashName, items)
 
@@ -207,6 +211,13 @@ local InvFunc = {
             function(stashName)
                 return exports[CoreInv]:getInventory(stashName)
             end,
+        stashEditMetadata =
+            function(stash, slot, metadata)
+                local itemData = exports[CoreInv]:getItemBySlot(stash, slot) or {}
+                if itemData then
+                    exports[CoreInv]:setItem(stash, itemData.item, itemData.count, metadata)
+                end
+            end,
         stashAddItem =
             function(stashItems, stashName, items)
                 --
@@ -272,15 +283,15 @@ local InvFunc = {
             function(src)
                 local grabInv = nil
                 if src then
-                    grabInv = exports[OXInv]:GetInventoryItems(src)
+                    grabInv = exports[OrigenInv]:GetInventoryItems(src)
                 else
-                    grabInv = exports[OXInv]:GetPlayerItems()
+                    grabInv = exports[OrigenInv]:GetInventory()
                 end
                 return grabInv
             end,
         invImg =
             function(item)
-                return "nui://"..OrigenInv.."/html/img/"..(Items[item].image or "")
+                return "nui://"..OrigenInv.."/html/images/"..(Items[item].image or "")
             end,
         openShop =
             function(name, label, items)
@@ -305,6 +316,10 @@ local InvFunc = {
         getStash =
             function(stashName)
                 return exports[OrigenInv]:getInventory(stashName)
+            end,
+        stashEditMetadata =
+            function(stash, slot, metadata)
+                exports[OrigenInv]:setMetadata(stash, slot, metadata)
             end,
         stashAddItem =
             function(stashItems, stashName, items)
@@ -415,6 +430,10 @@ local InvFunc = {
         getStash =
             function(stashName)
                 return exports[CodeMInv]:GetStashItems(stashName)
+            end,
+        stashEditMetadata =
+            function(stash, slot, metadata)
+
             end,
         stashAddItem =
             function(stashItems, stashName, items)
@@ -528,6 +547,10 @@ local InvFunc = {
         getStash =
             function(stashName)
                 return exports[TgiannInv]:GetSecondaryInventoryItems("stash", stashName)
+            end,
+        stashEditMetadata =
+            function(stash, slot, metadata)
+
             end,
         stashAddItem =
             function(stashItems, stashName, items)
@@ -691,6 +714,10 @@ local InvFunc = {
                     local result = MySQL.scalar.await('SELECT items FROM stashitems WHERE stash = ?', { stashName })
                     return result and json.decode(result) or {}
                 end
+            end,
+        stashEditMetadata =
+            function(stash, slot, metadata)
+
             end,
         stashAddItem =
             function(stashItems, stashName, items)
@@ -879,6 +906,23 @@ local InvFunc = {
                         return {}
                     end
                 end
+            end,
+        stashEditMetadata =
+            function(stash, slot, metadata)
+                local stashData = getStash(stash)
+                for i = 1, #stashData do
+                    if stashData[i].slot == slot then
+                        print("found slot")
+                        stashData[i].info = metadata
+                    end
+                    jsonPrint(stashData[i])
+                end
+
+                debugPrint("^6Bridge^7: ^3stashEditMetadata^7: ^2Saving ^3QB^2 stash '^6"..stash.."^7'")
+                MySQL.Async.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+                    ['stash'] = stash,
+                    ['items'] = json.encode(stashData)
+                })
             end,
         stashAddItem =
             function(stashItems, stashName, items)
@@ -1377,7 +1421,6 @@ function getPlayerInv(src)
                 grabInv = triggerCallback(getScript()..":GetESXInv")
             end
         end
-        --jsonPrint(grabInv)
     end
 
     if grabInv == nil then
@@ -2247,6 +2290,16 @@ function openStash(data)
 end
 
 
+function stashEditMetadata(stash, slot, metadata)
+    for i = 1, #InvFunc do
+        local inv = InvFunc[i]
+        if isStarted(inv.invName) then
+            inv.stashEditMetadata(stash, slot, metadata)
+            return
+        end
+    end
+end
+
 -- Wrapper function for opening stash from the server.
 -- Messy but not much else I can do about it.
 RegisterNetEvent(getScript()..":server:openServerStash", function(data)
@@ -2316,7 +2369,7 @@ function getStash(stashName)
         if isStarted(inv.invName) then
             debugPrint("^6Bridge^7: ^2Retrieving ^3"..inv.invName.." ^2Stash^7:", stashName)
             stashItems = inv.getStash(stashName)
-            break
+            goto skip
         end
     end
 
@@ -2332,7 +2385,7 @@ function getStash(stashName)
         end
 
     end
-
+    ::skip::
     if stashItems then
         for _, item in pairs(stashItems) do
             local itemInfo = Items[item.name:lower()]
@@ -2356,7 +2409,6 @@ function getStash(stashName)
         end
         debugPrint("^6Bridge^7: ^3GetStashItems^7: ^2Stash information for '^6"..stashName.."^7' retrieved")
     end
-    --jsonPrint(items)
     return items
 end
 
@@ -2548,7 +2600,7 @@ if isServer() then
     end)
 end
 
-RegisterNetEvent(getScript()..":openGrabBox", function(data)
+RegisterNetEvent(getScript()..":openGrabBox", function(data, stashData)
     local Ped = PlayerPedId()
 	local id = data.metadata and data.metadata.id or data.info and data.info.id or ""
 
@@ -2559,7 +2611,9 @@ RegisterNetEvent(getScript()..":openGrabBox", function(data)
 
 	openStash({
 		stash = id,
-        coords = GetEntityCoords(Ped)
+        coords = GetEntityCoords(Ped),
+        maxWeight = stashData and stashData.maxWeight or 100000,
+        slots = stashData and stashData.slots or 5,
 	})
 end)
 
@@ -2781,11 +2835,10 @@ end
 --- })
 --- ```
 function openShop(data)
-    --jsonPrint(data)
     if (data.job or data.gang) and not jobCheck(data.job or data.gang) then return end
 
     -- If shop has registered coords, limit players from being too far away from it when opening
-    local exploitCheck = triggerCallback(getScript()..":getRegisteredShopLocation", data.originShop or data.shop)
+    local exploitCheck = triggerCallback(getScript()..":getRegisteredShopLocation", data.shop)
     if not exploitCheck then
         print("^3Warning^7: ^2This isn't a registered store^1, refusing call^7")
         return
@@ -2802,16 +2855,14 @@ function openShop(data)
     end
     if not data.items.items[1] then
         local shopMenu = {}
-        --jsonPrint(data.items)
         for k, v in pairs(data.items.items) do
-            print(v.header)
             local clonedTable = cloneTable(data)
             local itemsTable = v.items or v.Items
             shopMenu[#shopMenu+1] = {
                 header = v.header or k,
                 txt = countTable(itemsTable).." Products",
                 onSelect = function()
-                    clonedTable.originShop = data.shop
+                    --clonedTable.originShop = data.shop
                     clonedTable.shop = data.shop.."_"..k
                     clonedTable.label = data.items.label.." - "..(v.header or k)
                     clonedTable.slots = #itemsTable
@@ -2847,7 +2898,7 @@ RegisterNetEvent(getScript()..':server:openServerShop', function(shopName)
 
     -- If shop has registered coords, limit players from being too far away from it when opening
     if not shopExploitCheck[shopName] then
-        print("^3Warning^7: ^1Source^7: ^3"..src.." ^1Tried to open a shop^7: ^2This isn't a registered store^1, refusing call^7")
+        print("^3Warning^7: ^1Source^7: ^3"..src.." ^1Tried to open a shop ^7'"..shopName.."' ^2This isn't a registered store^7, ^1refusing call^7")
         return
     end
     if not distExploitCheck(shopExploitCheck[shopName], src) then
@@ -2892,6 +2943,9 @@ function registerShop(name, label, items, society, coords)
             if not items[1] then
                 for k, v in pairs(items) do
                     inv.registerShop(name.."_"..k, label.." - "..(v.header or k), v.items, society)
+                    shopExploitCheck[name.."_"..k] = shopExploitCheck[name.."_"..k] or {}
+                    shopExploitCheck[name.."_"..k][#shopExploitCheck[name.."_"..k]+1] = coords
+
                     debugPrint("^6Bridge^7: ^2Registering ^5"..inv.invName.." ^3Store^7:", name.."_"..k, "^4Label^7: "..label.." - "..(v.header or k), coords and "- ^4Coord^7: "..formatCoord(coords) or "NO COORD SET")
                 end
             else
