@@ -264,3 +264,13 @@ function fundSociety(society, amount)
 
     print("^1Error^7: ^3FundSociety^7: ^2No supported banking script found")
 end
+
+if isServer() then
+    createCallback(getScript()..":server:getAccount", function(source, society)
+        if society then
+            local getMoney = getSocietyAccount(society)
+            return getMoney
+        end
+        return 0
+    end)
+end
