@@ -638,6 +638,8 @@ function lookEnt(entity)
                 debugPrint("^6Bridge^7: ^2Turning Player to^7: '^6"..formatCoord(entity).."^7'")
                 Wait(1500)
             end
+            -- Make players head face the coord for 5 seconds
+            TaskLookAtCoord(ped, entity.x, entity.y, entity.z, 5000, 1, 1)
         else
             if DoesEntityExist(entity) then
                 local entCoords = GetEntityCoords(entity)
@@ -646,6 +648,9 @@ function lookEnt(entity)
                     debugPrint("^6Bridge^7: ^2Turning Player to^7: '^6"..entity.."^7' - '"..formatCoord(entCoords).."^7'")
                     Wait(1500)
                 end
+
+                -- Make players head face the coord for 5 seconds
+                TaskLookAtEntity(ped, entity, 5000, 1, 1)
             end
         end
     end
