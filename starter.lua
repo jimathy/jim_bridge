@@ -77,6 +77,7 @@ end
 -- [[ Server.Cfg Convar Check ]]--
 -- Check server convars for hard set defaults, otherwise it uses per script configurations
 if Config and Config.System then
+    debugMode = Config.System.Debug
     if Config.System.Debug then
         if GetConvar("jim_DisableDebug", "false") == "true" then
             debugMode = false
@@ -84,10 +85,7 @@ if Config and Config.System then
         if GetConvar("jim_DisableEventDebug", "false") == "true" then
             Config.System.EventDebug = false
         end
-    else
-        debugMode = Config.System.Debug
     end
-
     Config.System.Menu = GetConvar("jim_menuScript", Config.System.Menu)
     Config.System.Notify = GetConvar("jim_notifyScript", Config.System.Notify or "gta")
     Config.System.ProgressBar = GetConvar("jim_progressBarScript", Config.System.ProgressBar or "gta")
