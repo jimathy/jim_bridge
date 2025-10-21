@@ -1,11 +1,10 @@
-2.1.07
+2.1.08
 
-- Support for new embeded shop recipes
-- Add checks for targets set with minZ and maxZ set too high or low
-- New target function `createPropTarget()` which creates a box target based on a prop model
-- Add CodeM as option for billing
-- Add 17Mov progressbar support
-- Fix OrigenInv calling OX_Inv to get player inventory
-- Allow "Grab Boxes" to have custom slots and weight
+- Fix getStash() always trying to use fallback functions
+- Start adding stashEditMetadata() function - wip
+- Add check for broken/missing config.lua in scripts
+- Add fix for debugMode breaking if no config file
+- Add a callback to check for society bank balances
+- Add player head movement for `lookEnt()` to continue looking after turning
 
 https://github.com/jimathy/jim_bridge/releases/latest
