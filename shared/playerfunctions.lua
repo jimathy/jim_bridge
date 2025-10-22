@@ -605,6 +605,8 @@ local getPlayerFunc = {
                     onDuty = info.job.onDuty,
                     --account = info.charinfo.account,
                     citizenId = info.identifier,
+                    hunger = info.status.hunger,
+                    thirst = info.status.thirst,
                 }
                 return Player
             end,
@@ -635,7 +637,9 @@ local getPlayerFunc = {
                     --account = info.charinfo.account,
                     citizenId = info.identifier,
                     isDead = IsEntityDead(PlayerPedId()),
-                    isDown = IsPedDeadOrDying(PlayerPedId(), true)
+                    isDown = IsPedDeadOrDying(PlayerPedId(), true),
+                    hunger = info.status.hunger,
+                    thirst = info.status.thirst,
                 }
                 return Player
             end,
@@ -719,6 +723,8 @@ local getPlayerFunc = {
                     isDead = info.PlayerData.metadata["isdead"],
                     isDown = info.PlayerData.metadata["inlaststand"],
                     charInfo = info.charinfo,
+                    hunger = info.metadata["hunger"],
+                    thirst = info.metadata["thirst"],
                 }
                 return Player
             end,
@@ -747,6 +753,8 @@ local getPlayerFunc = {
                     isDead = info.metadata["isdead"],
                     isDown = info.metadata["inlaststand"],
                     charInfo = info.charinfo,
+                    hunger = info.metadata["hunger"],
+                    thirst = info.metadata["thirst"],
                 }
                 return Player
             end,
@@ -778,6 +786,8 @@ local getPlayerFunc = {
                         isDead = info.metadata["isdead"],
                         isDown = info.metadata["inlaststand"],
                         charInfo = info.charinfo,
+                        hunger = info.metadata["hunger"],
+                        thirst = info.metadata["thirst"],
                     }
                 end
                 return Player
@@ -809,6 +819,8 @@ local getPlayerFunc = {
                     isDead = info.metadata["isdead"],
                     isDown = info.metadata["inlaststand"],
                     charInfo = info.charinfo,
+                    hunger = info.metadata["hunger"],
+                    thirst = info.metadata["thirst"],
                 }
                 return Player
             end,
@@ -840,6 +852,8 @@ local getPlayerFunc = {
                         isDead = info.metadata["isdead"],
                         isDown = info.metadata["inlaststand"],
                         charInfo = info.charinfo,
+                        hunger = info.metadata["hunger"],
+                        thirst = info.metadata["thirst"],
                     }
                 end
                 return Player
@@ -871,6 +885,8 @@ local getPlayerFunc = {
                     isDead = info.metadata["isdead"],
                     isDown = info.metadata["inlaststand"],
                     charInfo = info.charinfo,
+                    hunger = info.metadata["hunger"],
+                    thirst = info.metadata["thirst"],
                 }
                 return Player
             end,
