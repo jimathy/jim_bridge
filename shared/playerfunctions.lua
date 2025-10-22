@@ -221,6 +221,10 @@ local billPlayerFunc = {
         function(data)
             TriggerEvent("codem-billing:client:OpenMenu")
         end,
+    tgg = 
+        function(data)
+            exports["tgg-billing"]:OpenBillingMenu()
+        end,
 }
 
 --- BillPlayer
@@ -984,4 +988,5 @@ function openClothing()
             break
         end
     end
+
 end
