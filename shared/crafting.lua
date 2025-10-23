@@ -420,7 +420,7 @@ function makeItem(origData)
             for k, v in pairs(data.craft[data.item]) do
                 if isInventoryOpen() then
                     print("^1Error^7: ^2Inventory is open, you tried to break things")
-                    stopCam(0)
+                    stopCam(100)
                     ClearPedTasks(Ped)
                     if canReturn then craftingMenu(origData) end
                     CraftLock = false
@@ -524,7 +524,7 @@ function makeItem(origData)
     end
 
     --Wait(500)
-    stopCam(0)
+    stopCam(100)
     CraftLock = false
     if canReturn then craftingMenu(origData) end
     ClearPedTasks(Ped)

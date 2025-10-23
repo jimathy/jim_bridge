@@ -171,7 +171,7 @@ function stopTempCam(renderTime)
 
 		clearLoadLocation()
 
-		Wait(renderTime or 0)
+		Wait(renderTime or 500)
 		for i = 1, #camCache do
 			DestroyCam(camCache[i], true)
 		end
