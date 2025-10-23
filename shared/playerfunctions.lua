@@ -221,7 +221,7 @@ local billPlayerFunc = {
         function(data)
             TriggerEvent("codem-billing:client:OpenMenu")
         end,
-    tgg = 
+    tgg =
         function(data)
             exports["tgg-billing"]:OpenBillingMenu()
         end,
@@ -723,6 +723,8 @@ local getPlayerFunc = {
                     isDead = info.PlayerData.metadata["isdead"],
                     isDown = info.PlayerData.metadata["inlaststand"],
                     charInfo = info.charinfo,
+                    hunger = info.PlayerData.metadata["hunger"],
+                    thirst = info.PlayerData.metadata["thirst"],
                 }
                 return Player
             end,
