@@ -439,7 +439,10 @@ local hasGroupFunc = {
             function(group, grade, src)
                 local hasJobFlag, duty = false, true
                 local playerInfo = GetPlayer(src)
-                local jobinfo = playerInfo.job or playerInfo.PlayerData.job
+                if not playerInfo then
+                    goto skip
+                end
+                local jobinfo = playerInfo and playerInfo.job or playerInfo.PlayerData.job
                 if jobinfo and jobinfo.name == group then
                     hasJobFlag = true
                     duty = jobinfo.onduty
@@ -448,7 +451,7 @@ local hasGroupFunc = {
                     end
                     return hasJobFlag, duty
                 end
-                local ganginfo = playerInfo.gang or playerInfo.PlayerData.gang
+                local ganginfo = playerInfo and playerInfo.gang or playerInfo.PlayerData.gang
                 if ganginfo and ganginfo.name == group then
                     hasJobFlag = true
                     if grade and not (grade <= ganginfo.grade.level) then
@@ -456,6 +459,7 @@ local hasGroupFunc = {
                     end
                     return hasJobFlag, duty
                 end
+                ::skip::
                 return hasJobFlag, duty
             end,
     },
@@ -465,7 +469,10 @@ local hasGroupFunc = {
             function(group, grade, src)
                 local hasJobFlag, duty = false, true
                 local playerInfo = GetPlayer(src)
-                local jobinfo = playerInfo.job or playerInfo.PlayerData.job
+                if not playerInfo then
+                    goto skip
+                end
+                local jobinfo = playerInfo and playerInfo.job or playerInfo.PlayerData.job
                 if jobinfo and jobinfo.name == group then
                     hasJobFlag = true
                     duty = jobinfo.onduty
@@ -473,13 +480,14 @@ local hasGroupFunc = {
                         hasJobFlag = false
                     end
                 end
-                local ganginfo = playerInfo.gang or playerInfo.PlayerData.gang
+                local ganginfo = playerInfo and playerInfo.gang or playerInfo.PlayerData.gang
                 if ganginfo and ganginfo.name == group then
                     hasJobFlag = true
                     if grade and not (grade <= ganginfo.grade.level) then
                         hasJobFlag = false
                     end
                 end
+                ::skip::
                 return hasJobFlag, duty
             end,
     },
@@ -508,9 +516,11 @@ local hasGroupFunc = {
         hasGroup =
             function(group, grade, src)
                 local hasJobFlag, duty = false, true
-
                 local playerInfo = GetPlayer(src)
-                local info = playerInfo.job
+                if not playerInfo then
+                    goto skip
+                end
+                local info = playerInfo and playerInfo.job
                 while not info do
                     info = GetPlayer(src).job
                     Wait(100)
@@ -518,7 +528,7 @@ local hasGroupFunc = {
                 if info.name == group then
                     hasJobFlag = true
                 end
-
+                ::skip::
                 return hasJobFlag, duty
             end,
     },
@@ -528,7 +538,10 @@ local hasGroupFunc = {
             function(group, grade, src)
                 local hasJobFlag, duty = false, true
                 local playerInfo = GetPlayer(src)
-                local jobinfo = playerInfo.job or playerInfo.PlayerData.job
+                if not playerInfo then
+                    goto skip
+                end
+                local jobinfo = playerInfo and playerInfo.job or playerInfo.PlayerData.job
                 if jobinfo and jobinfo.name == group then
                     hasJobFlag = true
                     duty = jobinfo.onduty
@@ -536,13 +549,14 @@ local hasGroupFunc = {
                         hasJobFlag = false
                     end
                 end
-                local ganginfo = playerInfo.gang or playerInfo.PlayerData.gang
+                local ganginfo = playerInfo and playerInfo.gang or playerInfo.PlayerData.gang
                 if ganginfo and ganginfo.name == group then
                     hasJobFlag = true
                     if grade and not (grade <= ganginfo.grade.level) then
                         hasJobFlag = false
                     end
                 end
+                ::skip::
                 return hasJobFlag, duty
             end,
     },
