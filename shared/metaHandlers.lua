@@ -122,7 +122,7 @@ function GetPlayer(source)
             return framework.GetPlayer(source)
         end
     end
-    return nil
+    return {}
 end
 
 -------------------------------------------------------------

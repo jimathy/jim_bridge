@@ -439,27 +439,30 @@ local hasGroupFunc = {
             function(group, grade, src)
                 local hasJobFlag, duty = false, true
                 local playerInfo = GetPlayer(src)
-                if not playerInfo then
-                    goto skip
+                local jobInfo, gangInfo = nil, nil
+                if next(playerInfo) then
+                    jobInfo = playerInfo.job
+                    gangInfo = playerInfo.gang
+                    if playerInfo.PlayerData then
+                        jobInfo = playerInfo.PlayerData.job
+                        gangInfo = playerInfo.PlayerData.gang
+                    end
                 end
-                local jobinfo = playerInfo and playerInfo.job or playerInfo.PlayerData.job
-                if jobinfo and jobinfo.name == group then
+                if jobInfo and jobInfo.name == group then
                     hasJobFlag = true
-                    duty = jobinfo.onduty
-                    if grade and not (grade <= jobinfo.grade.level) then
+                    duty = jobInfo.onduty
+                    if grade and not (grade <= jobInfo.grade.level) then
                         hasJobFlag = false
                     end
                     return hasJobFlag, duty
                 end
-                local ganginfo = playerInfo and playerInfo.gang or playerInfo.PlayerData.gang
-                if ganginfo and ganginfo.name == group then
+                if gangInfo and gangInfo.name == group then
                     hasJobFlag = true
-                    if grade and not (grade <= ganginfo.grade.level) then
+                    if grade and not (grade <= gangInfo.grade.level) then
                         hasJobFlag = false
                     end
                     return hasJobFlag, duty
                 end
-                ::skip::
                 return hasJobFlag, duty
             end,
     },
@@ -469,21 +472,25 @@ local hasGroupFunc = {
             function(group, grade, src)
                 local hasJobFlag, duty = false, true
                 local playerInfo = GetPlayer(src)
-                if not playerInfo then
-                    goto skip
+                local jobInfo, gangInfo = nil, nil
+                if next(playerInfo) then
+                    jobInfo = playerInfo.job
+                    gangInfo = playerInfo.gang
+                    if playerInfo.PlayerData then
+                        jobInfo = playerInfo.PlayerData.job
+                        gangInfo = playerInfo.PlayerData.gang
+                    end
                 end
-                local jobinfo = playerInfo and playerInfo.job or playerInfo.PlayerData.job
-                if jobinfo and jobinfo.name == group then
+                if jobInfo and jobInfo.name == group then
                     hasJobFlag = true
-                    duty = jobinfo.onduty
-                    if grade and not (grade <= jobinfo.grade.level) then
+                    duty = jobInfo.onduty
+                    if grade and not (grade <= jobInfo.grade.level) then
                         hasJobFlag = false
                     end
                 end
-                local ganginfo = playerInfo and playerInfo.gang or playerInfo.PlayerData.gang
-                if ganginfo and ganginfo.name == group then
+                if gangInfo and gangInfo.name == group then
                     hasJobFlag = true
-                    if grade and not (grade <= ganginfo.grade.level) then
+                    if grade and not (grade <= gangInfo.grade.level) then
                         hasJobFlag = false
                     end
                 end
@@ -517,9 +524,6 @@ local hasGroupFunc = {
             function(group, grade, src)
                 local hasJobFlag, duty = false, true
                 local playerInfo = GetPlayer(src)
-                if not playerInfo then
-                    goto skip
-                end
                 local info = playerInfo and playerInfo.job
                 while not info do
                     info = GetPlayer(src).job
@@ -528,7 +532,6 @@ local hasGroupFunc = {
                 if info.name == group then
                     hasJobFlag = true
                 end
-                ::skip::
                 return hasJobFlag, duty
             end,
     },
@@ -538,25 +541,28 @@ local hasGroupFunc = {
             function(group, grade, src)
                 local hasJobFlag, duty = false, true
                 local playerInfo = GetPlayer(src)
-                if not playerInfo then
-                    goto skip
+                local jobInfo, gangInfo = nil, nil
+                if next(playerInfo) then
+                    jobInfo = playerInfo.job
+                    gangInfo = playerInfo.gang
+                    if playerInfo.PlayerData then
+                        jobInfo = playerInfo.PlayerData.job
+                        gangInfo = playerInfo.PlayerData.gang
+                    end
                 end
-                local jobinfo = playerInfo and playerInfo.job or playerInfo.PlayerData.job
-                if jobinfo and jobinfo.name == group then
+                if jobInfo and jobInfo.name == group then
                     hasJobFlag = true
-                    duty = jobinfo.onduty
-                    if grade and not (grade <= jobinfo.grade.level) then
+                    duty = jobInfo.onduty
+                    if grade and not (grade <= jobInfo.grade.level) then
                         hasJobFlag = false
                     end
                 end
-                local ganginfo = playerInfo and playerInfo.gang or playerInfo.PlayerData.gang
-                if ganginfo and ganginfo.name == group then
+                if gangInfo and gangInfo.name == group then
                     hasJobFlag = true
-                    if grade and not (grade <= ganginfo.grade.level) then
+                    if grade and not (grade <= gangInfo.grade.level) then
                         hasJobFlag = false
                     end
                 end
-                ::skip::
                 return hasJobFlag, duty
             end,
     },
