@@ -1656,6 +1656,10 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
 
     local invName = ""
     if give == 0 or give == false then
+        if remamount < 0 then
+            print("^1Error^7: ^7src - ^1Client tried to remove a minus number of item ^7- "..item)
+            return
+        end
         if not hasItem(item, amount or 1, src) then
             dupeWarn(src, item, amount)
 
