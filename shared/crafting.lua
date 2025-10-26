@@ -434,6 +434,7 @@ function makeItem(origData)
                     anim = "putdown_low",
                     flag = 49,
                     icon = k,
+                    disableMovement = true,
                 }) then
                     TriggerEvent((isStarted(QBInv) and QBInvNew and "qb-" or "")..'inventory:client:ItemBox', Items[k], "use", v)
                 else
@@ -455,6 +456,7 @@ function makeItem(origData)
                 anim = anim,
                 flag = 49,
                 icon = data.item,
+                disableMovement = true,
                 request = true,
             }) then
                 TriggerServerEvent(getScript()..":Crafting:GetItem", data.item, data.craft, data.stashName, metadata, currentToken)
@@ -487,6 +489,7 @@ function makeItem(origData)
             anim = anim,
             flag = 49,
             icon = data.item,
+            disableMovement = true,
             request = true,
         }) then
             data.craft.amount *= craftAmount
