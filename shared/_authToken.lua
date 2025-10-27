@@ -137,21 +137,31 @@ function distExploitCheck(table, src)
         return false
     end
 
+    local maxDist = 10.0
+    local nearestDist = 999999.0
+    local nearestCoords = nil
+
     local ped = src and GetPlayerPed(src) or PlayerPedId()
     local srcCoords = GetEntityCoords(ped)
-    local allow = false
 
     for i = 1, #table do
-        if #(table[i].xy  - srcCoords.xy) <= 10 then
+
+        local dist2d = #(table[i].xy - srcCoords.xy)
+
+        -- Track the nearestDist
+        if dist2d < nearestDist then
+            nearestDist = dist2d
+            nearestCoords = table[i]
+        end
+
+        if dist2d <= maxDist then
+            debugPrint("^1Found location^7: ^3"..nearestDist.." ^7away from player - "..formatCoord(nearestCoords))
             return true
-        else
-            allow = false
         end
     end
 
-    if not allow then
-        print(src and ("^1Src ^3"..src.." ") or "", "^1Tried to open a registered shop/stash from over the distance limit^7")
-        return false
-    end
+    print(src and ("^1Src ^3"..src.." ") or "", "^1Tried to open a registered shop/stash from over the distance limit^7")
+    print("^1Nearest Possible Location^7: ^3"..nearestDist.." ^7away from player - "..formatCoord(nearestCoords))
+    return false
 
 end
