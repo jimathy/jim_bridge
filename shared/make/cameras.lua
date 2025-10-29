@@ -19,7 +19,7 @@ local camCache = {}
 -- ```
 function createTempCam(ent, coords)
 	local camID = nil
-	if Config.Crafting?.craftCam or Config.System.enableCam then
+	if (Config.Crafting and Config.Crafting.craftCam) or Config.System.enableCam then
 
 		-- if not ent or coords are provided, make a basic camera to control later
 		if not ent and not coords then
