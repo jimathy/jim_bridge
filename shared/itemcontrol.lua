@@ -1807,6 +1807,7 @@ function getItemMetadata(item, slot, src)
 
     if chosenSlot then
         for k, v in pairs(itemcheck) do
+            v.slot = tonumber(v.slot)
             if v.name == item and v.slot == chosenSlot then
                 lowestSlot = v.slot
                 metadata = itemcheck[k].info or itemcheck[k].metadata or {}
@@ -1815,6 +1816,7 @@ function getItemMetadata(item, slot, src)
         end
     else
         for k, v in pairs(itemcheck) do
+            v.slot = tonumber(v.slot)
             if v.name == item then
                 if v.slot <= lowestSlot then
                     lowestSlot = v.slot
