@@ -392,41 +392,6 @@ end
 --- ```
 function ConsumeSuccess(itemName, type, data)
     print("^1Deprecated function 'ConsumeSuccess' called, please update your scripts^7")
-    --local hunger = data and data.hunger or Items[itemName].hunger
-    --local thirst = data and data.thirst or Items[itemName].thirst
-    --
-    --ExecuteCommand("e c")
-    --removeItem(itemName, 1)
-    --
-    --if isStarted(ESXExport) then
-    --    if hunger then
-    --        TriggerServerEvent(getScript()..":server:setNeed", "hunger", tonumber(hunger) * 10000)
-    --    end
-    --    if thirst then
-    --        TriggerServerEvent(getScript()..":server:setNeed", "thirst", tonumber(thirst) * 10000)
-    --    end
-    --else
-    --    if hunger then
-    --        TriggerServerEvent(getScript()..":server:setNeed", "hunger", Core.Functions.GetPlayerData().metadata["hunger"] + tonumber(hunger))
-    --    end
-    --    if thirst then
-    --        TriggerServerEvent(getScript()..":server:setNeed", "thirst", Core.Functions.GetPlayerData().metadata["thirst"] + tonumber(thirst))
-    --    end
-    --end
-    --
-    --if type == "alcohol" then
-    --    alcoholCount = (alcoholCount or 0) + 1
-    --    if alcoholCount > 1 and alcoholCount < 4 then
-    --        TriggerEvent("evidence:client:SetStatus", "alcohol", 200)
-    --    elseif alcoholCount >= 4 then
-    --        TriggerEvent("evidence:client:SetStatus", "heavyalcohol", 200)
-    --        AlienEffect()
-    --    end
-    --end
-    --
-    --if Config.Reward then
-    --    getRandomReward(itemName)
-    --end
 end
 
 -------------------------------------------------------------
@@ -613,6 +578,7 @@ local getPlayerFunc = {
                 local Player = {}
                 local info = ESX.GetPlayerFromId(src)
                 if not info then return {} end
+
                 Player = {
                     name = info.getName(),
                     cash = info.getMoney(),
@@ -629,8 +595,8 @@ local getPlayerFunc = {
                     onDuty = info.job.onDuty,
                     --account = info.charinfo.account,
                     citizenId = info.identifier,
-                    hunger = info.status.hunger,
-                    thirst = info.status.thirst,
+                    hunger = Player(src).state.hunger or 0,
+                    thirst = Player(src).state.thirst or 0,
                 }
                 return Player
             end,
@@ -646,6 +612,7 @@ local getPlayerFunc = {
                     if v.name == "money" then cash = v.money end
                     if v.name == "bank" then bank = v.money end
                 end
+
                 Player = {
                     firstname = info.firstName,
                     lastname = info.lastName,
@@ -662,8 +629,8 @@ local getPlayerFunc = {
                     citizenId = info.identifier,
                     isDead = IsEntityDead(PlayerPedId()),
                     isDown = IsPedDeadOrDying(PlayerPedId(), true),
-                    hunger = info.status.hunger,
-                    thirst = info.status.thirst,
+                    hunger = LocalPlayer.state.hunger or 0,
+                    thirst = LocalPlayer.state.thirst or 0,
                 }
                 return Player
             end,
