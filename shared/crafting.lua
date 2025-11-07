@@ -121,7 +121,7 @@ function craftingMenu(data)
         for k, v in pairs(Recipes[i]) do
             if not excludeKeys[k] then
                 if not Recipes[i].amount then Recipes[i].amount = 1 end
-                tempCarryTable[k] = tempCarryTable[k] and (tempCarryTable[k] < Recipes[i].amount) or Recipes[i].amount
+                tempCarryTable[k] = math.max(tempCarryTable[k] or 0, Recipes[i].amount)
             end
         end
     end
@@ -596,4 +596,5 @@ RegisterNetEvent(getScript()..":Crafting:GetItem", function(ItemMake, craftable,
     -- Optionally, add experience here:
     -- for example:
     -- if isStarted("core_skills") then exports["core_skills"]:AddExperience(src, 2) end
+
 end)
