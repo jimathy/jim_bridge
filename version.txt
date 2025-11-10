@@ -1,10 +1,14 @@
-2.1.08
+2.1.09
 
-- Fix getStash() always trying to use fallback functions
-- Start adding stashEditMetadata() function - wip
-- Add check for broken/missing config.lua in scripts
-- Add fix for debugMode breaking if no config file
-- Add a callback to check for society bank balances
-- Add player head movement for `lookEnt()` to continue looking after turning
+- Add 100 wait for stopCam to reduce slow movement
+- Add support for rcore_clothing in openClothing() - Thanks desypher
+- Add hunger and thirst calls to getPlayer() - Thanks oosayeroo
+- Add support for tgg-billing - Thanks GhostInLowGear
+- Fix hasJob() checking players who haven't logged in yet
+- Add exploit possibility for removeItem with minus numbers
+- Fix movement being allowed when crafting
+- Make distExploitCheck() more verbose
+- CodeM slot fix, force to number (because numbers are apparently strings)
+- ESX change to check statebag for hunger and thirst info
 
 https://github.com/jimathy/jim_bridge/releases/latest
