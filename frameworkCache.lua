@@ -17,6 +17,7 @@ local Exports = {
     PSInv = "ps-inventory",
     CoreInv = "core_inventory",
     CodeMInv = "codem-inventory",
+    QSInv = "qs-inventory",
     OrigenInv = "origen_inventory",
     TgiannInv = "tgiann-inventory",
     JPRInv = "jpr-inventory",
@@ -126,6 +127,16 @@ local itemFunc = {
         cacheItem = function()
             local success, result = pcall(function()
                 return exports[Exports.OXInv]:Items()
+            end)
+            if success and result then
+                cache.Items = result
+            end
+        end,
+    },
+    {   script = Exports.QSInv,
+        cacheItem = function()
+            local success, result = pcall(function()
+                return exports[Exports.QSInv]:GetItemList()
             end)
             if success and result then
                 cache.Items = result
