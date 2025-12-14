@@ -129,6 +129,124 @@ local InvFunc = {
             end,
     },
 
+    {   invName = QSInv,
+        removeItem =
+            function(src, item, remamount)
+                exports[QSInv]:RemoveItem(src, item, remamount)
+            end,
+        addItem =
+            function(src, item, amountToAdd, info, slot)
+                exports[QSInv]:AddItem(src, item, amountToAdd, slot, info)
+            end,
+        setItemMetadata =
+            function(data, src)
+                exports[QSInv]:SetItemMetadata(src, data.slot, data.metadata)
+            end,
+        hasItem =
+            function(item, amount, src, invCache)
+                local count = 0
+                if invCache then
+                    for _, itemData in pairs(invCache) do
+                        if itemData and itemData.name == item then
+                            count = count + (itemData.amount or itemData.count or 0)
+                        end
+                    end
+                else
+                    if src then
+                        count = exports[QSInv]:GetItemTotalAmount(src, item)
+                    else
+                        local items = exports[QSInv]:Search(item)
+                        for _, v in pairs(items) do
+                            count = count + (v.amount or v.count or 0)
+                        end
+                    end
+                end
+                return count >= amount, count
+            end,
+        canCarry =
+            function(itemTable, src)
+                local resultTable = {}
+                for k, v in pairs(itemTable) do
+                    resultTable[k] = exports[QSInv]:CanCarryItem(src, k, v)
+                end
+                return resultTable
+            end,
+        getMaxInvWeight =
+            function()
+                return InventoryWeight
+            end,
+        getCurrentInvWeight =
+            function(src)
+                local weight = 0
+                local itemcheck = getPlayerInv(src)
+                if itemcheck then
+                    for _, v in pairs(itemcheck) do
+                        weight = weight + ((v.weight * (v.amount or v.count or 1)) or 0)
+                    end
+                end
+                return weight
+            end,
+        getPlayerInv =
+            function(src)
+                if src then
+                    return exports[QSInv]:GetInventory(src)
+                else
+                    return exports[QSInv]:getUserInventory()
+                end
+            end,
+        invImg =
+            function(item)
+                return "nui://"..QSInv.."/html/images/"..(Items[item].image or "")
+            end,
+        openShop =
+            function(name, label, items)
+                --
+            end,
+        serverOpenShop = function(shopName)
+            --
+        end,
+        registerShop =
+            function(name, label, items, society)
+                exports[QSInv]:RegisterShop(name, {
+                    name = label,
+                    items = items,
+                    account = society,
+                })
+            end,
+        openStash =
+            function(data)
+                TriggerEvent("inventory:client:SetCurrentStash", data.stash)
+                TriggerServerEvent("inventory:server:OpenInventory", "stash", data.stash, {
+                    maxweight = data.maxweight,
+                    slots = data.slots,
+                })
+            end,
+        clearStash =
+            function(stashId)
+                exports[QSInv]:ClearOtherInventory(stashId)
+            end,
+        getStash =
+            function(stashId)
+                return exports[QSInv]:GetStashItems(stashId)
+            end,
+        stashEditMetadata =
+            function(stash, slot, metadata)
+                --
+            end,
+        stashAddItem =
+            function(stashItems, stashName, items)
+                --
+            end,
+        stashRemoveItem =
+            function(stashItems, stashName, items)
+                --
+            end,
+        registerStash =
+            function(name, label, slots, weight, owner, coords)
+                exports[QSInv]:RegisterStash(name, slots, weight)
+            end,
+    },
+
     {   invName = CoreInv,
         removeItem =
             function(src, item, remamount)
@@ -2500,7 +2618,7 @@ end
 --- local hasAll, details = stashhasItem(currentStashItems, { iron = 2, wood = 5 })
 --- ```
 function stashhasItem(stashItems, items, amount)
-    local invs = { OXInv, CoreInv, CodeMInv, OrigenInv, TgiannInv, JPRInv, QBInv, PSInv, RSGInv }
+    local invs = { OXInv, CoreInv, CodeMInv, QSInv, OrigenInv, TgiannInv, JPRInv, QBInv, PSInv, RSGInv }
     local foundInv = ""
 
     for _, inv in ipairs(invs) do

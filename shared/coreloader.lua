@@ -10,12 +10,13 @@ OXLibExport, QBXExport, QBExport, ESXExport, OXCoreExport =
     Exports.ESXExport or "",
     Exports.OXCoreExport or ""
 
-OXInv, QBInv, PSInv, CoreInv, CodeMInv, OrigenInv, TgiannInv, JPRInv =
+OXInv, QBInv, PSInv, CoreInv, CodeMInv, QSInv, OrigenInv, TgiannInv, JPRInv =
     Exports.OXInv or "",
     Exports.QBInv or "",
     Exports.PSInv or "",
     Exports.CoreInv or "",
     Exports.CodeMInv or "",
+    Exports.QSInv or "",
     Exports.OrigenInv or "",
     Exports.TgiannInv or "",
     Exports.JPRInv or ""
@@ -99,6 +100,12 @@ else
                         Items[k].hunger = tempInfo.client.hunger
                         Items[k].thirst = tempInfo.client.thirst
                     end
+                end
+            end
+
+            if isStarted(QSInv) then
+                for k, v in pairs(Items) do
+                    Items[k].image = k..".png" -- Set default image
                 end
             end
         end)
