@@ -1622,101 +1622,124 @@ end
 
 
 RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount, newsrc, info, slot, token)
+    local invokingRes = GetInvokingResource()
+    local src = source
+
     local excludeRes = {
         [QBExport] = true,
         [ESXExport] = true,
         [VorpExport] = true,
     }
-    local invokingRes = GetInvokingResource()
 
-    --debugPrint(GetInvokingResource())
-	if invokingRes and invokingRes ~= getScript() and not excludeRes[invokingRes] then
-        debugPrint("^1Error^7: ^1Possible exploit^7, ^1vital function was called from an external resource^7")
+    if invokingRes and invokingRes ~= getScript() and not excludeRes[invokingRes] then
+        debugPrint("^1Error^7: ^1Possible exploit^7, vital function called from external resource: "..tostring(invokingRes))
+        return
+    end
+
+    local isClientCall = (invokingRes == nil)
+
+    if not isClientCall then
+        if newsrc ~= nil then
+            src = tonumber(newsrc) or src
+        end
+    end
+
+    -- Sanitize inputs
+    local giveBool = (give == true or give == 1 or tostring(give) == "true")
+    local amountNum = tonumber(amount) or 1
+    amountNum = math.floor(amountNum)
+
+    if amountNum < 1 then
+        return
+    end
+
+    -- Optional hard cap to prevent crazy numbers (change limits to your liking)
+    if amountNum > 100 then
+        debugPrint(("^1Exploit?^7 src %s tried amount %s for item %s"):format(src, amountNum, tostring(item)))
+        return
+    end
+
+    if not item or type(item) ~= "string" or item == "" then
         return
     end
 
     if not doesItemExist(item) then
-        print("^1Error^7 - ^2Tried to "..(tostring(give) == "true" and "add" or "remove").." '^3"..item.."^7' but it doesn't exist")
+        print("^1Error^7 - ^2Tried to "..(giveBool and "add" or "remove").." '^3"..tostring(item).."^7' but it doesn't exist")
         return
     end
 
-    local src = (newsrc and tonumber(newsrc)) or source
-
-    if (give == true or give == 1) then
-        if newsrc == nil then -- this must be coming from client this would be blank
-            if not checkToken(src, token, "item", item) then
-                return
-            end
+    -- Token check: ANY client-driven GIVE must present a valid token.
+    if isClientCall and giveBool then
+        if not checkToken(src, token, "item", item) then
+            return
         end
     end
 
-    local action = (tostring(give) == "true" and "addItem" or "removeItem")
-    local remamount = amount or 1
-    if item == nil then return end
-
+    local action = giveBool and "addItem" or "removeItem"
     local invName = ""
-    if give == 0 or give == false then
-        if remamount < 0 then
+
+    if not giveBool then
+        -- Removing items
+        if amountNum < 0 then
             print("^1Error^7: ^7src - ^1Client tried to remove a minus number of item ^7- "..item)
             return
         end
-        if not hasItem(item, amount or 1, src) then
-            dupeWarn(src, item, amount)
 
-        else
-            for i = 1, #InvFunc do
-                local inv = InvFunc[i]
-                if isStarted(inv.invName) then
-                    invName = inv.invName
-                    inv.removeItem(src, item, remamount)
-                    break
-                end
-            end
-
-            -----
-            -- Fallback for if no inventory found:
-            -----
-            if invName == "" then
-                print("^4ERROR^7: No Supported Inventory detected - ^2Falling back to core functions")
-                if isStarted(QBExport) or isStarted(QBXExport) then -- if qbcore or qbxcore, just use core functions
-                    invName = isStarted(QBXExport) and QBXExport or isStarted(QBExport) and QBExport
-                    Core.Functions.GetPlayer(src).Functions.RemoveItem(item, remamount, slot)
-
-                elseif ESX and isStarted(ESXExport) then  -- if esx then use core functions
-                    invName = ESX
-                    ESX.GetPlayerFromId(src).removeInventoryItem(item, remamount)
-
-                end
-            else
-                debugPrint("^6Bridge^7: ^3"..action.."^7[^6"..invName.."^7] Player(^3"..src.."^7) "..getItemLabel(item).."("..item..") x"..(amount or 1))
-            end
+        local hasIt = hasItem(item, amountNum, src)
+        if not hasIt then
+            dupeWarn(src, item, amountNum)
+            return
         end
-    else
-        local amountToAdd = amount or 1
+
         for i = 1, #InvFunc do
             local inv = InvFunc[i]
             if isStarted(inv.invName) then
                 invName = inv.invName
-                inv.addItem(src, item, amountToAdd, info, slot)
+                inv.removeItem(src, item, amountNum)
                 break
             end
         end
 
+        -- Fallback if no inventory found
         if invName == "" then
             print("^4ERROR^7: No Supported Inventory detected - ^2Falling back to core functions")
-            if isStarted(QBExport) or isStarted(QBXExport) then -- if qbcore or qbxcore, just use core functions
-                invName = isStarted(QBXExport) and QBXExport or isStarted(QBExport) and QBExport
-                Core.Functions.GetPlayer(src).Functions.AddItem(item, amountToAdd, nil, info)
-
-            elseif ESX and isStarted(ESXExport) then  -- if esx then use core functions
-                invName = ESX
-                ESX.GetPlayerFromId(src).addInventoryItem(item, amountToAdd)
+            if isStarted(QBExport) or isStarted(QBXExport) then
+                invName = isStarted(QBXExport) and QBXExport or QBExport
+                Core.Functions.GetPlayer(src).Functions.RemoveItem(item, amountNum, slot)
+            elseif ESX and isStarted(ESXExport) then
+                invName = "esx"
+                ESX.GetPlayerFromId(src).removeInventoryItem(item, amountNum)
             end
-        else
-            debugPrint("^6Bridge^7: ^3"..action.."^7[^6"..invName.."^7] Player(^3"..src.."^7) "..getItemLabel(item).."("..item..") x"..(amount or 1))
+        end
+
+        debugPrint("^6Bridge^7: ^3"..action.."^7[^6"..invName.."^7] Player(^3"..src.."^7) "..getItemLabel(item).."("..item..") x"..amountNum)
+        return
+    end
+
+    -- Adding items
+    for i = 1, #InvFunc do
+        local inv = InvFunc[i]
+        if isStarted(inv.invName) then
+            invName = inv.invName
+            inv.addItem(src, item, amountNum, info, slot)
+            break
         end
     end
+
+    if invName == "" then
+        print("^4ERROR^7: No Supported Inventory detected - ^2Falling back to core functions")
+        if isStarted(QBExport) or isStarted(QBXExport) then
+            invName = isStarted(QBXExport) and QBXExport or QBExport
+            Core.Functions.GetPlayer(src).Functions.AddItem(item, amountNum, nil, info)
+        elseif ESX and isStarted(ESXExport) then
+            invName = "esx"
+            ESX.GetPlayerFromId(src).addInventoryItem(item, amountNum)
+        end
+    end
+
+    debugPrint("^6Bridge^7: ^3"..action.."^7[^6"..invName.."^7] Player(^3"..src.."^7) "..getItemLabel(item).."("..item..") x"..amountNum)
 end)
+
 
 -------------------------------------------------------------
 -- Exploit Protection
