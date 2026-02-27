@@ -14,6 +14,7 @@ Exports = {
     OrigenInv = "origen_inventory",
     TgiannInv = "tgiann-inventory",
     JPRInv = "jpr-inventory",
+    TSSInv = "tss-inventory",
 
     OXLibExport = "ox_lib",
 

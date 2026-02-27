@@ -129,6 +129,145 @@ local InvFunc = {
             end,
     },
 
+    {   invName = TSSInv,
+        removeItem =
+            function(src, item, remamount, slot)
+                exports[TSSInv]:RemoveItem(src, item, remamount, slot)
+            end,
+        addItem =
+            function(src, item, amountToAdd, info, slot)
+                exports[TSSInv]:AddItem(src, item, amountToAdd, info or {})
+            end,
+        setItemMetadata =
+            function(data, src)
+                exports[TSSInv]:SetItemMetadata(src, data.item, data.metadata or {}, {
+                    itemId = data.slot and tostring(data.slot) or nil,
+                    merge = true
+                })
+            end,
+        hasItem =
+            function(item, amount, src)
+                if src then
+                    local serverItemCheck = exports[TSSInv]:GetItemCount(src, item) or 0
+                    return serverItemCheck >= amount, serverItemCheck
+                else
+                    local localItemCheck = exports[TSSInv]:GetItemCount(item) or 0
+                    return localItemCheck >= amount, localItemCheck
+                end
+            end,
+        canCarry =
+            function(itemTable, src)
+                local resultTable = {}
+                for k, v in pairs(itemTable) do
+                    local ok = false
+                    if src then
+                        ok = exports[TSSInv]:CanCarry(src, k, v)
+                    else
+                        ok = exports[TSSInv]:CanCarry(k, v)
+                    end
+                    resultTable[k] = ok == true
+                end
+                return resultTable
+            end,
+        getMaxInvWeight =
+            function()
+                return InventoryWeight
+            end,
+        getCurrentInvWeight =
+            function(src)
+                local invData = src and exports[TSSInv]:GetInventory(src) or nil
+                local items = invData and invData.items or {}
+                local weight = 0
+                for _, v in pairs(items) do
+                    local itemInfo = Items[v.name] or {}
+                    weight += (tonumber(itemInfo.weight) or 0) * (tonumber(v.amount) or 0)
+                end
+                return weight
+            end,
+        getPlayerInv =
+            function(src)
+                if src then
+                    local invData = exports[TSSInv]:GetInventory(src) or {}
+                    local items = invData.items or {}
+                    for _, v in pairs(items) do
+                        v.slot = v.id
+                    end
+                    return items
+                end
+                return {}
+            end,
+        invImg =
+            function(item)
+                return "nui://"..TSSInv.."/html/images/"..(Items[item].image or "")
+            end,
+        openShop =
+            function(name, label, items)
+                if isServer() then
+                    exports[TSSInv]:OpenShop(source, name)
+                else
+                    TriggerServerEvent(getScript()..':server:openServerShop', name)
+                end
+            end,
+        serverOpenShop =
+            function(shopName)
+                exports[TSSInv]:OpenShop(source, shopName)
+            end,
+        registerShop =
+            function(name, label, items, society)
+                -- tss-inventory shop data is configured in data/shops.lua
+            end,
+        openStash =
+            function(data)
+                if isServer() then
+                    exports[TSSInv]:OpenStash(source, data.stash, data)
+                else
+                    TriggerServerEvent(getScript()..':server:openServerStash', {
+                        stashName = data.stash,
+                        stash = data.stash,
+                        maxweight = data.maxWeight or 4000000,
+                        slots = data.slots or 50,
+                    })
+                end
+            end,
+        clearStash =
+            function(stashId)
+                -- no direct clear-stash export in tss-inventory
+            end,
+        getStash =
+            function(stashName)
+                local stash = exports[TSSInv]:GetStashInventory(stashName) or {}
+                local items = stash.items or {}
+                for _, v in pairs(items) do
+                    v.slot = v.id
+                end
+                return items
+            end,
+        stashEditMetadata =
+            function(stash, slot, metadata)
+                -- no direct stash metadata edit export
+            end,
+        stashAddItem =
+            function(stashItems, stashName, items)
+                for k, v in pairs(items) do
+                    exports[TSSInv]:AddItemToStash(stashName[1], k, v, {})
+                end
+            end,
+        stashRemoveItem =
+            function(stashItems, stashName, items)
+                for k, v in pairs(items) do
+                    exports[TSSInv]:RemoveItemFromStash(stashName[1], k, v, nil)
+                end
+            end,
+        registerStash =
+            function(name, label, slots, weight, owner, coords)
+                exports[TSSInv]:RegisterStash(name, {
+                    label = label,
+                    slots = slots or 50,
+                    maxWeight = weight or 4000000,
+                })
+            end,
+    },
+
     {   invName = CoreInv,
         removeItem =
             function(src, item, remamount)
@@ -1668,7 +1807,7 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
                 local inv = InvFunc[i]
                 if isStarted(inv.invName) then
                     invName = inv.invName
-                    inv.removeItem(src, item, remamount)
+                    inv.removeItem(src, item, remamount, slot)
                     break
                 end
             end
@@ -1799,6 +1938,38 @@ end
 
 -- Grab whole inventory and check for metadata
 function getItemMetadata(item, slot, src)
+    local _, activeInv = getPlayerInv(src)
+    if activeInv == TSSInv then
+        local itemData = nil
+        if src then
+            itemData = exports[TSSInv]:GetItem(src, item)
+        else
+            itemData = exports[TSSInv]:GetItem(item)
+        end
+
+        local entries = (itemData and itemData.entries) or {}
+        if not entries or #entries < 1 then
+            return {}, nil
+        end
+
+        local selected = nil
+        local chosenId = slot and tostring(slot) or nil
+        if chosenId and chosenId ~= "" then
+            for _, entry in pairs(entries) do
+                if tostring(entry.id) == chosenId then
+                    selected = entry
+                    break
+                end
+            end
+        end
+
+        if not selected then
+            selected = entries[1]
+        end
+
+        return (selected.metadata or {}), tostring(selected.id)
+    end
+
     local lowestSlot = 100
     local chosenSlot = slot
     local metadata = {}
@@ -2062,6 +2233,11 @@ end
 --- end
 --- ```
 function hasFreeInventorySlots(slots, src)
+    local _, activeInv = getPlayerInv(src)
+    if activeInv == TSSInv then
+        return true
+    end
+
     local inv = getPlayerInv(src)
     if (countTable(inv) + slots) <= InventorySlots then
         return true
@@ -2322,6 +2498,15 @@ RegisterNetEvent(getScript()..":server:openServerStash", function(data)
     if isStarted(TgiannInv) then
         exports[TgiannInv]:OpenInventory(source, 'stash', data.stashName, data)
 
+    elseif isStarted(TSSInv) then
+        exports[TSSInv]:OpenStash(source, data.stashName, {
+            label = data.label or data.stashName,
+            maxWeight = data.maxweight or data.maxWeight or 4000000,
+            slots = data.slots or 50,
+            coords = data.coords,
+            owner = data.owner,
+        })
+
     elseif isStarted(JPRInv) then
         exports[JPRInv]:OpenInventory(source, data.stashName, data)
 
@@ -2500,7 +2685,7 @@ end
 --- local hasAll, details = stashhasItem(currentStashItems, { iron = 2, wood = 5 })
 --- ```
 function stashhasItem(stashItems, items, amount)
-    local invs = { OXInv, CoreInv, CodeMInv, OrigenInv, TgiannInv, JPRInv, QBInv, PSInv, RSGInv }
+    local invs = { OXInv, TSSInv, CoreInv, CodeMInv, OrigenInv, TgiannInv, JPRInv, QBInv, PSInv, RSGInv }
     local foundInv = ""
 
     for _, inv in ipairs(invs) do

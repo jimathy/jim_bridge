@@ -10,7 +10,7 @@ OXLibExport, QBXExport, QBExport, ESXExport, OXCoreExport =
     Exports.ESXExport or "",
     Exports.OXCoreExport or ""
 
-OXInv, QBInv, PSInv, CoreInv, CodeMInv, OrigenInv, TgiannInv, JPRInv =
+OXInv, QBInv, PSInv, CoreInv, CodeMInv, OrigenInv, TgiannInv, JPRInv, TSSInv =
     Exports.OXInv or "",
     Exports.QBInv or "",
     Exports.PSInv or "",
@@ -18,7 +18,8 @@ OXInv, QBInv, PSInv, CoreInv, CodeMInv, OrigenInv, TgiannInv, JPRInv =
     Exports.CodeMInv or "",
     Exports.OrigenInv or "",
     Exports.TgiannInv or "",
-    Exports.JPRInv or ""
+    Exports.JPRInv or "",
+    Exports.TSSInv or ""
 
 RSGExport, RSGInv = Exports.RSGExport or "", Exports.RSGInv or ""
 VorpExport, VorpInv = Exports.VorpExport or "", Exports.VorpInv or ""
