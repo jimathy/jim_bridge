@@ -159,49 +159,29 @@ local progressFunc = {
             end,
     },
 
-    ["17mov"] = {
+    tss = {
         start =
             function(data)
-                if exports["17mov_Hud"]:StartProgress({
-                    duration = debugMode and 1000 or data.time,
+                return exports[TSSHudExport]:ProgressBar({
                     label = data.label,
+                    time = debugMode and 1000 or data.time,
+                    canCancel = data.cancel ~= false,
                     useWhileDead = data.dead or false,
-                    canCancel = data.cancel or true,
-                    controlDisables = {
-                        disableMovement = data.disableMovement or false,
-                        disableCarMovement = data.disableMovement or false,
-                        disableMouse = data.mouse or false,
-                        disableCombat = data.combat or true,
-                    },
-                    animation = {
-                        animDict = data.dict,
-                        anim = data.anim,
-                        flags = (data.flag == 8 and 32 or data.flag) or nil,
-                        task = data.task,
-                    },
-                    prop = data.prop and {
-                        model = data.prop.model,
-                        bone = data.prop.bone or 0,
-                        coords = data.prop.pos or vec3(0, 0, 0),
-                        rotation = data.prop.rot or vec3(0, 0, 0),
-                        
-                    } or nil,
-                    propTwo = data.propTwo and {
-                        model = data.propTwo.model,
-                        bone = data.propTwo.bone or 0,
-                        coords = data.propTwo.pos or vec3(0, 0, 0),
-                        rotation = data.propTwo.rot or vec3(0, 0, 0),
-                    } or nil,
-                    
-                }, nil, nil) then
-                    return true
-                else
-                    return false
-                end
+                    dict = data.dict,
+                    anim = data.anim,
+                    flag = (data.flag == 8 and 32 or data.flag) or nil,
+                    task = data.task,
+                    disableMovement = data.disableMovement or false,
+                    disableCarMovement = data.disableMovement or false,
+                    disableMouse = data.disableMouse or data.mouse or false,
+                    disableCombat = data.disableCombat ~= false and data.combat ~= false,
+                    prop = data.prop,
+                    propTwo = data.propTwo,
+                })
             end,
         stop =
             function()
-                exports["17mov_Hud"]:StopProgress()
+                exports[TSSHudExport]:CancelProgressBar("external")
             end,
     },
 

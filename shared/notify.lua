@@ -70,6 +70,19 @@ local notifyFunc = {
             end,
     },
 
+    tss = {
+        client =
+            function(title, message, type)
+                local mappedType = type == "info" and "warning" or (type or "success")
+                exports[TSSHudExport]:Notify(title, message, mappedType, 4000)
+            end,
+        server =
+            function(title, message, type, src)
+                local mappedType = type == "info" and "warning" or (type or "success")
+                TriggerClientEvent("tss-hud:client:Notify", src, title, message, mappedType, 4000)
+            end,
+    },
+
     gta = {
         client =
             function(title, message, type)

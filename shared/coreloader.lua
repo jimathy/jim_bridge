@@ -9,6 +9,7 @@ OXLibExport, QBXExport, QBExport, ESXExport, OXCoreExport =
     Exports.QBExport or "",
     Exports.ESXExport or "",
     Exports.OXCoreExport or ""
+TSSHudExport = Exports.TSSHudExport or "tss-hud"
 
 OXInv, QBInv, PSInv, CoreInv, CodeMInv, OrigenInv, TgiannInv, JPRInv, TSSInv =
     Exports.OXInv or "",

@@ -279,7 +279,7 @@ function waitForLogin()
             if result == true then
                 debugPrint("^6Bridge^7: ^3"..data.framework.."^2 Player Login Detected^7.")
             else
-                print("^4Error^7: ^2Timeout reached while waiting for player login^7.")
+                debugPrint("^6Bridge^7: ^3"..data.framework.."^2 login wait timed out (no active character yet)^7.")
             end
             return result
         end

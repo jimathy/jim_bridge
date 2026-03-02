@@ -1629,6 +1629,20 @@ end
 function createUseableItem(item, funct)
     if doesItemExist(item) then
         local useableFunc = {
+            {   framework = TSSInv,
+                func = function(item, funct)
+                    if not isServer() then return end
+                    if checkExportExists(TSSInv, "CreateUseableItem") then
+                        exports[TSSInv]:CreateUseableItem(item, funct)
+                    elseif checkExportExists(TSSInv, "createUseableItem") then
+                        exports[TSSInv]:createUseableItem(item, funct)
+                    elseif checkExportExists(TSSInv, "CreateUsableItem") then
+                        exports[TSSInv]:CreateUsableItem(item, funct)
+                    elseif checkExportExists(TSSInv, "createUsableItem") then
+                        exports[TSSInv]:createUsableItem(item, funct)
+                    end
+                end,
+            },
             {   framework = ESXExport,
                 func = function(item, funct)
                     while not ESX do Wait(0) end
@@ -1654,7 +1668,7 @@ function createUseableItem(item, funct)
 
         for i = 1, #useableFunc do
             local framework = useableFunc[i]
-            if isStarted(framework.framework) then
+            if isStarted(framework.framework) and (framework.framework ~= TSSInv or isServer()) then
                 debugPrint("^6Bridge^7: ^2Registering ^3UsableItem^2 with ^4"..framework.framework.."^7:", item)
                 framework.func(item, funct)
                 return

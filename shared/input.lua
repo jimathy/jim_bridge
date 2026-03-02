@@ -231,6 +231,66 @@ function createInput(title, opts)
         })
         return dialog
 
+    elseif Config.System.Menu == "tss" then
+        for i = 1, #opts do
+            currentNum += 1
+            if opts[i] == nil then currentNum -= 1 goto skip end
+            if opts[i].type == "radio" then
+                for k in pairs(opts[i].options) do
+                    opts[i].options[k].label = opts[i].options[k].text or opts[i].options[k].label
+                end
+                options[currentNum] = {
+                    type = "radio",
+                    required = opts[i].isRequired,
+                    label = opts[i].label or opts[i].text,
+                    name = opts[i].name,
+                    default = opts[i].default or (opts[i].options[1] and opts[i].options[1].value),
+                    options = opts[i].options,
+                }
+            end
+            if opts[i].type == "number" then
+                options[currentNum] = {
+                    type = "number",
+                    label = opts[i].label or opts[i].text,
+                    description = opts[i].txt and " - "..opts[i].txt or "",
+                    required = opts[i].isRequired,
+                    name = opts[i].name,
+                    min = opts[i].min,
+                    max = opts[i].max,
+                    default = opts[i].default,
+                }
+            end
+            if opts[i].type == "text" then
+                options[currentNum] = {
+                    type = "input",
+                    label = opts[i].label or opts[i].text,
+                    description = (opts[i].txt and " - "..opts[i].txt or ""),
+                    placeholder = opts[i].default,
+                    required = opts[i].isRequired,
+                    name = opts[i].name,
+                }
+            end
+            if opts[i].type == "select" then
+                options[currentNum] = {
+                    type = "select",
+                    label = opts[i].label or opts[i].text,
+                    description = opts[i].txt and " - "..opts[i].txt or "",
+                    required = opts[i].isRequired,
+                    name = opts[i].name,
+                    options = opts[i].options,
+                    min = opts[i].min,
+                    max = opts[i].max,
+                    default = opts[i].default,
+                }
+            end
+            ::skip::
+        end
+
+        return exports[TSSHudExport]:createInput(title, options, {
+            subtitle = "",
+            allowClose = true
+        })
+
     elseif Config.System.Menu == "gta" then
         WarMenu.CreateMenu(tostring(opts),
             title,

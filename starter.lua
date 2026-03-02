@@ -17,6 +17,7 @@ Exports = {
     TSSInv = "tss-inventory",
 
     OXLibExport = "ox_lib",
+    TSSHudExport = "tss-hud",
 
     QBMenuExport = "qb-menu",
 
@@ -92,7 +93,7 @@ if Config and Config.System then
     Config.System.ProgressBar = GetConvar("jim_progressBarScript", Config.System.ProgressBar or "gta")
     Config.System.drawText = GetConvar("jim_drawTextScript", Config.System.drawText or "gta")
     Config.System.skillCheck = GetConvar("jim_skillCheckScript", Config.System.skillCheck or "gta")
-    Config.System.RadialMenu = GetConvar("jim_radialMenuScript", Config.System.RadialMenu or "qb")
+    Config.System.Radial = GetConvar("jim_radialScript", Config.System.Radial or Config.System.Menu or "gta")
 
     if GetConvar("jim_dontUseTarget", "false") == "true" then
         Config.System.DontUseTarget = true
@@ -187,7 +188,6 @@ for _, v in pairs({ -- This is a specific load order
     'make/makeVeh.lua',
     'make/cameras.lua',
     'make/progressBars.lua',
-    'make/radialMenu.lua',
 
     'wrapperfunctions.lua',
     'polyZone.lua',
@@ -200,6 +200,7 @@ for _, v in pairs({ -- This is a specific load order
 
     -- Interactions
     'targets.lua',
+    'radial.lua',
     'contextmenus.lua',
     'input.lua',
     'notify.lua',

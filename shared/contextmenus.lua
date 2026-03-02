@@ -264,6 +264,17 @@ local contextFunc = {
             -- Show menu
             exports.lation_ui:showMenu('menu')
         end,
+
+    ["tss"] =
+        function(Menu, data)
+            exports[TSSHudExport]:openMenu(Menu, {
+                header = data.header,
+                headertxt = data.headertxt,
+                onBack = data.onBack,
+                onExit = data.onExit,
+                canClose = data.canClose,
+            }, false, false)
+        end,
 }
 
 
@@ -313,6 +324,7 @@ local lineBreakConversion = {
     ["ox"] = "\n",
     ["gta"] = "\n",
     ["lation"] = "\n",
+    ["tss"] = "\n",
 
     ["qb"] = "<br>",
     ["esx"] = "<br>",
