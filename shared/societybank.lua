@@ -192,6 +192,21 @@ local societyFunc = {
             end,
     },
 
+    {   bankName = "wasabi_banking",
+        getAccount =
+            function(society)
+                return exports['wasabi_banking']:GetAccountBalance(society, 'society')
+            end,
+        chargeSociety =
+            function(society, amount)
+                exports['wasabi_banking']:RemoveMoney('society', society, amount)
+            end,
+        fundSociety =
+            function(society, amount)
+                exports['wasabi_banking']:AddMoney('society', society, amount)
+            end,
+    },
+
 }
 
 
