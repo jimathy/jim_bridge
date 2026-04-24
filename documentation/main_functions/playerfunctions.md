@@ -39,22 +39,24 @@ This module contains helper functions for manipulating player states, interactio
     setHunger(source, 50)
     ```
 
-- **chargePlayer(cost, moneyType, newsrc)**
+- **chargePlayer(cost, moneyType, newsrc, reason)**
 
   ⚠️ Server Side Only
   - Deducts money from a player of the specified type (`cash`, `bank`, etc).
+  - `reason` is optional and will be passed through to frameworks/banking scripts that support transaction reasons.
   - **Example:**
     ```lua
-    chargePlayer(100, "cash", source)
+    chargePlayer(100, "cash", source, "shop purchase")
     ```
 
-- **fundPlayer(fund, moneyType, newsrc)**
+- **fundPlayer(fund, moneyType, newsrc, reason)**
 
   ⚠️ Server Side Only
   - Adds money to a player's balance of a given type.
+  - `reason` is optional and will be passed through to frameworks/banking scripts that support transaction reasons.
   - **Example:**
     ```lua
-    fundPlayer(250, "bank", source)
+    fundPlayer(250, "bank", source, "job payout")
     ```
 
 - **ConsumeSuccess(itemName, type, data)**

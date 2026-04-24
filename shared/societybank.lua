@@ -33,12 +33,12 @@ local societyFunc = {
                 return exports["fd_banking"]:GetAccount(society)
             end,
         chargeSociety =
-            function(society, amount)
-                exports["fd_banking"]:RemoveMoney(society, amount)
+            function(society, amount, reason)
+                exports["fd_banking"]:RemoveMoney(society, amount, reason)
             end,
         fundSociety =
-            function(society, amount)
-                exports["fd_banking"]:AddMoney(society, amount)
+            function(society, amount, reason)
+                exports["fd_banking"]:AddMoney(society, amount, reason)
             end,
     },
 
@@ -101,7 +101,7 @@ local societyFunc = {
                 return exports["qb-banking"]:GetAccountBalance(society)
             end,
         chargeSociety =
-            function(society, amount)
+            function(society, amount, reason)
                 if not exports["qb-banking"]:GetAccount(society) then
                     if Jobs[society] then
                         print("^6Bridge^7: ^2Making new bank account in ^7'^3qb-banking^7' ^2for ^7'^3"..society.."^7'")
@@ -111,10 +111,10 @@ local societyFunc = {
                         exports["qb-banking"]:CreateGangAccount(society, 0) Wait(150) -- make new account if return "null"
                     end
                 end
-                exports["qb-banking"]:RemoveMoney(society, amount)
+                exports["qb-banking"]:RemoveMoney(society, amount, reason)
             end,
         fundSociety =
-            function(society, amount)
+            function(society, amount, reason)
                 if not exports["qb-banking"]:GetAccount(society) then
                     if Jobs[society] then
                         print("^6Bridge^7: ^2Making new bank account in ^7'^3qb-banking^7' ^2for ^7'^3"..society.."^7'")
@@ -126,7 +126,7 @@ local societyFunc = {
                         Wait(150)
                     end
                 end
-                exports["qb-banking"]:AddMoney(society, amount)
+                exports["qb-banking"]:AddMoney(society, amount, reason)
             end,
     },
 
@@ -239,16 +239,17 @@ end
 --- Deducts funds from a society's bank account.
 --- @param society string The identifier of the society.
 --- @param amount number The amount of money to remove.
+--- @param reason string|nil Optional transaction reason.
 --- @usage
 --- ```lua
---- chargeSociety("police", 1000)
+--- chargeSociety("police", 1000, "Employee commission")
 --- ```
-function chargeSociety(society, amount)
+function chargeSociety(society, amount, reason)
 
     for i = 1, #societyFunc do
         local script = societyFunc[i]
         if isStarted(script.bankName) then
-            script.chargeSociety(society, amount)
+            script.chargeSociety(society, amount, reason)
             local newAmount = getSocietyAccount(society)
             debugPrint("^6Bridge^7: ^3"..script.bankName.."^7: ^2Removing $"..amount.." from account '^6"..society.."^7' ($"..tostring(newAmount)..")")
             return
@@ -261,16 +262,17 @@ end
 --- Adds funds to a society's bank account.
 --- @param society string The identifier of the society.
 --- @param amount number The amount of money to add.
+--- @param reason string|nil Optional transaction reason.
 --- @usage
 --- ```lua
---- fundSociety("police", 500)
+--- fundSociety("police", 500, "Business sale")
 --- ```
-function fundSociety(society, amount)
+function fundSociety(society, amount, reason)
 
     for i = 1, #societyFunc do
         local script = societyFunc[i]
         if isStarted(script.bankName) then
-            script.fundSociety(society, amount)
+            script.fundSociety(society, amount, reason)
             local newAmount = getSocietyAccount(society)
             debugPrint("^6Bridge^7: ^3"..script.bankName.."^7: ^2Adding ^7$"..amount.." ^2to account ^7'^6"..society.."^7' ($"..tostring(newAmount)..")")
             return
