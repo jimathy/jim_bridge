@@ -91,6 +91,8 @@ if Config and Config.System then
     Config.System.ProgressBar = GetConvar("jim_progressBarScript", Config.System.ProgressBar or "gta")
     Config.System.drawText = GetConvar("jim_drawTextScript", Config.System.drawText or "gta")
     Config.System.skillCheck = GetConvar("jim_skillCheckScript", Config.System.skillCheck or "gta")
+    Config.System.Billing = GetConvar("jim_billingScript", Config.System.Billing or "jim")
+    Config.System.RadialMenu = GetConvar("jim_radialMenuScript", Config.System.RadialMenu or "qb")
 
     if GetConvar("jim_dontUseTarget", "false") == "true" then
         Config.System.DontUseTarget = true
@@ -185,6 +187,7 @@ for _, v in pairs({ -- This is a specific load order
     'make/makeVeh.lua',
     'make/cameras.lua',
     'make/progressBars.lua',
+    'make/radialMenu.lua',
 
     'wrapperfunctions.lua',
     'polyZone.lua',

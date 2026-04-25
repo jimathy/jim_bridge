@@ -40,7 +40,7 @@ local bossMenuFunc = {
 
     {   name = "tss-bossmenu",
         openBossMenu = function(isGang, group)
-            TriggerEvent("tss-bossmenu:client:OpenMenu")
+            TriggerEvent("tss-bossmenu:client:OpenMenu", isGang, group)
         end,
     },
 

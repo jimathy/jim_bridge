@@ -58,7 +58,9 @@ setr jim_notifyScript gta           # qb, ox, gta, esx, okok, red, lation
 setr jim_drawTextScript qb          # qb, ox, gta, esx, lation
 setr jim_progressBarScript qb       # qb, ox, gta, esx, lation
 setr jim_skillCheckScript qb        # qb, ox, gta, lation
-setr jim_dontUseTarget false         # Set to true to disable target systems and use draw text 3d
+setr jim_billingScript jim          # jim, okok, codem, tgg, tss
+setr jim_radialMenuScript qb        # qb, ox, qbx
+setr jim_dontUseTarget false        # Set to true to disable target systems and use draw text 3d
 ```
 
 -----

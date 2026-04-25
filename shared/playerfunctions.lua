@@ -225,6 +225,10 @@ local billPlayerFunc = {
         function(data)
             exports["tgg-billing"]:OpenBillingMenu()
         end,
+    tss =
+        function(data)
+            TriggerEvent("tss-bossmenu:client:OpenMenu", isGang, group)
+        end,
 }
 
 --- BillPlayer
@@ -237,6 +241,19 @@ function billPlayer(data)
 end
 
 -- Money Handlers
+
+local function createQbBankingStatement(src, amount, reason, statementType)
+    if not IsDuplicityVersion() or not isStarted("qb-banking") then return end
+
+    local statementReason = reason or (statementType == "deposit" and "External Deposit" or "External Withdrawal")
+    local ok, result = pcall(function()
+        return exports["qb-banking"]:CreateBankStatement(src, "checking", amount, statementReason, statementType, "player")
+    end)
+
+    if not ok or result == false then
+        debugPrint("^1Error^7: ^3qb-banking^7 failed to create bank statement for player^7: ^3"..src.."^7", statementReason)
+    end
+end
 
 local moneyFunc = {
     {   framework = OXInv,
@@ -252,34 +269,34 @@ local moneyFunc = {
 
     {   framework = QBXExport,
         chargePlayer =
-            function(src, amount, moneyType)
-                return Core.Functions.GetPlayer(src).Functions.RemoveMoney(moneyType or "cash", amount)
+            function(src, amount, moneyType, reason)
+                return Core.Functions.GetPlayer(src).Functions.RemoveMoney(moneyType or "cash", amount, reason)
             end,
         fundPlayer =
-            function(src, amount, moneyType)
-                return Core.Functions.GetPlayer(src).Functions.AddMoney(moneyType or "cash", amount)
+            function(src, amount, moneyType, reason)
+                return Core.Functions.GetPlayer(src).Functions.AddMoney(moneyType or "cash", amount, reason)
             end,
     },
 
     {   framework = QBExport,
         chargePlayer =
-            function(src, amount, moneyType)
-                return Core.Functions.GetPlayer(src).Functions.RemoveMoney(moneyType or "cash", amount)
+            function(src, amount, moneyType, reason)
+                return Core.Functions.GetPlayer(src).Functions.RemoveMoney(moneyType or "cash", amount, reason)
             end,
         fundPlayer =
-            function(src, amount, moneyType)
-                return Core.Functions.GetPlayer(src).Functions.AddMoney(moneyType or "cash", amount)
+            function(src, amount, moneyType, reason)
+                return Core.Functions.GetPlayer(src).Functions.AddMoney(moneyType or "cash", amount, reason)
             end,
     },
 
     {   framework = RSGExport,
         chargePlayer =
-            function(src, amount, moneyType)
-                return Core.Functions.GetPlayer(src).Functions.RemoveMoney(moneyType or "cash", amount)
+            function(src, amount, moneyType, reason)
+                return Core.Functions.GetPlayer(src).Functions.RemoveMoney(moneyType or "cash", amount, reason)
             end,
         fundPlayer =
-            function(src, amount, moneyType)
-                return Core.Functions.GetPlayer(src).Functions.AddMoney(moneyType or "cash", amount)
+            function(src, amount, moneyType, reason)
+                return Core.Functions.GetPlayer(src).Functions.AddMoney(moneyType or "cash", amount, reason)
             end,
     },
 
@@ -300,12 +317,13 @@ local moneyFunc = {
 --- @param cost number The amount to charge.
 --- @param type string "cash" or "bank".
 --- @param newsrc number|nil Optional player ID; defaults to event source.
+--- @param reason string|nil Optional transaction reason.
 ---
 --- @usage
 --- ```lua
---- chargePlayer(100, "cash", playerId)
+--- chargePlayer(100, "cash", playerId, "shop purchase")
 --- ```
-function chargePlayer(cost, moneyType, newsrc)
+function chargePlayer(cost, moneyType, newsrc, reason)
     local is_success = false
     local src = newsrc or source
 
@@ -319,7 +337,10 @@ function chargePlayer(cost, moneyType, newsrc)
         if framework.framework == OXInv and moneyType == "bank" then goto skip end
         if isStarted(framework.framework) then
             debugPrint("^6Bridge^7: ^2Charging ^3"..framework.framework.." ^2Player^7: '^6"..cost.."^7'", moneyType)
-            is_success = framework.chargePlayer(src, cost, moneyType)
+            is_success = framework.chargePlayer(src, cost, moneyType, reason)
+            if is_success and moneyType == "bank" then
+                createQbBankingStatement(src, cost, reason, "withdraw")
+            end
             break
         end
         ::skip::
@@ -327,13 +348,13 @@ function chargePlayer(cost, moneyType, newsrc)
     return is_success
 end
 
-RegisterNetEvent(getScript()..":server:ChargePlayer", function(cost, moneyType, newsrc)
+RegisterNetEvent(getScript()..":server:ChargePlayer", function(cost, moneyType, newsrc, reason)
 	if GetInvokingResource() and GetInvokingResource() ~= getScript() and GetInvokingResource() ~= "qb-core" then
         print(GetInvokingResource())
         print("^1Error^7: ^1Possible exploit^7, ^1vital function was called from an external resource^7")
         return
     end
-    chargePlayer(cost, moneyType, newsrc)
+    chargePlayer(cost, moneyType, newsrc, reason)
 end)
 
 --- Funds a player by adding money to their account.
@@ -341,12 +362,13 @@ end)
 --- @param fund number The amount to add.
 --- @param type string "cash" or "bank".
 --- @param newsrc number|nil Optional player ID; defaults to event source.
+--- @param reason string|nil Optional transaction reason.
 ---
 --- @usage
 --- ```lua
---- fundPlayer(150, "cash", playerId)
+--- fundPlayer(150, "cash", playerId, "job payout")
 --- ```
-function fundPlayer(fund, moneyType, newsrc)
+function fundPlayer(fund, moneyType, newsrc, reason)
     local is_success = false
     local src = newsrc or source
 
@@ -360,7 +382,10 @@ function fundPlayer(fund, moneyType, newsrc)
         if framework.framework == OXInv and moneyType == "bank" then goto skip end
         if isStarted(framework.framework) then
             debugPrint("^6Bridge^7: ^2Funding ^3"..framework.framework.." ^2Player^7: '^6"..fund.."^7'", moneyType)
-            is_success = framework.fundPlayer(src, fund, moneyType)
+            is_success = framework.fundPlayer(src, fund, moneyType, reason)
+            if is_success and moneyType == "bank" then
+                createQbBankingStatement(src, fund, reason, "deposit")
+            end
             break
         end
         ::skip::
