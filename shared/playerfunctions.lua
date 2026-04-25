@@ -227,7 +227,7 @@ local billPlayerFunc = {
         end,
     tss =
         function(data)
-            exports["tss-bossmenu"]:OpenBillingMenu()
+            TriggerEvent("tss-bossmenu:client:OpenMenu", isGang, group)
         end,
 }
 
