@@ -1635,6 +1635,14 @@ RegisterNetEvent(getScript()..":server:toggleItem", function(give, item, amount,
         return
     end
 
+    -- A real client TriggerServerEvent has a non-empty network `source`; a trusted internal
+    -- TriggerEvent call from another server resource does not. Never trust a client-supplied
+    -- newsrc/token when this fired over the network, or a spoofed newsrc lets a client dupe
+    -- items for any player id and skip checkToken below.
+    if tostring(source) ~= "" and tostring(source) ~= "0" then
+        newsrc = nil
+    end
+
     if not doesItemExist(item) then
         print("^1Error^7 - ^2Tried to "..(tostring(give) == "true" and "add" or "remove").." '^3"..item.."^7' but it doesn't exist")
         return
