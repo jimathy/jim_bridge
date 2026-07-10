@@ -333,6 +333,14 @@ RegisterNetEvent(getScript()..":server:ChargePlayer", function(cost, moneyType, 
         print("^1Error^7: ^1Possible exploit^7, ^1vital function was called from an external resource^7")
         return
     end
+
+    -- Real client TriggerServerEvent calls have a non-empty network `source`; a client can
+    -- freely pass any newsrc value, so never trust it in that case or any player can drain
+    -- any other player's cash/bank by spoofing this event with the victim's id.
+    if tostring(source) ~= "" and tostring(source) ~= "0" then
+        newsrc = nil
+    end
+
     chargePlayer(cost, moneyType, newsrc)
 end)
 

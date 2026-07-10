@@ -282,7 +282,9 @@ end
 
 if isServer() then
     createCallback(getScript()..":server:getAccount", function(source, society)
-        if society then
+        -- Balance must never leak to a player outside the society: without this check any
+        -- player could scout every business/gang's bank balance for robbery/heist targeting.
+        if society and hasJob(society, source) then
             local getMoney = getSocietyAccount(society)
             return getMoney
         end
