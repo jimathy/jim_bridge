@@ -2629,6 +2629,7 @@ end)
 -------------------------------------------------------------
 
 local sellShopExploitCheck = {}
+local sellShopPrices = {}
 if isServer() then
     createCallback(getScript()..":getRegisteredSellShopLocation", function(src, name)
         return sellShopExploitCheck[name] or nil
@@ -2683,7 +2684,7 @@ function sellMenu(data)
                     onSelect = function()
 
                         local token = triggerCallback(AuthEvent)
-                        sellAnim({ item = k, price = v, ped = data.ped, onBack = function() sellMenu(data) end }, token)
+                        sellAnim({ item = k, price = v, ped = data.ped, shop = data.name, onBack = function() sellMenu(data) end }, token)
                     end,
                 }
             end
@@ -2722,7 +2723,8 @@ end
 ---
 --- @param data table Contains:
 ---   `- item: The item to sell.
----   `- price: Price per item.
+---   `- price: Price per item (display only, the server uses the price registered with registerSellShop).
+---   `- shop: The sell shop name registered with registerSellShop.
 ---   `- ped (optional): Ped entity involved.
 ---   `- onBack (optional): Callback to call on completion.
 ---@usage
@@ -2730,6 +2732,7 @@ end
 --- sellAnim({
 ---     item = "gold_ring",
 ---     price = 100,
+---     shop = "pawnshop",
 ---     ped = pedEntity,
 ---     onBack = function() sellMenu(data) end,
 --- })
@@ -2777,7 +2780,9 @@ local bannedItems = {
 }
 
 --- Server event handler for processing item sales.
---- Removes sold items from inventory and funds the player based on the sale.
+--- Validates the sale server side (registered shop, registered price, distance),
+--- removes sold items from inventory and funds the player based on the sale.
+--- The price sent by the client is never used, only the price registered with registerSellShop().
 RegisterNetEvent(getScript()..":Sellitems", function(data, token)
     local src = source
 
@@ -2792,21 +2797,71 @@ RegisterNetEvent(getScript()..":Sellitems", function(data, token)
         end
     end
 
+    local shopItems = data.shop and sellShopPrices[data.shop] or nil
+    if not shopItems then
+        print("^6Bridge^7: ^1Refused sale from ^3"..src.."^7: ^1sell shop ^7'^3"..tostring(data.shop).."^7'^1 has no items registered server side^7")
+        print("^6Bridge^7: ^1Register its sellable items with ^7registerSellShop^1(^7name^1, ^7coords^1, ^7items^1) ^1on the server^7")
+        return
+    end
+
+    local price = shopItems[data.item]
+    if not price then
+        dupeWarn(src, data.item, "^3Source^7: "..src.." ^1Tried to sell ^7'^3"..tostring(data.item).."^7'^1 which isn't sold at ^7'^3"..data.shop.."^7'")
+        return
+    end
+    if data.price and tonumber(data.price) ~= price then
+        print("^6Bridge^7: ^3"..src.." ^1sent price ^7"..tostring(data.price).." ^1for ^7'^3"..data.item.."^7'^1, ignoring it and using registered price ^7"..price)
+    end
+
+    if not distExploitCheck(sellShopExploitCheck[data.shop], src) then
+        return
+    end
+
     local hasItems, hasTable = hasItem(data.item, 1, src)
     if hasItems then
         removeItem(data.item, hasTable[data.item].count, src)
-        print((hasTable[data.item].count * data.price), data.price)
-        fundPlayer((hasTable[data.item].count * data.price), "cash", src)
+        fundPlayer((hasTable[data.item].count * price), "cash", src)
     else
         triggerNotify(nil, Loc[Config.Lan].error["dont_have"].." "..getItemLabel(data.item), "error", src)
     end
 end)
 
-function registerSellShop(name, coords)
+--- Recursively flattens a sellMenu style sellTable (flat { [item] = price } tables,
+--- optionally nested in categories with Header/Items keys) into { [item] = price }.
+local function flattenSellTable(tbl, out)
+    for k, v in pairs(tbl) do
+        if type(v) == "table" then
+            flattenSellTable(v, out)
+        else
+            local price = tonumber(v)
+            if type(k) == "string" and price and price >= 0 then
+                out[k] = price
+            end
+        end
+    end
+    return out
+end
+
+--- Registers a sell shop server side, this is what the sell events are validated against.
+--- Pass the same table you give to sellMenu() as items so prices stay server authoritative.
+---
+--- @param name string The sell shop identifier, matches sellMenu's data.name.
+--- @param coords vector3|nil A location of this shop, call again to add more locations.
+--- @param items table|nil The sellTable (or its Items table) with the item prices.
+---
+--- @usage
+--- ```lua
+--- registerSellShop("pawnshop", vector3(100.0, 200.0, 300.0), Selling)
+--- ```
+function registerSellShop(name, coords, items)
     if coords then
         debugPrint("^6Bridge^7: ^2Registering ^3Sell Store^7: "..name, coords and "- ^4Coord^7: "..formatCoord(coords) or "NO COORD SET")
         sellShopExploitCheck[name] = sellShopExploitCheck[name] or {}
         sellShopExploitCheck[name][#sellShopExploitCheck[name]+1] = coords
+    end
+    if items then
+        sellShopPrices[name] = flattenSellTable(items, sellShopPrices[name] or {})
+        debugPrint("^6Bridge^7: ^2Registered ^3Sell Store ^2prices for^7: "..name.." ^7(^3"..countTable(sellShopPrices[name]).." ^2items^7)")
     end
 end
 
