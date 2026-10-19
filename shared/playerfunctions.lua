@@ -359,7 +359,7 @@ function fundPlayer(fund, moneyType, newsrc)
         local framework = moneyFunc[i]
         if framework.framework == OXInv and moneyType == "bank" then goto skip end
         if isStarted(framework.framework) then
-            debugPrint("^6Bridge^7: ^2Funding ^3"..framework.framework.." ^2Player^7: '^6"..fund.."^7'", moneyType)
+            debugPrint("^6Bridge^7: ^2Funding ^3"..framework.framework.." ^2Player^7(^3"..src.."^7): '^6"..fund.."^7'", moneyType)
             is_success = framework.fundPlayer(src, fund, moneyType)
             break
         end

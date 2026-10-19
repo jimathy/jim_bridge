@@ -2683,7 +2683,7 @@ function sellMenu(data)
                     onSelect = function()
 
                         local token = triggerCallback(AuthEvent)
-                        sellAnim({ item = k, price = v, ped = data.ped, onBack = function() sellMenu(data) end }, token)
+                        sellAnim({ item = k, price = v, ped = data.ped, shopName = data.name, onBack = function() sellMenu(data) end }, token)
                     end,
                 }
             end
@@ -2776,8 +2776,37 @@ local bannedItems = {
     markedbills = true
 }
 
+-- Server-defined sell price registry
+-- Supports per-shop pricing: { [shopName] = { [itemName] = price } }
+-- Or global pricing: { [itemName] = price }
+-- Use registerSellPrice() to register prices from your shop configs
+local sellPriceRegistry = {}
+
+-- Register sell price for an item at a specific shop
+-- Usage: registerSellPrice("shopName", "item_name", 50)
+-- Usage: registerSellPrice(nil, "item_name", 50) -- nil = global price
+function registerSellPrice(shopName, itemName, price)
+    sellPriceRegistry[tostring(shopName)] = sellPriceRegistry[tostring(shopName)] or {}
+    sellPriceRegistry[tostring(shopName)][tostring(itemName)] = tonumber(price)
+    debugPrint("^6Bridge^7: ^2Registered price^7: ^3"..tostring(itemName).."^7[^3"..tostring(price).."^7] - "..tostring(shopName or "global").."^7")
+end
+
+-- Get sell price from registry (checks per-shop first, then global)
+function GetSellPrice(shopName, itemName)
+    -- Check for per-shop price (only if shopName is not nil/empty)
+    if shopName and shopName ~= "" then
+        local shopPrices = sellPriceRegistry[tostring(shopName)]
+        if shopPrices then
+            return shopPrices[tostring(itemName)]
+        end
+    end
+    -- Fallback to global registry (no shop specified, or shop not found in registry)
+    return sellPriceRegistry[tostring(itemName)]
+end
+
 --- Server event handler for processing item sales.
 --- Removes sold items from inventory and funds the player based on the sale.
+--- Uses server-defined prices from the registry, ignoring client-supplied price.
 RegisterNetEvent(getScript()..":Sellitems", function(data, token)
     local src = source
 
@@ -2795,18 +2824,47 @@ RegisterNetEvent(getScript()..":Sellitems", function(data, token)
     local hasItems, hasTable = hasItem(data.item, 1, src)
     if hasItems then
         removeItem(data.item, hasTable[data.item].count, src)
-        print((hasTable[data.item].count * data.price), data.price)
-        fundPlayer((hasTable[data.item].count * data.price), "cash", src)
+
+        -- FIX: Use server-defined price from registry, NOT client-supplied data.price
+        -- data.shopName comes from sellMenu's 'name' parameter
+        local pricePerUnit = GetSellPrice(data.shopName, data.item)
+
+        if not pricePerUnit then
+            debugPrint("^1ERROR^7: No sell price registered for item: ^3"..data.item.."^7 at shop: ^3"..tostring(data.shopName or "global"))
+            -- Try to find available prices for debugging
+            for shop, items in pairs(sellPriceRegistry) do
+                if items[tostring(data.item)] then
+                    debugPrint("^6Available price for "..data.item..": ^7at shop ^3"..shop)
+                end
+            end
+            triggerNotify(nil, "This item cannot be sold", "error", src)
+            return
+        end
+
+        local totalPrice = hasTable[data.item].count * pricePerUnit
+        fundPlayer(totalPrice, "cash", src)
+        triggerNotify(nil, "Sold "..hasTable[data.item].count.."x "..data.item.." for $"..cv(totalPrice), "success", src)
     else
         triggerNotify(nil, Loc[Config.Lan].error["dont_have"].." "..getItemLabel(data.item), "error", src)
     end
 end)
 
-function registerSellShop(name, coords)
+function registerSellShop(name, coords, items)
     if coords then
         debugPrint("^6Bridge^7: ^2Registering ^3Sell Store^7: "..name, coords and "- ^4Coord^7: "..formatCoord(coords) or "NO COORD SET")
         sellShopExploitCheck[name] = sellShopExploitCheck[name] or {}
         sellShopExploitCheck[name][#sellShopExploitCheck[name]+1] = coords
+        if items then
+            for k, v in pairs(items) do
+                if type(v) == "table" then
+                    for l, b in pairs(v.Items) do
+                        registerSellPrice(name, l, b)
+                    end
+                else
+                    registerSellPrice(name, k, v)
+                end
+            end
+        end
     end
 end
 
